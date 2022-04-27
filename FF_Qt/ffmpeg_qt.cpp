@@ -9,6 +9,7 @@ FFMpegQt::FFMpegQt(QWidget* wid) : QWidget(wid),ui(new Ui::FFMpegQtFormUI)
 	ui->setupUi(this);
 	setAttribute(Qt::WA_DeleteOnClose);
 	ffmpeg_control_ = nullptr;
+	
 	OnModifyUI();
 }
 
@@ -22,7 +23,7 @@ void FFMpegQt::OnModifyUI()
 {
 	this->setMinimumSize(800, 600);
 	ffmpeg_control_ = std::make_unique<FFMpegController>();
-	ffmpeg_control_->Init("F:/Mojito.mp3");
+	ffmpeg_control_->Init("F:/11288507-720p.mp4");
 	connect(ui->btn_start,&QPushButton::clicked,this,&FFMpegQt::SlotStartClicked);
 	connect(this,SIGNAL(SignalImage(QImage*)),this,SLOT(SlotImage(QImage*)));
 	auto image_cb = ToWeakCallback([=](QImage* image)
@@ -42,13 +43,13 @@ void FFMpegQt::SlotImage(QImage* image)
 void FFMpegQt::SlotStartClicked()
 {
 	ffmpeg_control_->AsyncOpen();
+	StartLoopRender();
 }
 
 void FFMpegQt::StartLoopRender()
 {
 	auto task = ToWeakCallback([=]()
 	{
-		
 		if(ffmpeg_control_)
 		{
 			QImage* image = new QImage;

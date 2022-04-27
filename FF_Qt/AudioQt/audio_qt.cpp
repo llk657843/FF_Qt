@@ -9,7 +9,6 @@ AudioPlayerCore::AudioPlayerCore()
 {
 	output_ = nullptr;
 	connect(this,SIGNAL(SignalStart()),this,SLOT(SlotStart()));
-	char_queue_.set_max_size(8000);
 }
 
 AudioPlayerCore::~AudioPlayerCore()
@@ -28,12 +27,15 @@ void AudioPlayerCore::Play()
 	output_ = new QAudioOutput(fmt);
 	io_ = new AudioIoDevice;
 	io_->open(QIODevice::ReadWrite);
-	output_->start(io_);//播放开始
 }
 
 void AudioPlayerCore::SlotStart()
 {
-	output_->start(io_);//播放开始
+	std::once_flag once_flag;
+	std::call_once(once_flag, [=]()
+	{
+		output_->start(io_);//播放开始
+	});
 }
 
 void AudioPlayerCore::InitAudioFormat()
@@ -47,15 +49,8 @@ void AudioPlayerCore::WriteThread()
 	bool b_end = false;
 	int size = bytes_.size();
 	int buffer_cnt = 200;
-	while (!b_end)
-	{
-		int read_size = output_->periodSize();
-		int chunks = 0;
-		if (read_size > 0) 
-		{
-			chunks = output_->bytesFree() / read_size;
-		}
-	}
+	io_->Write(bytes_);
+	bytes_.clear();
 }
 
 void AudioPlayerCore::PlayFile()
@@ -75,15 +70,25 @@ void AudioPlayerCore::PlayFile()
 	io_ = new AudioIoDevice;
 	io_->open(QIODevice::ReadWrite);
 	
-	auto delay_task = [=]()
+	WriteThread();
+	emit SignalStart();
+	auto task =ToWeakCallback( [=]()
 	{
-		emit SignalStart();
-	};
+		printf("%lld\n",io_->pos());
+	});
 
-	qtbase::Post2DelayedTask(kThreadAudioRender, delay_task, std::chrono::seconds(1));
-	auto task = [=]()
+	qtbase::Post2RepeatedTask(kThreadHTTP,task,std::chrono::seconds(1));
+}
+
+void AudioPlayerCore::WriteByteArray(QByteArray byte_array)
+{
+	if (io_) 
 	{
-		WriteThread();
-	};
-	qtbase::Post2Task(kThreadUIHelper, task);
+		io_->Write(byte_array);
+		auto state = output_->state();
+		if(output_->state() == QAudio::State::StoppedState && io_->GetDataSize() >= 50000)
+		{
+			emit SignalStart();
+		}
+	}
 }

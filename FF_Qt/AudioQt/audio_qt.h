@@ -2,10 +2,11 @@
 #include <qobject.h>
 #include "../Thread/threadsafe_queue.h"
 #include "../Audio/char_queue.h"
+#include "../base_util/weak_callback.h"
 class AudioIoDevice;
 class QIODevice;
 class QAudioOutput;
-class AudioPlayerCore : public QObject
+class AudioPlayerCore : public QObject,public SupportWeakCallback
 {
 	Q_OBJECT
 public:
@@ -13,6 +14,7 @@ public:
 	~AudioPlayerCore();
 	void Play();
 	void PlayFile();
+	void WriteByteArray(QByteArray);
 
 signals:
 	void SignalStart();
@@ -27,7 +29,5 @@ private:
 private:
 	QAudioOutput* output_;
 	AudioIoDevice* io_;
-	//QIODevice* io_;
-	thread_safe_queue<MyString*> char_queue_;
 	QByteArray bytes_;
 };

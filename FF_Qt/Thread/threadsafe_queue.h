@@ -59,7 +59,6 @@ public:
 			{
 				condition_variable_.notify_one();
 			}
-			std::cout << internal_queue_.size() << std::endl;
 			return true;
 		}
 		return false;

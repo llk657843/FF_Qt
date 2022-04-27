@@ -2,6 +2,7 @@
 #include <functional>
 #include <qimage.h>
 #include <string>
+
 #include "../Thread/threadsafe_queue.h"
 class AudioPlayerCore;
 class AudioWrapper;
@@ -10,7 +11,8 @@ using ImageCallback = std::function<void(QImage* image)>;
 using OpenDoneCallback = std::function<void()>;
 class AVFormatContext;
 class AVInputFormat;
-
+class SwsContext;
+class AVFrame;
 class FFMpegController
 {
 public:
@@ -33,15 +35,20 @@ private:
 	void DecodeVideo();
 	void DecodeAudio();
 	void CallOpenDone();
+	void InitAudioPlayerCore();
 
-
+	void DecodeAll();
+	void PostImageTask(SwsContext*,AVFrame*,int width,int height);
+	void FreeFrame(AVFrame* ptr);
 private:
 	std::string path_;
 	FailCallback fail_cb_;
 	AVInputFormat* av_input_;
 	AVFormatContext* format_context_;
 	ImageCallback image_cb_;
+	//thread_safe_queue<AVPacket> image_packets_;
 	thread_safe_queue<QImage> images_;
+	//thread_safe_queue<AVPacket> audios_;
 	OpenDoneCallback open_done_callback_;
 	AudioPlayerCore* audio_player_core_;
 	
