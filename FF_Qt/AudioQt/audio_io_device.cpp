@@ -12,6 +12,7 @@ qint64 AudioIoDevice::readData(char* data, qint64 maxlen)
 {
     static int cnt = 0;
     std::lock_guard<std::mutex> lock(data_mutex_);
+    printf("read data\n");
 	if (m_data.size() >= maxlen)
     {
         QByteArray d = m_data.mid(0, int(maxlen));
@@ -37,6 +38,7 @@ qint64 AudioIoDevice::writeData(const char* data, qint64 len)
 
 void AudioIoDevice::Write(QByteArray bytes)
 {
+    printf("write data\n");
     std::lock_guard<std::mutex> lock(data_mutex_);
     m_data.append(std::move(bytes));
 }

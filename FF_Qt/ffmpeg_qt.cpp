@@ -30,13 +30,6 @@ void FFMpegQt::OnModifyUI()
 		emit SignalImage(image);
 	});
 	ffmpeg_control_->RegImageCallback(image_cb);
-
-	/*auto open_done_cb = ToWeakCallback([=]()
-	{
-		StartLoopRender();
-	});
-
-	ffmpeg_control_->RegOpenDoneCallback(open_done_cb);*/
 }
 
 void FFMpegQt::SlotImage(QImage* image)
