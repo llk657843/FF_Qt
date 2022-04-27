@@ -1,32 +1,39 @@
-# Prerequisites
-*.d
-
-# Compiled Object files
-*.slo
-*.lo
-*.o
+*.pdb
+*.suo
 *.obj
-
-# Precompiled Headers
-*.gch
-*.pch
-
-# Compiled Dynamic libraries
-*.so
-*.dylib
-*.dll
-
-# Fortran module files
-*.mod
-*.smod
-
-# Compiled Static libraries
-*.lai
-*.la
-*.a
-*.lib
-
-# Executables
-*.exe
-*.out
-*.app
+*.tlog
+*.log
+*.idb
+*.7z
+*.rar
+*.zip
+*.cache
+*.tlh
+*.tli
+*.sbr
+*/Debug/*
+*/Release/*
+*/Win32/*
+*/GeneratedFiles/*
+*/*.sdf
+*.sdf
+*.opensdf
+*/test/*
+*/GeneratedFiles/*
+*/compileResults.log
+moc_*
+*.htm
+*/.vs/*
+*/*/Debug/*
+*/*/Release/*
+*/*/GeneratedFiles/*
+*.opendb
+*.db
+libs/*
+*.ilk
+hysd*.exe
+*test*.exe
+*/hysd_release/res/*
+tool-kits/bin/*
+hysd-module/ui_test/*
+path.txt
