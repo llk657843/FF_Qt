@@ -66,8 +66,6 @@ private:
 	void CallFail(int code,const std::string& msg);
 	void InitSdk();
 	void Close();
-	void DecodeVideo();
-	void DecodeAudio();
 	void CallOpenDone();
 	void InitAudioPlayerCore();
 
