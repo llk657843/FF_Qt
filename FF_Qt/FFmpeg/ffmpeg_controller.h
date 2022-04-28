@@ -4,6 +4,39 @@
 #include <string>
 
 #include "../Thread/threadsafe_queue.h"
+class SwsContext;
+class AVCodecContext;
+class SwrContext;
+struct VideoDecoderFormat
+{
+	VideoDecoderFormat()
+	{
+		video_stream_index_ = 0;
+		width_ = 0;
+		height_ = 0;
+		context_ = nullptr;
+	}
+	int video_stream_index_;
+	SwsContext* context_;	//read only;
+	int width_;
+	int height_;
+};
+
+struct AudioDecoderFormat
+{
+	AudioDecoderFormat()
+	{
+		audio_stream_index_ = 0;
+		swr_context_ = nullptr;
+		avc_codec_context = nullptr;
+		out_channel_cnt_ = 0;
+	}
+	int audio_stream_index_;
+	AVCodecContext* avc_codec_context;	//read only;
+	SwrContext* swr_context_;	//read only;
+	int out_channel_cnt_;
+};
+
 class AudioPlayerCore;
 class AudioWrapper;
 using FailCallback = std::function<void(int code,const std::string& msg)>;
@@ -38,9 +71,16 @@ private:
 	void CallOpenDone();
 	void InitAudioPlayerCore();
 
-	void DecodeAll();
 	void PostImageTask(SwsContext*,AVFrame*,int width,int height);
 	void FreeFrame(AVFrame* ptr);
+
+	void DecodeAll();
+	void InitVideoDecoderFormat(VideoDecoderFormat& video_decoder);
+	void InitAudioDecoderFormat(AudioDecoderFormat& audio_decoder);
+
+	void DecodeCore(VideoDecoderFormat&,AudioDecoderFormat&);
+
+
 private:
 	std::string path_;
 	FailCallback fail_cb_;

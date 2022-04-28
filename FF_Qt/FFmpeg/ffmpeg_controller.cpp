@@ -209,113 +209,15 @@ void FFMpegController::InitAudioPlayerCore()
 
 void FFMpegController::DecodeAll()
 {
-	int video_stream = av_find_best_stream(format_context_, AVMEDIA_TYPE_VIDEO, -1, -1, NULL, 0);
-	AVCodecID id = format_context_->streams[video_stream]->codec->codec_id;
-	AVCodec* av_decoder = avcodec_find_decoder(id);
-	if (!av_decoder)
-	{
-		CallFail(-1, "find decoder failed");
-		return;
-	}
-
-	avcodec_open2(format_context_->streams[video_stream]->codec, av_decoder, NULL);
-	frame_ = format_context_->streams[video_stream]->avg_frame_rate.num;
-	AVPacket* packet = (AVPacket*)av_malloc(sizeof(AVPacket));
-	int res = 0;
-	int width = format_context_->streams[video_stream]->codec->width;
-	int height = format_context_->streams[video_stream]->codec->height;
-	AVPixelFormat src_fmt = format_context_->streams[video_stream]->codec->pix_fmt;
-
-	AVFrame* frame_argb = av_frame_alloc();
-	SwsContext* sws_context = sws_getContext(width, height, src_fmt, width, height, AVPixelFormat::AV_PIX_FMT_RGB32, SWS_BICUBIC, NULL, NULL, NULL);
-	int numBytes = avpicture_get_size(AV_PIX_FMT_RGB32, width, height);
-
-	CallOpenDone();
-	
-	int audio_stream = av_find_best_stream(format_context_, AVMEDIA_TYPE_AUDIO, -1, -1, NULL, 0);
-	auto avcodec_context = format_context_->streams[audio_stream]->codec;
-	AVCodecID audio_id = avcodec_context->codec_id;
-	AVCodec* av_audio_decoder = avcodec_find_decoder(audio_id);
-
-	if (!av_audio_decoder)
-	{
-		CallFail(-1, "find decoder failed");
-		return;
-	}
-	int ret = avcodec_open2(avcodec_context, av_audio_decoder, NULL);
-	if (ret < 0)
-	{
-		CallFail(-1, "av decoder failed");
-		return;
-	}
-
-	AVFrame* inFrame = av_frame_alloc();
-	SwrContext* swrContext = swr_alloc();
-	//音频格式  输入的采样设置参数
-	AVSampleFormat inFormat = avcodec_context->sample_fmt;
-	AVSampleFormat  outFormat = AV_SAMPLE_FMT_S16;
-	int inSampleRate = avcodec_context->sample_rate;
-	int outSampleRate = avcodec_context->sample_rate;
-	uint64_t in_ch_layout = avcodec_context->channel_layout;
-	uint64_t out_ch_layout = AV_CH_LAYOUT_STEREO;
-
-	//给Swrcontext 分配空间，设置公共参数
-	swr_alloc_set_opts(swrContext, out_ch_layout, outFormat, outSampleRate,
-		in_ch_layout, inFormat, inSampleRate, 0, NULL
-	);
-	// 初始化
-	swr_init(swrContext);
-	// 获取声道数量
-	int outChannelCount = av_get_channel_layout_nb_channels(out_ch_layout);
-
-	int currentIndex = 0;
-
-	// 设置音频缓冲区间 16bit   44100  PCM数据, 双声道
-	int buffer_cnt = 1000;
-	uint8_t* out_buffer = (uint8_t*)av_malloc(MAX_AUDIO_FRAME_SIZE);
-	//开始读取源文件，进行解码
-	while (av_read_frame(format_context_, packet) >= 0)
-	{
-		//if(currentIndex >= buffer_cnt)
-		//{
-		//	break;
-		//}
-		if (packet->stream_index == AVMEDIA_TYPE_VIDEO)
-		{
-			currentIndex++;
-			AVFrame* frame = av_frame_alloc();
-			if (avcodec_send_packet(format_context_->streams[video_stream]->codec, packet) != 0)
-			{
-				continue;
-			}
-			if (avcodec_receive_frame(format_context_->streams[video_stream]->codec, frame) != 0)
-			{
-				continue;
-			}
-			PostImageTask(sws_context,frame,width,height);
-		}
-
-		else if (packet->stream_index == audio_stream)
-		{
-			avcodec_send_packet(avcodec_context, packet);
-			//解码
-			ret = avcodec_receive_frame(avcodec_context, inFrame);
-			int data_size = av_get_bytes_per_sample(avcodec_context->sample_fmt);
-			if (ret == 0)
-			{
-				//将每一帧数据转换成pcm
-				swr_convert(swrContext, &out_buffer, MAX_AUDIO_FRAME_SIZE,
-					(const uint8_t**)inFrame->data, inFrame->nb_samples);
-				//获取实际的缓存大小
-
-				int out_buffer_size = av_samples_get_buffer_size(NULL, outChannelCount, inFrame->nb_samples, outFormat, 1);
-				// 写入文件
-				QByteArray byte_array;
-				byte_array.append((char*)out_buffer,out_buffer_size);
-				audio_player_core_->WriteByteArray(byte_array);
-			}
-		}
-	}
+	//解析视频相关参数
+	VideoDecoderFormat video_decoder_format;
+	InitVideoDecoderFormat(video_decoder_format);
+	//解析音频相关参数
+	AudioDecoderFormat audio_decoder_format;
+	InitAudioDecoderFormat(audio_decoder_format);
+	//开始解析
+	DecodeCore(video_decoder_format, audio_decoder_format);
+	//释放资源
 	Close();
 }
 
@@ -334,15 +236,114 @@ void FFMpegController::PostImageTask(SwsContext* sws_context,AVFrame* frame,int 
 			FreeFrame(frame);
 		}
 	};
-	//av_frame_free(new_frame.get());
-
-	
 	qtbase::Post2Task(kThreadVideoDecoder, image_task);
 }
 
 void FFMpegController::FreeFrame(AVFrame* ptr)
 {
 	av_frame_free(&ptr);
+}
+
+void FFMpegController::InitVideoDecoderFormat(VideoDecoderFormat& decoder_format)
+{
+	decoder_format.video_stream_index_ = av_find_best_stream(format_context_, AVMEDIA_TYPE_VIDEO, -1, -1, NULL, 0);
+	AVCodecID id = format_context_->streams[decoder_format.video_stream_index_]->codec->codec_id;
+	AVCodec* av_decoder = avcodec_find_decoder(id);
+	if (!av_decoder)
+	{
+		CallFail(-1, "find decoder failed");
+		return;
+	}
+	avcodec_open2(format_context_->streams[decoder_format.video_stream_index_]->codec, av_decoder, NULL);
+	frame_ = format_context_->streams[decoder_format.video_stream_index_]->avg_frame_rate.num;
+
+	decoder_format.width_ = format_context_->streams[decoder_format.video_stream_index_]->codec->width;
+	decoder_format.height_= format_context_->streams[decoder_format.video_stream_index_]->codec->height;
+	AVPixelFormat src_fmt = format_context_->streams[decoder_format.video_stream_index_]->codec->pix_fmt;
+
+	decoder_format.context_ = sws_getContext(decoder_format.width_, decoder_format.height_, src_fmt, decoder_format.width_, decoder_format.height_, AVPixelFormat::AV_PIX_FMT_RGB32, SWS_BICUBIC, NULL, NULL, NULL);
+	CallOpenDone();
+}
+
+void FFMpegController::DecodeCore(VideoDecoderFormat& video_decoder_format, AudioDecoderFormat& audio_decoder_format)
+{
+	AVFrame* audio_in_frame = av_frame_alloc();
+	//开始读取源文件，进行解码
+	AVPacket* packet = (AVPacket*)av_malloc(sizeof(AVPacket));
+	// 设置音频缓冲区间 16bit   44100  PCM数据, 双声道
+	uint8_t* out_buffer = (uint8_t*)av_malloc(MAX_AUDIO_FRAME_SIZE);
+	while (av_read_frame(format_context_, packet) >= 0)
+	{
+		if (packet->stream_index == AVMEDIA_TYPE_VIDEO)
+		{
+			AVFrame* frame = av_frame_alloc();
+			if (avcodec_send_packet(format_context_->streams[video_decoder_format.video_stream_index_]->codec, packet) != 0)
+			{
+				continue;
+			}
+			if (avcodec_receive_frame(format_context_->streams[video_decoder_format.video_stream_index_]->codec, frame) != 0)
+			{
+				continue;
+			}
+			PostImageTask(video_decoder_format.context_, frame, video_decoder_format.width_, video_decoder_format.height_);
+		}
+
+		else if (packet->stream_index == audio_decoder_format.audio_stream_index_)
+		{
+			avcodec_send_packet(audio_decoder_format.avc_codec_context, packet);
+			//解码
+			if (avcodec_receive_frame(audio_decoder_format.avc_codec_context, audio_in_frame) != 0)
+			{
+				continue;
+			}
+			//将每一帧数据转换成pcm
+			swr_convert(audio_decoder_format.swr_context_, &out_buffer, MAX_AUDIO_FRAME_SIZE,
+				(const uint8_t**)audio_in_frame->data, audio_in_frame->nb_samples);
+			//获取实际的缓存大小
+			int out_buffer_size = av_samples_get_buffer_size(NULL, audio_decoder_format.out_channel_cnt_, audio_in_frame->nb_samples, audio_decoder_format.avc_codec_context->sample_fmt, 1);
+			// 写入文件
+			QByteArray byte_array;
+			byte_array.append((char*)out_buffer, out_buffer_size);
+			audio_player_core_->WriteByteArray(byte_array);
+		}
+	}
+}
+
+void FFMpegController::InitAudioDecoderFormat(AudioDecoderFormat& audio_decoder)
+{
+	audio_decoder.audio_stream_index_ = av_find_best_stream(format_context_, AVMEDIA_TYPE_AUDIO, -1, -1, NULL, 0);
+	audio_decoder.avc_codec_context = format_context_->streams[audio_decoder.audio_stream_index_]->codec;
+	AVCodecID audio_id = audio_decoder.avc_codec_context->codec_id;
+	AVCodec* av_audio_decoder = avcodec_find_decoder(audio_id);
+
+	if (!av_audio_decoder)
+	{
+		CallFail(-1, "find decoder failed");
+		return;
+	}
+	int ret = avcodec_open2(audio_decoder.avc_codec_context, av_audio_decoder, NULL);
+	if (ret < 0)
+	{
+		CallFail(-1, "av decoder failed");
+		return;
+	}
+	SwrContext* swrContext = swr_alloc();
+	//音频格式  输入的采样设置参数
+	AVSampleFormat in_format = audio_decoder.avc_codec_context->sample_fmt;
+	AVSampleFormat  out_format = AV_SAMPLE_FMT_S16;
+	int in_sample_rate = audio_decoder.avc_codec_context->sample_rate;
+	int out_sample_rate = audio_decoder.avc_codec_context->sample_rate;
+	uint64_t in_ch_layout = audio_decoder.avc_codec_context->channel_layout;
+	uint64_t out_ch_layout = AV_CH_LAYOUT_STEREO;
+
+	//给Swrcontext 分配空间，设置公共参数
+	swr_alloc_set_opts(swrContext, out_ch_layout, out_format, out_sample_rate,
+		in_ch_layout, in_format, in_sample_rate, 0, NULL
+	);
+	// 初始化
+	swr_init(swrContext);
+	// 获取声道数量
+	audio_decoder.out_channel_cnt_ = av_get_channel_layout_nb_channels(out_ch_layout);
 }
 
 void FFMpegController::CallFail(int code, const std::string& msg)
