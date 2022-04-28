@@ -46,9 +46,6 @@
     <ClCompile Include="Thread\threadsafe_queue.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="FFmpeg\frame_cache.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="Thread\pending_task.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -101,9 +98,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Thread\threadsafe_queue.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="FFmpeg\frame_cache.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Thread\pending_task.h">

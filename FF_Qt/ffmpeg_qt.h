@@ -36,4 +36,7 @@ private:
 private:
 	Ui::FFMpegQtFormUI* ui;
 	std::unique_ptr<FFMpegController> ffmpeg_control_;
+	int lb_width_;
+	int lb_height_;
+
 };

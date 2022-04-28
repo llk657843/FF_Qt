@@ -201,6 +201,10 @@ void FFMpegController::InitAudioPlayerCore()
 		return;
 	}
 	audio_player_core_ = new AudioPlayerCore;
+	if (format_context_) 
+	{
+		audio_player_core_->SetSamplerate(format_context_->streams[AVMEDIA_TYPE_AUDIO]->codec->sample_rate);
+	}
 }
 
 void FFMpegController::DecodeAll()
@@ -258,7 +262,7 @@ void FFMpegController::DecodeAll()
 	AVSampleFormat inFormat = avcodec_context->sample_fmt;
 	AVSampleFormat  outFormat = AV_SAMPLE_FMT_S16;
 	int inSampleRate = avcodec_context->sample_rate;
-	int outSampleRate = 44100;
+	int outSampleRate = avcodec_context->sample_rate;
 	uint64_t in_ch_layout = avcodec_context->channel_layout;
 	uint64_t out_ch_layout = AV_CH_LAYOUT_STEREO;
 
@@ -274,7 +278,6 @@ void FFMpegController::DecodeAll()
 	int currentIndex = 0;
 
 	// 设置音频缓冲区间 16bit   44100  PCM数据, 双声道
-	//uint8_t* out_buffer = (uint8_t*)av_malloc(2 * 44100 * 16);
 	int buffer_cnt = 1000;
 	uint8_t* out_buffer = (uint8_t*)av_malloc(MAX_AUDIO_FRAME_SIZE);
 	//开始读取源文件，进行解码
@@ -301,26 +304,26 @@ void FFMpegController::DecodeAll()
 			Sleep(35);
 		}
 
-		//else if (packet->stream_index == audio_stream)
-		//{
-		//	avcodec_send_packet(avcodec_context, packet);
-		//	//解码
-		//	ret = avcodec_receive_frame(avcodec_context, inFrame);
-		//	int data_size = av_get_bytes_per_sample(avcodec_context->sample_fmt);
-		//	if (ret == 0)
-		//	{
-		//		//将每一帧数据转换成pcm
-		//		swr_convert(swrContext, &out_buffer, MAX_AUDIO_FRAME_SIZE,
-		//			(const uint8_t**)inFrame->data, inFrame->nb_samples);
-		//		//获取实际的缓存大小
+		else if (packet->stream_index == audio_stream)
+		{
+			avcodec_send_packet(avcodec_context, packet);
+			//解码
+			ret = avcodec_receive_frame(avcodec_context, inFrame);
+			int data_size = av_get_bytes_per_sample(avcodec_context->sample_fmt);
+			if (ret == 0)
+			{
+				//将每一帧数据转换成pcm
+				swr_convert(swrContext, &out_buffer, MAX_AUDIO_FRAME_SIZE,
+					(const uint8_t**)inFrame->data, inFrame->nb_samples);
+				//获取实际的缓存大小
 
-		//		int out_buffer_size = av_samples_get_buffer_size(NULL, outChannelCount, inFrame->nb_samples, outFormat, 1);
-		//		// 写入文件
-		//		char* data = (char*)out_buffer;
-
-		//		//audio_player_core_->WriteByteArray();
-		//	}
-		//}
+				int out_buffer_size = av_samples_get_buffer_size(NULL, outChannelCount, inFrame->nb_samples, outFormat, 1);
+				// 写入文件
+				QByteArray byte_array;
+				byte_array.append((char*)out_buffer,out_buffer_size);
+				audio_player_core_->WriteByteArray(byte_array);
+			}
+		}
 	}
 
 	Close();
@@ -411,17 +414,10 @@ void FFMpegController::AsyncOpen()
 	};
 	audio_player_core_->Play();
 	qtbase::Post2Task(kThreadHTTP, video_task);
-	
-	//auto audio_task = [=]()
-	//{
-	//	DecodeAudio();
-	//};
-	//qtbase::Post2Task(kThreadAudioDecoder, audio_task);
 }
 
 bool FFMpegController::GetImage(QImage& image)
 {
-	//return false;
 	return images_.get_front_read_write(std::forward<QImage&>(image));
 }
 

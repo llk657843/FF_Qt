@@ -71,7 +71,7 @@ void ThreadPool::EventLoop(int name)
 			}
 		}
 	}
-	printf("thread is exit");
+	printf("thread is exit\n");
 }
 
 void ThreadPool::InitAll()

@@ -12,6 +12,7 @@ class AudioPlayerCore : public QObject,public SupportWeakCallback
 public:
 	AudioPlayerCore();
 	~AudioPlayerCore();
+	void SetSamplerate(int sample_rate);
 	void Play();
 	void PlayFile();
 	void WriteByteArray(QByteArray);
@@ -30,4 +31,5 @@ private:
 	QAudioOutput* output_;
 	AudioIoDevice* io_;
 	QByteArray bytes_;
+	int sample_rate_;
 };

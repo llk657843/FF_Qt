@@ -8,6 +8,7 @@
 AudioPlayerCore::AudioPlayerCore()
 {
 	output_ = nullptr;
+	sample_rate_ = 44100;
 	connect(this,SIGNAL(SignalStart()),this,SLOT(SlotStart()));
 }
 
@@ -15,10 +16,15 @@ AudioPlayerCore::~AudioPlayerCore()
 {
 }
 
+void AudioPlayerCore::SetSamplerate(int sample_rate)
+{
+	sample_rate_ = sample_rate;
+}
+
 void AudioPlayerCore::Play()
 {
 	QAudioFormat fmt;//设置音频输出格式
-	fmt.setSampleRate(44100);//1秒的音频采样率
+	fmt.setSampleRate(sample_rate_);//1秒的音频采样率
 	fmt.setSampleSize(16);//声音样本的大小
 	fmt.setChannelCount(2);//声道
 	fmt.setCodec("audio/pcm");//解码格式
@@ -56,7 +62,7 @@ void AudioPlayerCore::WriteThread()
 void AudioPlayerCore::PlayFile()
 {
 	QAudioFormat fmt;//设置音频输出格式
-	fmt.setSampleRate(44100);//1秒的音频采样率
+	fmt.setSampleRate(sample_rate_);//1秒的音频采样率
 	fmt.setSampleSize(16);//声音样本的大小
 	fmt.setChannelCount(2);//声道
 	fmt.setCodec("audio/pcm");//解码格式

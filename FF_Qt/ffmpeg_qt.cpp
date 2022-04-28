@@ -9,7 +9,8 @@ FFMpegQt::FFMpegQt(QWidget* wid) : QWidget(wid),ui(new Ui::FFMpegQtFormUI)
 	ui->setupUi(this);
 	setAttribute(Qt::WA_DeleteOnClose);
 	ffmpeg_control_ = nullptr;
-	
+	lb_width_ = 0;
+	lb_height_ = 0;
 	OnModifyUI();
 }
 
@@ -21,23 +22,33 @@ FFMpegQt::~FFMpegQt()
 
 void FFMpegQt::OnModifyUI()
 {
-	this->setMinimumSize(800, 600);
+	this->setMinimumSize(1300, 780);
 	ffmpeg_control_ = std::make_unique<FFMpegController>();
-	ffmpeg_control_->Init("F:/11288507-720p.mp4");
+	ffmpeg_control_->Init("F:/周杰伦-一路向北-(国语)[Chedvd.com].avi");
 	connect(ui->btn_start,&QPushButton::clicked,this,&FFMpegQt::SlotStartClicked);
 	connect(this,SIGNAL(SignalImage(QImage*)),this,SLOT(SlotImage(QImage*)));
 	auto image_cb = ToWeakCallback([=](QImage* image)
 	{
 		emit SignalImage(image);
 	});
+	//ui->lb_movie->setScaledContents(true);
 	ffmpeg_control_->RegImageCallback(image_cb);
 }
 
 void FFMpegQt::SlotImage(QImage* image)
 {
+	if(!lb_width_)
+	{
+		lb_width_ = ui->lb_movie->width();
+	}
+	if(!lb_height_)
+	{
+		lb_height_ = ui->lb_movie->height();
+	}
+	
 	ui->lb_movie->setPixmap(QPixmap::fromImage(*image));
 	delete image;
-	repaint();
+	update();
 }
 
 void FFMpegQt::SlotStartClicked()
@@ -58,5 +69,5 @@ void FFMpegQt::StartLoopRender()
 		}
 	});
 
-	qtbase::Post2RepeatedTask(kThreadUIHelper,task,std::chrono::milliseconds(41));
+	qtbase::Post2RepeatedTask(kThreadVideoRender,task,std::chrono::milliseconds(41));
 }

@@ -15,13 +15,3 @@ int main(int argc, char* argv[])
     ThreadPool::GetInstance()->StopAll();
 	return 0;
 }
-//
-//int main(int argc, char* argv[])
-//{
-//    QApplication a(argc, argv);
-//
-//    FFMpegQt* wid = new FFMpegQt;
-//    wid->show();
-//    a.exec();
-//    return 0;
-//}

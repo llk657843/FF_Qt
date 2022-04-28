@@ -1,11 +1,12 @@
 #pragma once
 enum ThreadName 
 {
-	kThreadUIHelper = 0,
+	kThreadVideoRender = 0,
 	kThreadVideoDecoder,
 	kThreadAudioRender,
 	kThreadAudioDecoder,
 	kThreadHTTP,              //ÓÃ»§apiÍøÂçÇëÇó
 	kThreadLog,
+	kThreadMoreTask,
 };
-const int ThreadCnt = 6;
+const int ThreadCnt = 7;

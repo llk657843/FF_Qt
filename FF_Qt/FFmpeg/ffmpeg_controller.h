@@ -13,6 +13,7 @@ class AVFormatContext;
 class AVInputFormat;
 class SwsContext;
 class AVFrame;
+
 class FFMpegController
 {
 public:
