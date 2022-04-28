@@ -100,11 +100,11 @@ void FFMpegController::PostImageTask(SwsContext* sws_context,AVFrame* frame,int 
 	{
 		if (frame)
 		{
-			int outputLineSize[4];
+			int output_line_size[4];
 			QImage output(width, height, QImage::Format_ARGB32);
-			av_image_fill_linesizes(outputLineSize, AV_PIX_FMT_ARGB, width);
-			uint8_t* outputDst[] = { output.bits() };
-			sws_scale(sws_context, frame->data, frame->linesize, 0, height, outputDst, outputLineSize);
+			av_image_fill_linesizes(output_line_size, AV_PIX_FMT_ARGB, width);
+			uint8_t* output_dst[] = { output.bits() };
+			sws_scale(sws_context, frame->data, frame->linesize, 0, height, output_dst, output_line_size);
 			images_.push_back(output);
 			FreeFrame(frame);
 		}
@@ -149,16 +149,18 @@ void FFMpegController::DecodeCore(VideoDecoderFormat& video_decoder_format, Audi
 	{
 		if (packet->stream_index == AVMEDIA_TYPE_VIDEO)
 		{
-			AVFrame* frame = av_frame_alloc();
 			if (avcodec_send_packet(format_context_->streams[video_decoder_format.video_stream_index_]->codec, packet) != 0)
 			{
 				continue;
 			}
+			AVFrame* frame = av_frame_alloc();
 			if (avcodec_receive_frame(format_context_->streams[video_decoder_format.video_stream_index_]->codec, frame) != 0)
 			{
+				av_frame_free(&frame);
 				continue;
 			}
 			PostImageTask(video_decoder_format.context_, frame, video_decoder_format.width_, video_decoder_format.height_);
+			Sleep(20);
 		}
 
 		else if (packet->stream_index == audio_decoder_format.audio_stream_index_)
@@ -173,13 +175,14 @@ void FFMpegController::DecodeCore(VideoDecoderFormat& video_decoder_format, Audi
 			swr_convert(audio_decoder_format.swr_context_, &out_buffer, MAX_AUDIO_FRAME_SIZE,
 				(const uint8_t**)audio_in_frame->data, audio_in_frame->nb_samples);
 			//获取实际的缓存大小
-			int out_buffer_size = av_samples_get_buffer_size(NULL, audio_decoder_format.out_channel_cnt_, audio_in_frame->nb_samples, audio_decoder_format.avc_codec_context->sample_fmt, 1);
+			int out_buffer_size = av_samples_get_buffer_size(NULL, audio_decoder_format.out_channel_cnt_, audio_in_frame->nb_samples, AV_SAMPLE_FMT_S16, 1);
 			// 写入文件
 			QByteArray byte_array;
 			byte_array.append((char*)out_buffer, out_buffer_size);
 			audio_player_core_->WriteByteArray(byte_array);
 		}
 	}
+	av_free(audio_decoder_format.swr_context_);
 }
 
 void FFMpegController::InitAudioDecoderFormat(AudioDecoderFormat& audio_decoder)
@@ -200,21 +203,22 @@ void FFMpegController::InitAudioDecoderFormat(AudioDecoderFormat& audio_decoder)
 		CallFail(-1, "av decoder failed");
 		return;
 	}
-	SwrContext* swrContext = swr_alloc();
+	audio_decoder.swr_context_ = swr_alloc();
 	//音频格式  输入的采样设置参数
 	AVSampleFormat in_format = audio_decoder.avc_codec_context->sample_fmt;
-	AVSampleFormat  out_format = AV_SAMPLE_FMT_S16;
+	AVSampleFormat out_format = AV_SAMPLE_FMT_S16;
 	int in_sample_rate = audio_decoder.avc_codec_context->sample_rate;
 	int out_sample_rate = audio_decoder.avc_codec_context->sample_rate;
 	uint64_t in_ch_layout = audio_decoder.avc_codec_context->channel_layout;
 	uint64_t out_ch_layout = AV_CH_LAYOUT_STEREO;
 
 	//给Swrcontext 分配空间，设置公共参数
-	swr_alloc_set_opts(swrContext, out_ch_layout, out_format, out_sample_rate,
+	swr_alloc_set_opts(audio_decoder.swr_context_, out_ch_layout, out_format, out_sample_rate,
 		in_ch_layout, in_format, in_sample_rate, 0, NULL
 	);
 	// 初始化
-	swr_init(swrContext);
+	swr_init(audio_decoder.swr_context_);
+	
 	// 获取声道数量
 	audio_decoder.out_channel_cnt_ = av_get_channel_layout_nb_channels(out_ch_layout);
 }
