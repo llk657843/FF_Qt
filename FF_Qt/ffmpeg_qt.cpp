@@ -69,5 +69,5 @@ void FFMpegQt::StartLoopRender()
 		}
 	});
 
-	qtbase::Post2RepeatedTask(kThreadVideoRender,task,std::chrono::milliseconds(41));
+	qtbase::Post2RepeatedTask(kThreadVideoRender,task,std::chrono::microseconds(41667));
 }

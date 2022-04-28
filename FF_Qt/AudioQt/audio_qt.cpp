@@ -88,11 +88,13 @@ void AudioPlayerCore::PlayFile()
 
 void AudioPlayerCore::WriteByteArray(QByteArray byte_array)
 {
+	static int cnt = 0;
 	if (io_) 
 	{
 		io_->Write(byte_array);
 		auto state = output_->state();
-		if(output_->state() == QAudio::State::StoppedState && io_->GetDataSize() >= 50000)
+		cnt++;
+		if(output_->state() == QAudio::State::StoppedState && cnt>1)
 		{
 			emit SignalStart();
 		}

@@ -221,21 +221,14 @@ void FFMpegController::DecodeAll()
 	avcodec_open2(format_context_->streams[video_stream]->codec, av_decoder, NULL);
 	frame_ = format_context_->streams[video_stream]->avg_frame_rate.num;
 	AVPacket* packet = (AVPacket*)av_malloc(sizeof(AVPacket));
-	AVFrame picture;
-	int got_pic_ptr = 0;
 	int res = 0;
 	int width = format_context_->streams[video_stream]->codec->width;
 	int height = format_context_->streams[video_stream]->codec->height;
 	AVPixelFormat src_fmt = format_context_->streams[video_stream]->codec->pix_fmt;
 
 	AVFrame* frame_argb = av_frame_alloc();
-
-
 	SwsContext* sws_context = sws_getContext(width, height, src_fmt, width, height, AVPixelFormat::AV_PIX_FMT_RGB32, SWS_BICUBIC, NULL, NULL, NULL);
-	int test_cnt = 0;
 	int numBytes = avpicture_get_size(AV_PIX_FMT_RGB32, width, height);
-	
-	int got = 0;
 
 	CallOpenDone();
 	
@@ -283,10 +276,10 @@ void FFMpegController::DecodeAll()
 	//开始读取源文件，进行解码
 	while (av_read_frame(format_context_, packet) >= 0)
 	{
-		if(currentIndex >= buffer_cnt)
-		{
-			break;
-		}
+		//if(currentIndex >= buffer_cnt)
+		//{
+		//	break;
+		//}
 		if (packet->stream_index == AVMEDIA_TYPE_VIDEO)
 		{
 			currentIndex++;
@@ -299,9 +292,7 @@ void FFMpegController::DecodeAll()
 			{
 				continue;
 			}
-
 			PostImageTask(sws_context,frame,width,height);
-			Sleep(35);
 		}
 
 		else if (packet->stream_index == audio_stream)
@@ -325,7 +316,6 @@ void FFMpegController::DecodeAll()
 			}
 		}
 	}
-
 	Close();
 }
 
