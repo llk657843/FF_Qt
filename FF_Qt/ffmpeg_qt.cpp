@@ -64,10 +64,13 @@ void FFMpegQt::StartLoopRender()
 		if(ffmpeg_control_)
 		{
 			QImage* image = new QImage;
-			while (ffmpeg_control_->GetImage(*image) == false) {};
+			while (ffmpeg_control_->GetImage(*image) == false)
+			{
+				std::this_thread::yield();
+			}
 			emit SignalImage(image);
 		}
 	});
 
-	qtbase::Post2RepeatedTask(kThreadVideoRender,task,std::chrono::microseconds(41667));
+	qtbase::Post2RepeatedTask(kThreadVideoRender,task,std::chrono::milliseconds(40));
 }

@@ -42,6 +42,7 @@ class AudioWrapper;
 using FailCallback = std::function<void(int code,const std::string& msg)>;
 using ImageCallback = std::function<void(QImage* image)>;
 using OpenDoneCallback = std::function<void()>;
+using DelayFunc = std::function<QImage(void)>;
 class AVFormatContext;
 class AVInputFormat;
 class SwsContext;
@@ -69,7 +70,7 @@ private:
 	void CallOpenDone();
 	void InitAudioPlayerCore();
 
-	void PostImageTask(SwsContext*,AVFrame*,int width,int height);
+	QImage PostImageTask(SwsContext*,AVFrame*,int width,int height);
 	void FreeFrame(AVFrame* ptr);
 
 	void DecodeAll();
@@ -85,8 +86,7 @@ private:
 	AVInputFormat* av_input_;
 	AVFormatContext* format_context_;
 	ImageCallback image_cb_;
-	//thread_safe_queue<AVPacket> image_packets_;
-	thread_safe_queue<QImage> images_;
+	thread_safe_queue<DelayFunc> image_frames_;
 	//thread_safe_queue<AVPacket> audios_;
 	OpenDoneCallback open_done_callback_;
 	AudioPlayerCore* audio_player_core_;

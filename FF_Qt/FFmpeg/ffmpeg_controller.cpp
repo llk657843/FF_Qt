@@ -25,7 +25,7 @@ FFMpegController::FFMpegController()
 	fail_cb_ = nullptr;
 	image_cb_ = nullptr;
 	audio_player_core_ = nullptr;
-	images_.set_max_size(100);
+	image_frames_.set_max_size(200);
 	InitSdk();
 }
 
@@ -94,22 +94,19 @@ void FFMpegController::DecodeAll()
 	Close();
 }
 
-void FFMpegController::PostImageTask(SwsContext* sws_context,AVFrame* frame,int width,int height)
+QImage FFMpegController::PostImageTask(SwsContext* sws_context, AVFrame* frame, int width, int height)
 {
-	auto image_task = [=]()
+	if (frame)
 	{
-		if (frame)
-		{
-			int output_line_size[4];
-			QImage output(width, height, QImage::Format_ARGB32);
-			av_image_fill_linesizes(output_line_size, AV_PIX_FMT_ARGB, width);
-			uint8_t* output_dst[] = { output.bits() };
-			sws_scale(sws_context, frame->data, frame->linesize, 0, height, output_dst, output_line_size);
-			images_.push_back(output);
-			FreeFrame(frame);
-		}
-	};
-	qtbase::Post2Task(kThreadVideoDecoder, image_task);
+		int output_line_size[4];
+		QImage output(width, height, QImage::Format_ARGB32);
+		av_image_fill_linesizes(output_line_size, AV_PIX_FMT_ARGB, width);
+		uint8_t* output_dst[] = { output.bits() };
+		sws_scale(sws_context, frame->data, frame->linesize, 0, height, output_dst, output_line_size);
+		FreeFrame(frame);
+		return output;
+	}
+	return QImage();
 }
 
 void FFMpegController::FreeFrame(AVFrame* ptr)
@@ -153,14 +150,18 @@ void FFMpegController::DecodeCore(VideoDecoderFormat& video_decoder_format, Audi
 			{
 				continue;
 			}
+			
 			AVFrame* frame = av_frame_alloc();
 			if (avcodec_receive_frame(format_context_->streams[video_decoder_format.video_stream_index_]->codec, frame) != 0)
 			{
 				av_frame_free(&frame);
 				continue;
 			}
-			PostImageTask(video_decoder_format.context_, frame, video_decoder_format.width_, video_decoder_format.height_);
-			Sleep(20);
+			auto func = [=]()
+			{
+				return PostImageTask(video_decoder_format.context_, frame, video_decoder_format.width_, video_decoder_format.height_);
+			};
+			image_frames_.push_back(func);
 		}
 
 		else if (packet->stream_index == audio_decoder_format.audio_stream_index_)
@@ -286,7 +287,10 @@ void FFMpegController::AsyncOpen()
 
 bool FFMpegController::GetImage(QImage& image)
 {
-	return images_.get_front_read_write(std::forward<QImage&>(image));
+	DelayFunc delay_func;
+	image_frames_.get_front_read_write(delay_func);
+	image = delay_func();
+	return true;
 }
 
 void FFMpegController::RegImageCallback(ImageCallback image_cb)
