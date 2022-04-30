@@ -19,13 +19,13 @@ public:
 	~FFMpegQt();
 
 signals:
-	void SignalImage(QImage* image);
+	void SignalImage(ImageInfo* image);
 
 private:
 	void OnModifyUI();
 
 private slots:
-	void SlotImage(QImage*);
+	void SlotImage(ImageInfo*);
 
 private:
 	void SlotStartClicked();
@@ -38,5 +38,6 @@ private:
 	std::unique_ptr<FFMpegController> ffmpeg_control_;
 	int lb_width_;
 	int lb_height_;
+	
 
 };

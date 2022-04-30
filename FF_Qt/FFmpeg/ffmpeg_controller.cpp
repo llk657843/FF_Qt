@@ -94,21 +94,23 @@ void FFMpegController::DecodeAll()
 	Close();
 }
 
-QImage FFMpegController::PostImageTask(SwsContext* sws_context, AVFrame* frame, int width, int height)
+ImageInfo* FFMpegController::PostImageTask(SwsContext* sws_context, AVFrame* frame, int width, int height,int64_t timestamp)
 {
+	//kThreadVideoRender
+	ImageInfo* image_info = nullptr;
 	if (frame)
 	{
 		int output_line_size[4];
 		QImage output(width, height, QImage::Format_ARGB32);
 		av_image_fill_linesizes(output_line_size, AV_PIX_FMT_ARGB, width);
 		uint8_t* output_dst[] = { output.bits() };
-		int64_t res = frame->best_effort_timestamp;
+
 		sws_scale(sws_context, frame->data, frame->linesize, 0, height, output_dst, output_line_size);
 		FreeFrame(frame);
-		
-		return output;
+		image_info = new ImageInfo(timestamp,std::move(output));
+		return image_info;
 	}
-	return QImage();
+	return nullptr;
 }
 
 void FFMpegController::FreeFrame(AVFrame* ptr)
@@ -119,19 +121,22 @@ void FFMpegController::FreeFrame(AVFrame* ptr)
 void FFMpegController::InitVideoDecoderFormat(VideoDecoderFormat& decoder_format)
 {
 	decoder_format.video_stream_index_ = av_find_best_stream(format_context_, AVMEDIA_TYPE_VIDEO, -1, -1, NULL, 0);
-	AVCodecID id = format_context_->streams[decoder_format.video_stream_index_]->codec->codec_id;
+	decoder_format.codec_context_ = format_context_->streams[decoder_format.video_stream_index_]->codec;
+	AVCodecID id = decoder_format.codec_context_->codec_id;
 	AVCodec* av_decoder = avcodec_find_decoder(id);
 	if (!av_decoder)
 	{
 		CallFail(-1, "find decoder failed");
 		return;
 	}
-	avcodec_open2(format_context_->streams[decoder_format.video_stream_index_]->codec, av_decoder, NULL);
+
+	avcodec_open2(decoder_format.codec_context_, av_decoder, NULL);
 	frame_ = format_context_->streams[decoder_format.video_stream_index_]->avg_frame_rate.num;
 
-	decoder_format.width_ = format_context_->streams[decoder_format.video_stream_index_]->codec->width;
-	decoder_format.height_= format_context_->streams[decoder_format.video_stream_index_]->codec->height;
-	AVPixelFormat src_fmt = format_context_->streams[decoder_format.video_stream_index_]->codec->pix_fmt;
+	decoder_format.width_ = decoder_format.codec_context_->width;
+	decoder_format.height_= decoder_format.codec_context_->height;
+
+	AVPixelFormat src_fmt = decoder_format.codec_context_->pix_fmt;
 
 	decoder_format.context_ = sws_getContext(decoder_format.width_, decoder_format.height_, src_fmt, decoder_format.width_, decoder_format.height_, AVPixelFormat::AV_PIX_FMT_RGB32, SWS_BICUBIC, NULL, NULL, NULL);
 	CallOpenDone();
@@ -161,7 +166,8 @@ void FFMpegController::DecodeCore(VideoDecoderFormat& video_decoder_format, Audi
 			}
 			auto func = [=]()
 			{
-				return PostImageTask(video_decoder_format.context_, frame, video_decoder_format.width_, video_decoder_format.height_);
+				int64_t timestamp = frame->best_effort_timestamp * av_q2d(video_decoder_format.codec_context_->time_base) * 1000.0;
+				return PostImageTask(video_decoder_format.context_, frame, video_decoder_format.width_, video_decoder_format.height_, timestamp);
 			};
 			image_frames_.push_back(func);
 		}
@@ -182,7 +188,8 @@ void FFMpegController::DecodeCore(VideoDecoderFormat& video_decoder_format, Audi
 			// Ð´ÈëÎÄ¼þ
 			QByteArray byte_array;
 			byte_array.append((char*)out_buffer, out_buffer_size);
-			audio_player_core_->WriteByteArray(byte_array, audio_in_frame->best_effort_timestamp);
+			int64_t res = audio_in_frame->best_effort_timestamp *av_q2d(audio_decoder_format.avc_codec_context->time_base) * 1000.0;
+			audio_player_core_->WriteByteArray(byte_array, res);
 		}
 	}
 	av_free(audio_decoder_format.swr_context_);
@@ -284,15 +291,35 @@ void FFMpegController::AsyncOpen()
 		DecodeAll();
 	};
 	audio_player_core_->Play();
-	qtbase::Post2Task(kThreadHTTP, video_task);
+	qtbase::Post2Task(kThreadVideoDecoder, video_task);
 }
 
-bool FFMpegController::GetImage(QImage& image)
+bool FFMpegController::GetImage(ImageInfo*& image_info)
 {
+	//kThreadVideoRender
 	DelayFunc delay_func;
-	image_frames_.get_front_read_write(delay_func);
-	image = delay_func();
-	return true;
+	bool b_get = image_frames_.get_front_read_write(delay_func);
+	if (b_get) {
+		image_info = delay_func();
+		int64_t audio_timestamp = 0;
+		audio_timestamp = audio_player_core_->GetCurrentTimestamp();
+		if (image_info && image_info->timestamp_ > audio_timestamp + 50)
+		{
+			int64_t sleep_time = image_info->timestamp_ - audio_timestamp;
+			if (sleep_time > 0)
+			{
+				Sleep(sleep_time);
+			}
+		}
+		else
+		{
+			delete image_info;
+			image_info = nullptr;
+			return false;
+		}
+		return true;
+	}
+	return false;
 }
 
 void FFMpegController::RegImageCallback(ImageCallback image_cb)

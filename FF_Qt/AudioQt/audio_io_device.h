@@ -17,5 +17,5 @@ public:
 
 private:
 	ThreadSafeBytesList bytes_list_;
-	int64_t current_read_timestamp_;
+	std::atomic_int64_t current_read_timestamp_;
 };

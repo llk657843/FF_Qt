@@ -19,7 +19,7 @@ public:
 	ThreadSafeBytesList();
 	~ThreadSafeBytesList();
 	void InsertBytes(QByteArray& bytes,int64_t timestamp);
-	qint64 GetBytes(qint64 max_byte_size,char* res_bytes,int64_t& timestamp);
+	qint64 GetBytes(qint64 max_byte_size,char* res_bytes,std::atomic_int64_t& timestamp);
 	void Clear();
 
 private:

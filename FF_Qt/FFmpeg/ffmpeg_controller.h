@@ -2,7 +2,7 @@
 #include <functional>
 #include <qimage.h>
 #include <string>
-
+#include "../image_info/image_info.h"
 #include "../Thread/threadsafe_queue.h"
 class SwsContext;
 class AVCodecContext;
@@ -15,11 +15,13 @@ struct VideoDecoderFormat
 		width_ = 0;
 		height_ = 0;
 		context_ = nullptr;
+		codec_context_ = nullptr;
 	}
 	int video_stream_index_;
 	SwsContext* context_;	//read only;
 	int width_;
 	int height_;
+	AVCodecContext* codec_context_;
 };
 
 struct AudioDecoderFormat
@@ -42,7 +44,7 @@ class AudioWrapper;
 using FailCallback = std::function<void(int code,const std::string& msg)>;
 using ImageCallback = std::function<void(QImage* image)>;
 using OpenDoneCallback = std::function<void()>;
-using DelayFunc = std::function<QImage(void)>;
+using DelayFunc = std::function<ImageInfo*(void)>;
 class AVFormatContext;
 class AVInputFormat;
 class SwsContext;
@@ -58,7 +60,7 @@ public:
 	void RegFailCallback(FailCallback fail_cb);
 	void Parse(bool b_internal = false);
 	void AsyncOpen();
-	bool GetImage(QImage& image);
+	bool GetImage(ImageInfo*& image);
 
 	void RegImageCallback(ImageCallback image_cb);
 	void RegOpenDoneCallback(OpenDoneCallback);
@@ -70,7 +72,7 @@ private:
 	void CallOpenDone();
 	void InitAudioPlayerCore();
 
-	QImage PostImageTask(SwsContext*,AVFrame*,int width,int height);
+	ImageInfo* PostImageTask(SwsContext*,AVFrame*,int width,int height,int64_t timestamp);
 	void FreeFrame(AVFrame* ptr);
 
 	void DecodeAll();
@@ -87,9 +89,7 @@ private:
 	AVFormatContext* format_context_;
 	ImageCallback image_cb_;
 	thread_safe_queue<DelayFunc> image_frames_;
-	//thread_safe_queue<AVPacket> audios_;
 	OpenDoneCallback open_done_callback_;
 	AudioPlayerCore* audio_player_core_;
-	
 	int frame_;
 };

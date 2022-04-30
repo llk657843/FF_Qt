@@ -16,7 +16,7 @@ void ThreadSafeBytesList::InsertBytes(QByteArray& bytes, int64_t timestamp)
 	byte_list_.emplace_back(SingleByteArray(bytes,timestamp));
 }
 
-qint64 ThreadSafeBytesList::GetBytes(qint64 max_byte_size, char* res_bytes, int64_t& timestamp)
+qint64 ThreadSafeBytesList::GetBytes(qint64 max_byte_size, char* res_bytes, std::atomic_int64_t& timestamp)
 {
 	std::lock_guard<std::mutex> lock(mutex_);
 	qint64 index = 0;
@@ -24,7 +24,7 @@ qint64 ThreadSafeBytesList::GetBytes(qint64 max_byte_size, char* res_bytes, int6
 	while (!byte_list_.empty() && max_byte_size > 0)
 	{
 		SingleByteArray single_array = byte_list_.front();
-		timestamp = std::max(single_array.time_stamp_, timestamp);
+		timestamp = single_array.time_stamp_;
 		int store_size = single_array.byte_array_.size();
 		if (store_size <= max_byte_size)
 		{

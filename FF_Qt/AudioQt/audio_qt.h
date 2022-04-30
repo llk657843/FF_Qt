@@ -15,6 +15,7 @@ public:
 	void SetSamplerate(int sample_rate);
 	void Play();
 	void WriteByteArray(QByteArray&,int64_t timestamp);
+	int64_t GetCurrentTimestamp();
 
 signals:
 	void SignalStart();

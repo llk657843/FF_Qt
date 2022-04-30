@@ -1,4 +1,7 @@
 #include "audio_io_device.h"
+
+#include <iostream>
+
 #include "../Thread/time_util.h"
 AudioIoDevice::AudioIoDevice()
 {
@@ -11,7 +14,8 @@ AudioIoDevice::~AudioIoDevice()
 
 qint64 AudioIoDevice::readData(char* data, qint64 maxlen)
 {
-	return bytes_list_.GetBytes(maxlen, data, current_read_timestamp_);
+	auto res = bytes_list_.GetBytes(maxlen, data, current_read_timestamp_);
+	return res;
 }
 
 qint64 AudioIoDevice::writeData(const char* data, qint64 len)

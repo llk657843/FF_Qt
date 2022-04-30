@@ -63,3 +63,12 @@ void AudioPlayerCore::WriteByteArray(QByteArray& byte_array, int64_t timestamp)
 		}
 	}
 }
+
+int64_t AudioPlayerCore::GetCurrentTimestamp()
+{
+	if (io_) 
+	{
+		return io_->GetCurrentTimeStamp();
+	}
+	return 0;
+}

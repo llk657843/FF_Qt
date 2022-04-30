@@ -102,6 +102,7 @@
     <ClCompile Include="Audio\bytes_list.cpp" />
     <ClCompile Include="Audio\char_queue.cpp" />
     <ClCompile Include="Audio\mq_manager.cpp" />
+    <ClCompile Include="image_info\image_info.cpp" />
     <ClCompile Include="Thread\pending_task.cpp" />
     <ClCompile Include="Thread\threadsafe_queue.cpp" />
     <ClCompile Include="Thread\thread_pool.cpp" />
@@ -124,6 +125,7 @@
     <ClInclude Include="Audio\bytes_list.h" />
     <ClInclude Include="Audio\char_queue.h" />
     <ClInclude Include="Audio\mq_manager.h" />
+    <ClInclude Include="image_info\image_info.h" />
     <ClInclude Include="Thread\pending_task.h" />
     <ClInclude Include="Thread\threadsafe_queue.h" />
     <ClInclude Include="Thread\thread_name_define.h" />

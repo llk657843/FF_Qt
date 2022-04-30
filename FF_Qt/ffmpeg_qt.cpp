@@ -1,6 +1,8 @@
 #include "ffmpeg_qt.h"
 
 #include <thread>
+#include <windows.h>
+
 #include "Thread/thread_pool_entrance.h"
 #include "ui_ffmpeg_qt.h"
 
@@ -11,6 +13,7 @@ FFMpegQt::FFMpegQt(QWidget* wid) : QWidget(wid),ui(new Ui::FFMpegQtFormUI)
 	ffmpeg_control_ = nullptr;
 	lb_width_ = 0;
 	lb_height_ = 0;
+	qRegisterMetaType<ImageInfo*>("ImageInfo*");
 	OnModifyUI();
 }
 
@@ -26,28 +29,26 @@ void FFMpegQt::OnModifyUI()
 	ffmpeg_control_ = std::make_unique<FFMpegController>();
 	ffmpeg_control_->Init("F:/周杰伦-一路向北-(国语)[Chedvd.com].avi");
 	connect(ui->btn_start,&QPushButton::clicked,this,&FFMpegQt::SlotStartClicked);
-	connect(this,SIGNAL(SignalImage(QImage*)),this,SLOT(SlotImage(QImage*)));
-	auto image_cb = ToWeakCallback([=](QImage* image)
-	{
-		emit SignalImage(image);
-	});
-	//ui->lb_movie->setScaledContents(true);
-	ffmpeg_control_->RegImageCallback(image_cb);
+	connect(this,SIGNAL(SignalImage(ImageInfo*)),this,SLOT(SlotImage(ImageInfo*)));
 }
 
-void FFMpegQt::SlotImage(QImage* image)
+void FFMpegQt::SlotImage(ImageInfo* info)
 {
-	if(!lb_width_)
+	if(!info)
+	{
+		return;
+	}
+	/*if(!lb_width_)
 	{
 		lb_width_ = ui->lb_movie->width();
 	}
 	if(!lb_height_)
 	{
 		lb_height_ = ui->lb_movie->height();
-	}
+	}*/
 	
-	ui->lb_movie->setPixmap(QPixmap::fromImage(*image));
-	delete image;
+	ui->lb_movie->setPixmap(QPixmap::fromImage(info->image_));
+	delete info;
 	update();
 }
 
@@ -61,16 +62,16 @@ void FFMpegQt::StartLoopRender()
 {
 	auto task = ToWeakCallback([=]()
 	{
-		if(ffmpeg_control_)
+		while(ffmpeg_control_)
 		{
-			QImage* image = new QImage;
-			while (ffmpeg_control_->GetImage(*image) == false)
+			ImageInfo* image_info = nullptr;
+			while (ffmpeg_control_->GetImage(image_info) == false)
 			{
 				std::this_thread::yield();
 			}
-			emit SignalImage(image);
+			emit SignalImage(image_info);
 		}
 	});
 
-	qtbase::Post2RepeatedTask(kThreadVideoRender,task,std::chrono::milliseconds(40));
+	qtbase::Post2Task(kThreadVideoRender,task);
 }
