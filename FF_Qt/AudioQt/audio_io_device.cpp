@@ -1,8 +1,8 @@
 #include "audio_io_device.h"
-
+#include "../Thread/time_util.h"
 AudioIoDevice::AudioIoDevice()
 {
-    readed_index_ = 0;
+	current_read_timestamp_ = 0;
 }
 
 AudioIoDevice::~AudioIoDevice()
@@ -11,22 +11,7 @@ AudioIoDevice::~AudioIoDevice()
 
 qint64 AudioIoDevice::readData(char* data, qint64 maxlen)
 {
-    std::shared_lock<std::shared_mutex> lock(data_mutex_);
-	if (m_data.size() >= maxlen)
-    {
-        QByteArray d = m_data.mid(readed_index_, int(maxlen));
-        memcpy(data, d.data(), size_t(d.size()));
-        readed_index_ += d.size();
-        return d.size();
-    }
-    else 
-    {
-        QByteArray d = m_data;
-        memcpy(data, d.data(), size_t(d.size()));
-        readed_index_ += d.size();
-    	m_data.clear();
-        return d.size();
-    }
+	return bytes_list_.GetBytes(maxlen, data, current_read_timestamp_);
 }
 
 qint64 AudioIoDevice::writeData(const char* data, qint64 len)
@@ -34,14 +19,12 @@ qint64 AudioIoDevice::writeData(const char* data, qint64 len)
     return 0;
 }
 
-void AudioIoDevice::Write(QByteArray bytes)
+void AudioIoDevice::Write(QByteArray& bytes, int64_t timestamp)
 {
-    std::lock_guard<std::shared_mutex> lock(data_mutex_);
-    m_data.append(std::move(bytes));
+	bytes_list_.InsertBytes(bytes,timestamp);
 }
 
-int AudioIoDevice::GetDataSize() const
+int64_t AudioIoDevice::GetCurrentTimeStamp() const
 {
-    std::shared_lock<std::shared_mutex> lock(data_mutex_);
-    return m_data.size();
+	return current_read_timestamp_;
 }

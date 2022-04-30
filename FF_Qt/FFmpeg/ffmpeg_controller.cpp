@@ -25,7 +25,7 @@ FFMpegController::FFMpegController()
 	fail_cb_ = nullptr;
 	image_cb_ = nullptr;
 	audio_player_core_ = nullptr;
-	image_frames_.set_max_size(200);
+	image_frames_.set_max_size(100);
 	InitSdk();
 }
 
@@ -102,8 +102,10 @@ QImage FFMpegController::PostImageTask(SwsContext* sws_context, AVFrame* frame, 
 		QImage output(width, height, QImage::Format_ARGB32);
 		av_image_fill_linesizes(output_line_size, AV_PIX_FMT_ARGB, width);
 		uint8_t* output_dst[] = { output.bits() };
+		int64_t res = frame->best_effort_timestamp;
 		sws_scale(sws_context, frame->data, frame->linesize, 0, height, output_dst, output_line_size);
 		FreeFrame(frame);
+		
 		return output;
 	}
 	return QImage();
@@ -180,7 +182,7 @@ void FFMpegController::DecodeCore(VideoDecoderFormat& video_decoder_format, Audi
 			// Ð´ÈëÎÄ¼þ
 			QByteArray byte_array;
 			byte_array.append((char*)out_buffer, out_buffer_size);
-			audio_player_core_->WriteByteArray(byte_array);
+			audio_player_core_->WriteByteArray(byte_array, audio_in_frame->best_effort_timestamp);
 		}
 	}
 	av_free(audio_decoder_format.swr_context_);

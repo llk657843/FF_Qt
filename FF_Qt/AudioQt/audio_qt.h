@@ -14,8 +14,7 @@ public:
 	~AudioPlayerCore();
 	void SetSamplerate(int sample_rate);
 	void Play();
-	void PlayFile();
-	void WriteByteArray(QByteArray);
+	void WriteByteArray(QByteArray&,int64_t timestamp);
 
 signals:
 	void SignalStart();
@@ -25,11 +24,9 @@ private slots:
 
 private:
 	void InitAudioFormat();
-	void WriteThread();
 
 private:
 	QAudioOutput* output_;
 	AudioIoDevice* io_;
-	QByteArray bytes_;
 	int sample_rate_;
 };

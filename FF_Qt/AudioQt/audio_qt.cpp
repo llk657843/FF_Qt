@@ -49,52 +49,15 @@ void AudioPlayerCore::InitAudioFormat()
 
 }
 
-void AudioPlayerCore::WriteThread()
-{
-	int index = 0;
-	bool b_end = false;
-	int size = bytes_.size();
-	int buffer_cnt = 200;
-	io_->Write(bytes_);
-	bytes_.clear();
-}
-
-void AudioPlayerCore::PlayFile()
-{
-	QAudioFormat fmt;//设置音频输出格式
-	fmt.setSampleRate(sample_rate_);//1秒的音频采样率
-	fmt.setSampleSize(16);//声音样本的大小
-	fmt.setChannelCount(2);//声道
-	fmt.setCodec("audio/pcm");//解码格式
-	fmt.setByteOrder(QAudioFormat::LittleEndian);
-	fmt.setSampleType(QAudioFormat::UnSignedInt);//设置音频类型
-	output_ = new QAudioOutput(fmt);
-	QFile file("F:/mojito.pcm");
-	file.open(QIODevice::ReadOnly);
-	bytes_ = file.readAll();
-	file.close();
-	io_ = new AudioIoDevice;
-	io_->open(QIODevice::ReadWrite);
-	
-	WriteThread();
-	emit SignalStart();
-	auto task =ToWeakCallback( [=]()
-	{
-		printf("%lld\n",io_->pos());
-	});
-
-	qtbase::Post2RepeatedTask(kThreadHTTP,task,std::chrono::seconds(1));
-}
-
-void AudioPlayerCore::WriteByteArray(QByteArray byte_array)
+void AudioPlayerCore::WriteByteArray(QByteArray& byte_array, int64_t timestamp)
 {
 	static int cnt = 0;
 	if (io_) 
 	{
-		io_->Write(byte_array);
-		auto state = output_->state();
 		cnt++;
-		if(output_->state() == QAudio::State::StoppedState && cnt>1)
+		io_->Write(byte_array,timestamp);
+		auto state = output_->state();
+		if(output_->state() == QAudio::State::StoppedState && cnt>=2)
 		{
 			emit SignalStart();
 		}

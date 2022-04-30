@@ -2,7 +2,7 @@
 #include <mutex>
 #include <QIODevice>
 #include <shared_mutex>
-
+#include "../Audio/bytes_list.h"
 class AudioIoDevice : public QIODevice
 {
 public:
@@ -12,11 +12,10 @@ public:
 	virtual qint64 readData(char* data, qint64 maxlen) override;
 	virtual qint64 writeData(const char* data, qint64 len) override;
 
-	void Write(QByteArray bytes);
-	int GetDataSize() const;
+	void Write(QByteArray& bytes,int64_t timestamp);
+	int64_t GetCurrentTimeStamp() const;
 
 private:
-	QByteArray m_data;
-	int readed_index_;
-	mutable std::shared_mutex data_mutex_;
+	ThreadSafeBytesList bytes_list_;
+	int64_t current_read_timestamp_;
 };

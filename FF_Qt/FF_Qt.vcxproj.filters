@@ -70,6 +70,9 @@
     <ClCompile Include="AudioQt\audio_io_device.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Audio\bytes_list.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="ffmpeg_qt.ui">
@@ -122,6 +125,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="AudioQt\audio_io_device.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Audio\bytes_list.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
