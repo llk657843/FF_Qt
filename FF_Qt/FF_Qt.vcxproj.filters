@@ -76,6 +76,9 @@
     <ClCompile Include="image_info\image_info.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="view_callback\view_callback.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="ffmpeg_qt.ui">
@@ -134,6 +137,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="image_info\image_info.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="view_callback\view_callback.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

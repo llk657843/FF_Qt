@@ -1,10 +1,12 @@
 #include "ffmpeg_qt.h"
 
+#include <iostream>
 #include <thread>
 #include <windows.h>
 
 #include "Thread/thread_pool_entrance.h"
 #include "ui_ffmpeg_qt.h"
+#include "view_callback/view_callback.h"
 
 FFMpegQt::FFMpegQt(QWidget* wid) : QWidget(wid),ui(new Ui::FFMpegQtFormUI)
 {
@@ -30,6 +32,14 @@ void FFMpegQt::OnModifyUI()
 	ffmpeg_control_->Init("F:/周杰伦-一路向北-(国语)[Chedvd.com].avi");
 	connect(ui->btn_start,&QPushButton::clicked,this,&FFMpegQt::SlotStartClicked);
 	connect(this,SIGNAL(SignalImage(ImageInfo*)),this,SLOT(SlotImage(ImageInfo*)));
+	connect(this,SIGNAL(SignalStartLoop()),this,SLOT(SlotStartLoop()));
+
+	auto view_cb = ToWeakCallback([=]()
+	{
+		emit SignalStartLoop();
+	});
+
+	ViewCallback::GetInstance()->RegAudioStartCallback(view_cb);
 }
 
 void FFMpegQt::SlotImage(ImageInfo* info)
@@ -38,24 +48,20 @@ void FFMpegQt::SlotImage(ImageInfo* info)
 	{
 		return;
 	}
-	/*if(!lb_width_)
-	{
-		lb_width_ = ui->lb_movie->width();
-	}
-	if(!lb_height_)
-	{
-		lb_height_ = ui->lb_movie->height();
-	}*/
-	
+	int64_t start_time = time_util::GetCurrentTimeMst();
 	ui->lb_movie->setPixmap(QPixmap::fromImage(info->image_));
+	repaint();
 	delete info;
-	update();
+}
+
+void FFMpegQt::SlotStartLoop()
+{
+	StartLoopRender();
 }
 
 void FFMpegQt::SlotStartClicked()
 {
 	ffmpeg_control_->AsyncOpen();
-	StartLoopRender();
 }
 
 void FFMpegQt::StartLoopRender()

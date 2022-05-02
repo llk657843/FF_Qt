@@ -5,6 +5,7 @@
 #include "../Thread/thread_pool_entrance.h"
 #include "audio_io_device.h"
 #include "QFile"
+#include "../view_callback/view_callback.h"
 AudioPlayerCore::AudioPlayerCore()
 {
 	output_ = nullptr;
@@ -33,20 +34,38 @@ void AudioPlayerCore::Play()
 	output_ = new QAudioOutput(fmt);
 	io_ = new AudioIoDevice;
 	io_->open(QIODevice::ReadWrite);
+	connect(output_, &QAudioOutput::stateChanged, this, &AudioPlayerCore::SlotStateChange);
 }
 
 void AudioPlayerCore::SlotStart()
 {
-	std::once_flag once_flag;
+	static std::once_flag once_flag;
 	std::call_once(once_flag, [=]()
 	{
 		output_->start(io_);//²¥·Å¿ªÊ¼
+		ViewCallback::GetInstance()->NotifyAudioStartCallback();
 	});
 }
 
 void AudioPlayerCore::InitAudioFormat()
 {
 
+}
+
+void AudioPlayerCore::SlotStateChange(QAudio::State state)
+{
+#ifdef _DEBUG
+	if(state == QAudio::State::IdleState)
+	{
+		end_time_ = time_util::GetCurrentTimeMst();
+		//std::cout << "duration:" << end_time_ - start_time_ << std::endl;
+	}
+	if(state == QAudio::State::ActiveState)
+	{
+		start_time_ = time_util::GetCurrentTimeMst();
+		//std::cout << "start audio :" << start_time_ << std::endl;
+	}
+#endif
 }
 
 void AudioPlayerCore::WriteByteArray(QByteArray& byte_array, int64_t timestamp)

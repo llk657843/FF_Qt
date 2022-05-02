@@ -1,8 +1,7 @@
 #include "audio_io_device.h"
-
 #include <iostream>
-
 #include "../Thread/time_util.h"
+const int DURATION = 26;
 AudioIoDevice::AudioIoDevice()
 {
 	current_read_timestamp_ = 0;
@@ -30,5 +29,5 @@ void AudioIoDevice::Write(QByteArray& bytes, int64_t timestamp)
 
 int64_t AudioIoDevice::GetCurrentTimeStamp() const
 {
-	return current_read_timestamp_;
+	return current_read_timestamp_ + DURATION;
 }

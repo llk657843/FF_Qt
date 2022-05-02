@@ -20,12 +20,14 @@ public:
 
 signals:
 	void SignalImage(ImageInfo* image);
+	void SignalStartLoop();
 
 private:
 	void OnModifyUI();
 
 private slots:
 	void SlotImage(ImageInfo*);
+	void SlotStartLoop();
 
 private:
 	void SlotStartClicked();

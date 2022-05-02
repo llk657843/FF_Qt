@@ -72,7 +72,7 @@ private:
 	void CallOpenDone();
 	void InitAudioPlayerCore();
 
-	ImageInfo* PostImageTask(SwsContext*,AVFrame*,int width,int height,int64_t timestamp);
+	ImageInfo* PostImageTask(SwsContext*,AVFrame*,int width,int height,int64_t timestamp,QImage* image);
 	void FreeFrame(AVFrame* ptr);
 
 	void DecodeAll();

@@ -109,6 +109,7 @@
     <ClCompile Include="Thread\thread_pool_entrance.cpp" />
     <ClCompile Include="Thread\thread_safe_priority_task_queue.cpp" />
     <ClCompile Include="Thread\time_util.cpp" />
+    <ClCompile Include="view_callback\view_callback.cpp" />
     <QtRcc Include="FF_Qt.qrc" />
     <QtUic Include="ffmpeg_qt.ui" />
     <ClCompile Include="base_util\weak_callback.cpp" />
@@ -120,6 +121,7 @@
     <QtMoc Include="ffmpeg_qt.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="view_callback\view_callback.h" />
     <QtMoc Include="AudioQt\audio_qt.h" />
     <ClInclude Include="AudioQt\audio_io_device.h" />
     <ClInclude Include="Audio\bytes_list.h" />

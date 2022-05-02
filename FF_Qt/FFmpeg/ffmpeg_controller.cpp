@@ -25,7 +25,7 @@ FFMpegController::FFMpegController()
 	fail_cb_ = nullptr;
 	image_cb_ = nullptr;
 	audio_player_core_ = nullptr;
-	image_frames_.set_max_size(100);
+	image_frames_.set_max_size(300);
 	InitSdk();
 }
 
@@ -94,20 +94,21 @@ void FFMpegController::DecodeAll()
 	Close();
 }
 
-ImageInfo* FFMpegController::PostImageTask(SwsContext* sws_context, AVFrame* frame, int width, int height,int64_t timestamp)
+ImageInfo* FFMpegController::PostImageTask(SwsContext* sws_context, AVFrame* frame, int width, int height,int64_t timestamp,QImage* output)
 {
 	//kThreadVideoRender
 	ImageInfo* image_info = nullptr;
 	if (frame)
 	{
 		int output_line_size[4];
-		QImage output(width, height, QImage::Format_ARGB32);
+		
 		av_image_fill_linesizes(output_line_size, AV_PIX_FMT_ARGB, width);
-		uint8_t* output_dst[] = { output.bits() };
+		uint8_t* output_dst[] = { output->bits() };
 
 		sws_scale(sws_context, frame->data, frame->linesize, 0, height, output_dst, output_line_size);
 		FreeFrame(frame);
-		image_info = new ImageInfo(timestamp,std::move(output));
+		image_info = new ImageInfo(timestamp,std::move(*output));
+		delete output;
 		return image_info;
 	}
 	return nullptr;
@@ -164,10 +165,12 @@ void FFMpegController::DecodeCore(VideoDecoderFormat& video_decoder_format, Audi
 				av_frame_free(&frame);
 				continue;
 			}
+			
+			QImage* output = new QImage(video_decoder_format.width_, video_decoder_format.height_, QImage::Format_ARGB32);
 			auto func = [=]()
 			{
 				int64_t timestamp = frame->best_effort_timestamp * av_q2d(video_decoder_format.codec_context_->time_base) * 1000.0;
-				return PostImageTask(video_decoder_format.context_, frame, video_decoder_format.width_, video_decoder_format.height_, timestamp);
+				return PostImageTask(video_decoder_format.context_, frame, video_decoder_format.width_, video_decoder_format.height_, timestamp, output);
 			};
 			image_frames_.push_back(func);
 		}
@@ -188,7 +191,7 @@ void FFMpegController::DecodeCore(VideoDecoderFormat& video_decoder_format, Audi
 			// 写入文件
 			QByteArray byte_array;
 			byte_array.append((char*)out_buffer, out_buffer_size);
-			int64_t res = audio_in_frame->best_effort_timestamp *av_q2d(audio_decoder_format.avc_codec_context->time_base) * 1000.0;
+			int64_t res = audio_in_frame->best_effort_timestamp * 1000.0 * av_q2d(audio_decoder_format.avc_codec_context->pkt_timebase) ;
 			audio_player_core_->WriteByteArray(byte_array, res);
 		}
 	}
@@ -216,7 +219,7 @@ void FFMpegController::InitAudioDecoderFormat(AudioDecoderFormat& audio_decoder)
 	audio_decoder.swr_context_ = swr_alloc();
 	//音频格式  输入的采样设置参数
 	AVSampleFormat in_format = audio_decoder.avc_codec_context->sample_fmt;
-	AVSampleFormat out_format = AV_SAMPLE_FMT_S16;
+	AVSampleFormat out_format = AVSampleFormat::AV_SAMPLE_FMT_S16;
 	int in_sample_rate = audio_decoder.avc_codec_context->sample_rate;
 	int out_sample_rate = audio_decoder.avc_codec_context->sample_rate;
 	uint64_t in_ch_layout = audio_decoder.avc_codec_context->channel_layout;
@@ -303,7 +306,11 @@ bool FFMpegController::GetImage(ImageInfo*& image_info)
 		image_info = delay_func();
 		int64_t audio_timestamp = 0;
 		audio_timestamp = audio_player_core_->GetCurrentTimestamp();
-		if (image_info && image_info->timestamp_ > audio_timestamp + 50)
+		if(audio_timestamp < 30)
+		{
+			Sleep(audio_timestamp);
+		}
+		else if (image_info && image_info->timestamp_ > audio_timestamp)
 		{
 			int64_t sleep_time = image_info->timestamp_ - audio_timestamp;
 			if (sleep_time > 0)
@@ -311,11 +318,9 @@ bool FFMpegController::GetImage(ImageInfo*& image_info)
 				Sleep(sleep_time);
 			}
 		}
-		else
+		else if (image_info)
 		{
-			delete image_info;
-			image_info = nullptr;
-			return false;
+			return true;
 		}
 		return true;
 	}

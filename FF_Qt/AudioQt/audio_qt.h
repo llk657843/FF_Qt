@@ -1,4 +1,5 @@
 #pragma once
+#include <qaudio.h>
 #include <qobject.h>
 #include "../Thread/threadsafe_queue.h"
 #include "../Audio/char_queue.h"
@@ -25,9 +26,12 @@ private slots:
 
 private:
 	void InitAudioFormat();
+	void SlotStateChange(QAudio::State);
 
 private:
 	QAudioOutput* output_;
 	AudioIoDevice* io_;
 	int sample_rate_;
+	int64_t start_time_;
+	int64_t end_time_;
 };
