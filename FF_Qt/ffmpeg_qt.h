@@ -1,6 +1,7 @@
 #pragma once
 #include <memory>
 #include <mutex>
+#include <qaudio.h>
 #include <queue>
 #include <QWidget>
 
@@ -21,6 +22,7 @@ public:
 signals:
 	void SignalImage(ImageInfo* image);
 	void SignalStartLoop();
+	void SignalStopLoop();
 
 private:
 	void OnModifyUI();
@@ -28,6 +30,7 @@ private:
 private slots:
 	void SlotImage(ImageInfo*);
 	void SlotStartLoop();
+	void SlotStopLoop();
 
 private:
 	void SlotStartClicked();
@@ -37,9 +40,9 @@ private:
 
 private:
 	Ui::FFMpegQtFormUI* ui;
-	std::unique_ptr<FFMpegController> ffmpeg_control_;
 	int lb_width_;
 	int lb_height_;
-	
-
+	std::unique_ptr<FFMpegController> ffmpeg_control_;
+	std::shared_ptr<std::function<void(QAudio::State)>> audio_state_cb_;
+	WeakCallbackFlag weak_flag_;
 };

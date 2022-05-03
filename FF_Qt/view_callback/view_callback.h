@@ -1,17 +1,19 @@
 #pragma once
 #include <functional>
+#include <qaudio.h>
 
 #include "../base_util/singleton.h"
-using AudioStartCallback = std::function<void()>;
+using AudioStateCallback = std::function<void(QAudio::State)>;
 class ViewCallback
 {
 public:
 	ViewCallback();
 	~ViewCallback();
 	SINGLETON_DEFINE(ViewCallback);
-	void RegAudioStartCallback(AudioStartCallback);
-	void NotifyAudioStartCallback();
+	//以观察者模式监听音频状态
+	void RegAudioStateCallback(std::shared_ptr<AudioStateCallback>);
+	void NotifyAudioStateCallback(QAudio::State);
 
 private:
-	AudioStartCallback audio_start_callback_;
+	std::list<std::weak_ptr<AudioStateCallback>> audio_start_callbacks_;
 };

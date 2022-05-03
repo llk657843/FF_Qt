@@ -33,13 +33,21 @@ void FFMpegQt::OnModifyUI()
 	connect(ui->btn_start,&QPushButton::clicked,this,&FFMpegQt::SlotStartClicked);
 	connect(this,SIGNAL(SignalImage(ImageInfo*)),this,SLOT(SlotImage(ImageInfo*)));
 	connect(this,SIGNAL(SignalStartLoop()),this,SLOT(SlotStartLoop()));
+	connect(this,SIGNAL(SignalStopLoop()),this,SLOT(SlotStopLoop()));
 
-	auto view_cb = ToWeakCallback([=]()
+	audio_state_cb_ = std::make_shared<std::function<void(QAudio::State)>>(ToWeakCallback([=](QAudio::State state)
 	{
-		emit SignalStartLoop();
-	});
+			if (state == QAudio::State::ActiveState) 
+			{
+				emit SignalStartLoop();
+			}
+			else if(state == QAudio::State::IdleState)
+			{
+				emit SignalStopLoop();
+			}
+	}));
 
-	ViewCallback::GetInstance()->RegAudioStartCallback(view_cb);
+	ViewCallback::GetInstance()->RegAudioStateCallback(audio_state_cb_);
 }
 
 void FFMpegQt::SlotImage(ImageInfo* info)
@@ -59,6 +67,11 @@ void FFMpegQt::SlotStartLoop()
 	StartLoopRender();
 }
 
+void FFMpegQt::SlotStopLoop()
+{
+	weak_flag_.Cancel();
+}
+
 void FFMpegQt::SlotStartClicked()
 {
 	ffmpeg_control_->AsyncOpen();
@@ -66,18 +79,17 @@ void FFMpegQt::SlotStartClicked()
 
 void FFMpegQt::StartLoopRender()
 {
-	auto task = ToWeakCallback([=]()
+	auto task = weak_flag_.ToWeakCallback([=]()
 	{
-		while(ffmpeg_control_)
+		if(ffmpeg_control_)
 		{
 			ImageInfo* image_info = nullptr;
-			while (ffmpeg_control_->GetImage(image_info) == false)
+			if (ffmpeg_control_->GetImage(image_info) != false)
 			{
-				std::this_thread::yield();
+				emit SignalImage(image_info);
 			}
-			emit SignalImage(image_info);
 		}
 	});
 
-	qtbase::Post2Task(kThreadVideoRender,task);
+	qtbase::Post2RepeatedTask(kThreadVideoRender,task,std::chrono::milliseconds(10));
 }

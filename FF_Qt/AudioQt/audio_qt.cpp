@@ -43,7 +43,6 @@ void AudioPlayerCore::SlotStart()
 	std::call_once(once_flag, [=]()
 	{
 		output_->start(io_);//²¥·Å¿ªÊ¼
-		ViewCallback::GetInstance()->NotifyAudioStartCallback();
 	});
 }
 
@@ -54,6 +53,7 @@ void AudioPlayerCore::InitAudioFormat()
 
 void AudioPlayerCore::SlotStateChange(QAudio::State state)
 {
+	ViewCallback::GetInstance()->NotifyAudioStateCallback(state);
 #ifdef _DEBUG
 	if(state == QAudio::State::IdleState)
 	{
