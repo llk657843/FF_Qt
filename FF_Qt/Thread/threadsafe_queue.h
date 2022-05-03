@@ -12,7 +12,7 @@ class thread_safe_queue
 public:
 	thread_safe_queue():max_size_(DEFAULT_MAX_SIZE), is_sleep_(false) {}
 	~thread_safe_queue() {}
-
+	//队列的上限值设定必须在队列开始push之前设定。上限值设定关系到缓冲区大小，也关系到内存大小
 	void set_max_size(unsigned int max_size)
 	{
 		max_size_ = max_size;

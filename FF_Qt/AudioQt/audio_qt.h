@@ -2,7 +2,6 @@
 #include <qaudio.h>
 #include <qobject.h>
 #include "../Thread/threadsafe_queue.h"
-#include "../Audio/char_queue.h"
 #include "../base_util/weak_callback.h"
 class AudioIoDevice;
 class QIODevice;

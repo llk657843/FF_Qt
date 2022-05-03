@@ -15,7 +15,6 @@ extern "C"
 #include "windows.h"
 #include "../Thread/thread_pool_entrance.h"
 #include "../AudioQt/audio_qt.h"
-#include "../Audio/mq_manager.h"
 #include "../time_strategy/time_base_define.h"
 const int MAX_AUDIO_FRAME_SIZE = 48000 * 2 * 16 * 0.125;
 FFMpegController::FFMpegController()
@@ -26,7 +25,7 @@ FFMpegController::FFMpegController()
 	fail_cb_ = nullptr;
 	image_cb_ = nullptr;
 	audio_player_core_ = nullptr;
-	image_frames_.set_max_size(300);
+	image_frames_.set_max_size(200);
 	InitSdk();
 }
 
@@ -310,13 +309,14 @@ bool FFMpegController::GetImage(ImageInfo*& image_info)
 		audio_timestamp = audio_player_core_->GetCurrentTimestamp();
 		if (audio_timestamp < 30)
 		{
+			//音频可能还没开始跑，先休息一下
 			Sleep(audio_timestamp);
 		}
 		else if (image_info && image_info->timestamp_ > audio_timestamp)
 		{
 			//视频比音频快，则让视频渲染等一会儿再渲染
 			int64_t sleep_time = image_info->timestamp_ - audio_timestamp;
-			sleep_time = sleep_time > 5 ? 5 + normal_wait_time : sleep_time + normal_wait_time;
+			sleep_time = sleep_time > MAX_ADJUST_TIME ? MAX_ADJUST_TIME + normal_wait_time : sleep_time + normal_wait_time;
 			if (sleep_time > 0)
 			{
 				Sleep(sleep_time);
@@ -327,7 +327,7 @@ bool FFMpegController::GetImage(ImageInfo*& image_info)
 		{
 			//视频比音频慢，则让视频渲染加快
 			int sub_time = audio_timestamp - image_info->timestamp_;
-			sub_time = sub_time > 5 ? 5 : sub_time;
+			sub_time = sub_time > MAX_ADJUST_TIME ? MAX_ADJUST_TIME : sub_time;
 			normal_wait_time -= sub_time;
 			if(normal_wait_time > 0)
 			{

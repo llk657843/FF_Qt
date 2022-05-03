@@ -2,7 +2,6 @@
 #include <QtWidgets/QApplication>
 #include "Thread/thread_pool.h"
 #include "ffmpeg_qt.h"
-#include "Audio/mq_manager.h"
 #include "QThread"
 
 int main(int argc, char* argv[])

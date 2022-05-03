@@ -61,12 +61,6 @@
     <ClCompile Include="AudioQt\audio_qt.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Audio\char_queue.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Audio\mq_manager.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="AudioQt\audio_io_device.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -122,12 +116,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Thread\time_util.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Audio\char_queue.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Audio\mq_manager.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="AudioQt\audio_io_device.h">
