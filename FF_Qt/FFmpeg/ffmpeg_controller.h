@@ -91,5 +91,5 @@ private:
 	thread_safe_queue<DelayFunc> image_frames_;
 	OpenDoneCallback open_done_callback_;
 	AudioPlayerCore* audio_player_core_;
-	int frame_;
+	int frame_time_;
 };

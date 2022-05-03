@@ -121,6 +121,7 @@
     <QtMoc Include="ffmpeg_qt.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="time_strategy\time_base_define.h" />
     <ClInclude Include="view_callback\view_callback.h" />
     <QtMoc Include="AudioQt\audio_qt.h" />
     <ClInclude Include="AudioQt\audio_io_device.h" />

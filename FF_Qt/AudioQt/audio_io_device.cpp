@@ -13,8 +13,7 @@ AudioIoDevice::~AudioIoDevice()
 
 qint64 AudioIoDevice::readData(char* data, qint64 maxlen)
 {
-	auto res = bytes_list_.GetBytes(maxlen, data, current_read_timestamp_);
-	return res;
+	return bytes_list_.GetBytes(maxlen, data, current_read_timestamp_);
 }
 
 qint64 AudioIoDevice::writeData(const char* data, qint64 len)

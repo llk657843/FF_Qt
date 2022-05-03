@@ -16,6 +16,7 @@ extern "C"
 #include "../Thread/thread_pool_entrance.h"
 #include "../AudioQt/audio_qt.h"
 #include "../Audio/mq_manager.h"
+#include "../time_strategy/time_base_define.h"
 const int MAX_AUDIO_FRAME_SIZE = 48000 * 2 * 16 * 0.125;
 FFMpegController::FFMpegController()
 {
@@ -132,7 +133,7 @@ void FFMpegController::InitVideoDecoderFormat(VideoDecoderFormat& decoder_format
 	}
 
 	avcodec_open2(decoder_format.codec_context_, av_decoder, NULL);
-	frame_ = format_context_->streams[decoder_format.video_stream_index_]->avg_frame_rate.num;
+	frame_time_ = 1000.0 /format_context_->streams[decoder_format.video_stream_index_]->avg_frame_rate.num;
 
 	decoder_format.width_ = decoder_format.codec_context_->width;
 	decoder_format.height_= decoder_format.codec_context_->height;
@@ -302,27 +303,47 @@ bool FFMpegController::GetImage(ImageInfo*& image_info)
 	//kThreadVideoRender
 	DelayFunc delay_func;
 	bool b_get = image_frames_.get_front_read_write(delay_func);
+	int normal_wait_time = frame_time_ - BASE_SLEEP_TIME;
 	if (b_get) {
 		image_info = delay_func();
 		int64_t audio_timestamp = 0;
 		audio_timestamp = audio_player_core_->GetCurrentTimestamp();
-		if(audio_timestamp < 30)
+		if (audio_timestamp < 30)
 		{
 			Sleep(audio_timestamp);
 		}
 		else if (image_info && image_info->timestamp_ > audio_timestamp)
 		{
+			//视频比音频快，则让视频渲染等一会儿再渲染
 			int64_t sleep_time = image_info->timestamp_ - audio_timestamp;
+			sleep_time = sleep_time > 5 ? 5 + normal_wait_time : sleep_time + normal_wait_time;
 			if (sleep_time > 0)
 			{
 				Sleep(sleep_time);
 			}
-		}
-		else if (image_info)
-		{
 			return true;
 		}
-		return true;
+		else if (image_info && image_info->timestamp_ < audio_timestamp)
+		{
+			//视频比音频慢，则让视频渲染加快
+			int sub_time = audio_timestamp - image_info->timestamp_;
+			sub_time = sub_time > 5 ? 5 : sub_time;
+			normal_wait_time -= sub_time;
+			if(normal_wait_time > 0)
+			{
+				Sleep(normal_wait_time);
+			}
+			return true;
+		}
+		else if(image_info && image_info->timestamp_ <= audio_timestamp)
+		{
+			Sleep(normal_wait_time);
+			return true;
+		}
+		else
+		{
+			return false;
+		}
 	}
 	return false;
 }

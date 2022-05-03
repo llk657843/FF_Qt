@@ -142,5 +142,8 @@
     <ClInclude Include="view_callback\view_callback.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="time_strategy\time_base_define.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

@@ -6,6 +6,7 @@
 
 #include "Thread/thread_pool_entrance.h"
 #include "ui_ffmpeg_qt.h"
+#include "time_strategy/time_base_define.h"
 #include "view_callback/view_callback.h"
 
 FFMpegQt::FFMpegQt(QWidget* wid) : QWidget(wid),ui(new Ui::FFMpegQtFormUI)
@@ -91,5 +92,5 @@ void FFMpegQt::StartLoopRender()
 		}
 	});
 
-	qtbase::Post2RepeatedTask(kThreadVideoRender,task,std::chrono::milliseconds(10));
+	qtbase::Post2RepeatedTask(kThreadVideoRender,task,std::chrono::milliseconds(BASE_SLEEP_TIME));
 }
