@@ -25,7 +25,7 @@ FFMpegController::FFMpegController()
 	fail_cb_ = nullptr;
 	image_cb_ = nullptr;
 	audio_player_core_ = nullptr;
-	image_frames_.set_max_size(200);
+	image_frames_.set_max_size(100);
 	InitSdk();
 }
 
@@ -107,8 +107,7 @@ ImageInfo* FFMpegController::PostImageTask(SwsContext* sws_context, AVFrame* fra
 
 		sws_scale(sws_context, frame->data, frame->linesize, 0, height, output_dst, output_line_size);
 		FreeFrame(frame);
-		image_info = new ImageInfo(timestamp,std::move(*output));
-		delete output;
+		image_info = new ImageInfo(timestamp,output);
 		return image_info;
 	}
 	return nullptr;
@@ -330,7 +329,10 @@ bool FFMpegController::GetImage(ImageInfo*& image_info)
 	if (b_get) {
 		image_info = delay_func();
 		int64_t audio_timestamp = 0;
+		
 		audio_timestamp = audio_player_core_->GetCurrentTimestamp();
+		
+		
 		if (audio_timestamp < 30)
 		{
 			//音频可能还没开始跑，先休息一下
@@ -339,23 +341,29 @@ bool FFMpegController::GetImage(ImageInfo*& image_info)
 		else if (image_info && image_info->timestamp_ > audio_timestamp)
 		{
 			//视频比音频快，则让视频渲染等一会儿再渲染
+			std::cout << "video fast then audio" << std::endl;
 			int64_t sleep_time = image_info->timestamp_ - audio_timestamp;
 			sleep_time = sleep_time > MAX_ADJUST_TIME ? MAX_ADJUST_TIME + normal_wait_time : sleep_time + normal_wait_time;
 			if (sleep_time > 0)
 			{
-				Sleep(sleep_time);
+				std::this_thread::sleep_for(std::chrono::milliseconds(sleep_time));
 			}
 			return true;
 		}
 		else if (image_info && image_info->timestamp_ < audio_timestamp)
 		{
+			//std::cout << "audio fast then video" << std::endl;
 			//视频比音频慢，则让视频渲染加快
 			int sub_time = audio_timestamp - image_info->timestamp_;
 			sub_time = sub_time > MAX_ADJUST_TIME ? MAX_ADJUST_TIME : sub_time;
 			normal_wait_time -= sub_time;
 			if(normal_wait_time > 0)
 			{
-				Sleep(normal_wait_time);
+				int64_t start_time = time_util::GetCurrentTimeMst();
+				std::cout << "prepare:" << normal_wait_time<<" ";
+				std::this_thread::sleep_for(std::chrono::milliseconds(normal_wait_time));
+				int64_t end_time = time_util::GetCurrentTimeMst();
+				std::cout << end_time - start_time << std::endl;
 			}
 			return true;
 		}

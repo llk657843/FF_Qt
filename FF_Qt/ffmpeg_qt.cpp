@@ -90,8 +90,9 @@ void FFMpegQt::ShowImage(ImageInfo* image_info)
 	{
 		return;
 	}
-	ui->lb_movie->setPixmap(QPixmap::fromImage(image_info->image_));
+	ui->lb_movie->setPixmap(QPixmap::fromImage(*image_info->image_));
 	repaint();
+	delete image_info->image_;
 	delete image_info;
 }
 

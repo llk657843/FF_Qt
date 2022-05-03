@@ -1,4 +1,6 @@
 #include "player_controller.h"
+
+#include <iostream>
 #include <qaudio.h>
 #include "../view_callback/view_callback.h"
 #include "../FFmpeg/ffmpeg_controller.h"
@@ -79,14 +81,18 @@ void PlayerController::SlotStartLoop()
 {
 	auto task = weak_flag_.ToWeakCallback([=]()
 		{
+			int64_t start_time = 0; 
 			if (ffmpeg_control_)
 			{
 				ImageInfo* image_info = nullptr;
+				start_time = time_util::GetCurrentTimeMst();
 				if (ffmpeg_control_->GetImage(image_info) != false)
 				{
 					ViewCallback::GetInstance()->NotifyImageInfoCallback(image_info);
 				}
 			}
+			int64_t end_time = time_util::GetCurrentTimeMst();
+			std::cout << end_time - start_time << std::endl;
 			std::unique_lock<std::mutex> lock(pause_mutex_);
 			if (bool_flag_)
 			{
