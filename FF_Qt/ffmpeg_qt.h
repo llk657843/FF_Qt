@@ -6,7 +6,8 @@
 #include <QWidget>
 
 #include "base_util/weak_callback.h"
-#include "FFmpeg/ffmpeg_controller.h"
+
+class ImageInfo;
 
 namespace Ui
 {
@@ -14,22 +15,13 @@ namespace Ui
 }
 class FFMpegQt : public QWidget,public SupportWeakCallback
 {
-	Q_OBJECT
 public:
 	FFMpegQt(QWidget* wid = nullptr);
 	~FFMpegQt();
 
-signals:
-	void SignalImage(ImageInfo* image);
-	
-
 private:
 	void OnModifyUI();
 	void RegisterSignals();
-
-private slots:
-	void SlotImage(ImageInfo*);
-
 
 private:
 	void SlotStartClicked();
@@ -38,11 +30,14 @@ private:
 	void SlotStop();
 
 	void StartLoopRender();
-	
+	void ShowTime(int64_t time);
+	void ShowImage(ImageInfo*);
+
+	QString GetTimeString(int64_t time_seconds);
 
 private:
 	Ui::FFMpegQtFormUI* ui;
 	int lb_width_;
 	int lb_height_;
-	
+	int64_t all_time_;
 };

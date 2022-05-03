@@ -1,13 +1,18 @@
 #pragma once
 #include <functional>
 #include <qaudio.h>
+#include <QObject>
 
 #include "../base_util/singleton.h"
+class ImageInfo;
 using AudioStateCallback = std::function<void(QAudio::State)>;
 //unused
 using OpenDoneCallback = std::function<void()>;
-class ViewCallback
+using ImageInfoCallback = std::function<void(ImageInfo*)>;
+using TimeCallback = std::function<void(int64_t timestamp)>;
+class ViewCallback : public QObject
 {
+	Q_OBJECT
 public:
 	ViewCallback();
 	~ViewCallback();
@@ -16,6 +21,27 @@ public:
 	void RegAudioStateCallback(std::shared_ptr<AudioStateCallback>);
 	void NotifyAudioStateCallback(QAudio::State);
 
+	void RegImageInfoCallback(ImageInfoCallback image_info_cb);
+	/**
+	 * \brief 会将消息转到主线程使用
+	 */
+	void NotifyImageInfoCallback(ImageInfo*);
+
+
+	void RegTimeCallback(TimeCallback time_cb);
+	void NotifyTimeCallback(int64_t timestamp);
+
+signals:
+	void SignalImageInfo(ImageInfo*);
+	void SignalTimeUpdate(int64_t);
+
+private slots:
+	void SlotImageInfo(ImageInfo*);
+	void SlotTimeUpdate(int64_t);
+
 private:
 	std::list<std::weak_ptr<AudioStateCallback>> audio_start_callbacks_;
+	ImageInfoCallback image_info_callback_;
+	TimeCallback time_cb_;
+	int64_t last_cb_time_;
 };

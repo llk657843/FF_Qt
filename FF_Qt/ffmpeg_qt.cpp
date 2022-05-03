@@ -2,6 +2,7 @@
 #include <iostream>
 #include "Thread/thread_pool_entrance.h"
 #include "ui_ffmpeg_qt.h"
+#include "player_controller/player_controller.h"
 #include "view_callback/view_callback.h"
 
 FFMpegQt::FFMpegQt(QWidget* wid) : QWidget(wid),ui(new Ui::FFMpegQtFormUI)
@@ -29,38 +30,43 @@ void FFMpegQt::OnModifyUI()
 void FFMpegQt::RegisterSignals()
 {
 	connect(ui->btn_start, &QPushButton::clicked, this, &FFMpegQt::SlotStartClicked);
-	connect(this, SIGNAL(SignalImage(ImageInfo*)), this, SLOT(SlotImage(ImageInfo*)));
-	connect(ui->btn_resume,&QPushButton::clicked,this,&FFMpegQt::SlotResume);
-	connect(ui->btn_pause, &QPushButton::clicked,this,&FFMpegQt::SlotPause);
-	connect(ui->btn_stop,&QPushButton::clicked,this,&FFMpegQt::SlotStop);
-}
+	connect(ui->btn_resume, &QPushButton::clicked, this, &FFMpegQt::SlotResume);
+	connect(ui->btn_pause, &QPushButton::clicked, this, &FFMpegQt::SlotPause);
+	connect(ui->btn_stop, &QPushButton::clicked, this, &FFMpegQt::SlotStop);
 
-void FFMpegQt::SlotImage(ImageInfo* info)
-{
-	if(!info)
-	{
-		return;
-	}
-	int64_t start_time = time_util::GetCurrentTimeMst();
-	ui->lb_movie->setPixmap(QPixmap::fromImage(info->image_));
-	repaint();
-	delete info;
+
+	auto image_cb = ToWeakCallback([=](ImageInfo* image_info)
+		{
+		//ui thread
+			ShowImage(image_info);
+		});
+
+	ViewCallback::GetInstance()->RegImageInfoCallback(image_cb);
+
+
+	auto time_cb = ToWeakCallback([=](int64_t timestamp) {
+		//ui thread
+		ShowTime(timestamp);
+		});
+
+	ViewCallback::GetInstance()->RegTimeCallback(time_cb);
 }
 
 
 void FFMpegQt::SlotStartClicked()
 {
-	
+	PlayerController::GetInstance()->Open();
+	PlayerController::GetInstance()->Start();
 }
 
 void FFMpegQt::SlotResume()
 {
-	std::cout << "Warning,function empty!" << std::endl;
+	PlayerController::GetInstance()->Resume();
 }
 
 void FFMpegQt::SlotPause()
 {
-	
+	PlayerController::GetInstance()->Pause();
 }
 
 void FFMpegQt::SlotStop()
@@ -70,4 +76,30 @@ void FFMpegQt::SlotStop()
 void FFMpegQt::StartLoopRender()
 {
 
+}
+
+void FFMpegQt::ShowTime(int64_t time)
+{
+	int64_t sec = time * 0.001;
+	ui->lb_time->setText(GetTimeString(sec));
+}
+
+void FFMpegQt::ShowImage(ImageInfo* image_info)
+{
+	if (!image_info)
+	{
+		return;
+	}
+	ui->lb_movie->setPixmap(QPixmap::fromImage(image_info->image_));
+	repaint();
+	delete image_info;
+}
+
+QString FFMpegQt::GetTimeString(int64_t time_seconds)
+{
+	QString res_string;
+	int64_t show_sec = time_seconds % 60;
+	int64_t show_min = time_seconds / 60;
+	res_string = QString::number(show_min) +":"+QString::number(show_sec);
+	return res_string;
 }

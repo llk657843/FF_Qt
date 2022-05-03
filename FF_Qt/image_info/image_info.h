@@ -38,7 +38,10 @@ public:
 		return *this;
 	}
 
-	~ImageInfo() {}
+	~ImageInfo()
+	{
+		
+	}
 
 
 public:

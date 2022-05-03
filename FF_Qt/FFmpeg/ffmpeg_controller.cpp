@@ -254,46 +254,70 @@ void FFMpegController::InitSdk()
 	av_register_all();
 }
 
-void FFMpegController::Parse(bool b_internal)
+void FFMpegController::Parse(AVFormatContext*& context,bool b_internal)
 {
 	if(path_.empty())
 	{
 		CallFail(-1,"media path empty");
 	}
+	if(context)
+	{
+		return;
+	}
 
-	int res = avformat_open_input(&format_context_, path_.c_str(),av_input_,NULL);
+	int res = avformat_open_input(&context, path_.c_str(),av_input_,NULL);
 	if(res != 0)
 	{
 		CallFail(res,"avformat open input failed");
 		return;
 	}
 
-	res = avformat_find_stream_info(format_context_,NULL);
+	res = avformat_find_stream_info(context,NULL);
 	if(res != 0)
 	{
 		CallFail(res,"find stream info failed");
 		return;
 	}
-	int64_t dur = format_context_->duration;
+	int64_t dur = context->duration;
 	printf("Parse completed,duration :%lld\n", dur);
-	av_dump_format(format_context_, NULL, path_.c_str(), 0);
+	av_dump_format(context, NULL, path_.c_str(), 0);
 
 	//外部查询，则查完了就关掉
 	if (!b_internal) 
 	{
-		Close();
+		if (context)
+		{
+			avformat_free_context(context);
+			context = nullptr;
+		}
+	}
+}
+
+void FFMpegController::PauseAudio()
+{
+	if(audio_player_core_)
+	{
+		audio_player_core_->Pause();
+	}
+}
+
+void FFMpegController::ResumeAudio()
+{
+	if(audio_player_core_)
+	{
+		audio_player_core_->Resume();
 	}
 }
 
 void FFMpegController::AsyncOpen()
 {
-	Parse(true);
+	Parse(format_context_,true);
 	InitAudioPlayerCore();
+	audio_player_core_->Play();
 	auto video_task = [=]()
 	{
 		DecodeAll();
 	};
-	audio_player_core_->Play();
 	qtbase::Post2Task(kThreadDecoder, video_task);
 }
 

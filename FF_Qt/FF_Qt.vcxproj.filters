@@ -80,13 +80,16 @@
     </QtUic>
   </ItemGroup>
   <ItemGroup>
-    <QtMoc Include="ffmpeg_qt.h">
-      <Filter>Header Files</Filter>
-    </QtMoc>
     <QtMoc Include="AudioQt\audio_qt.h">
       <Filter>Header Files</Filter>
     </QtMoc>
     <QtMoc Include="player_controller\player_controller.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="base_util\closure.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="view_callback\view_callback.h">
       <Filter>Header Files</Filter>
     </QtMoc>
   </ItemGroup>
@@ -130,10 +133,13 @@
     <ClInclude Include="image_info\image_info.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="view_callback\view_callback.h">
+    <ClInclude Include="time_strategy\time_base_define.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="time_strategy\time_base_define.h">
+    <ClInclude Include="base_util\guard_ptr.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ffmpeg_qt.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

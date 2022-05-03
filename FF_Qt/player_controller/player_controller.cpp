@@ -4,15 +4,20 @@
 #include "../FFmpeg/ffmpeg_controller.h"
 #include "../Thread/thread_pool_entrance.h"
 #include "../time_strategy/time_base_define.h"
+#include "../base_util/guard_ptr.h"
 PlayerController::PlayerController()
 {
 	ffmpeg_control_ = std::make_unique<FFMpegController>();
+	bool_flag_ = false;
 	connect(this, SIGNAL(SignalStartLoop()), this, SLOT(SlotStartLoop()));
 	connect(this, SIGNAL(SignalStopLoop()), this, SLOT(SlotStopLoop()));
+	InitCallbacks();
 }
 
 PlayerController::~PlayerController()
 {
+	bool_flag_ = false;
+	cv_pause_.notify_one();
 }
 
 void PlayerController::InitCallbacks()
@@ -54,6 +59,22 @@ bool PlayerController::IsRunning()
 	return false;
 }
 
+void PlayerController::Pause()
+{
+	bool_flag_ = true;
+	ffmpeg_control_->PauseAudio();
+}
+
+void PlayerController::Resume()
+{
+	if (bool_flag_) 
+	{
+		ffmpeg_control_->ResumeAudio();
+		bool_flag_ = false;
+		cv_pause_.notify_one();
+	}
+}
+
 void PlayerController::SlotStartLoop()
 {
 	auto task = weak_flag_.ToWeakCallback([=]()
@@ -63,11 +84,15 @@ void PlayerController::SlotStartLoop()
 				ImageInfo* image_info = nullptr;
 				if (ffmpeg_control_->GetImage(image_info) != false)
 				{
-					//emit SignalImage(image_info);
+					ViewCallback::GetInstance()->NotifyImageInfoCallback(image_info);
 				}
 			}
+			std::unique_lock<std::mutex> lock(pause_mutex_);
+			if (bool_flag_)
+			{
+				cv_pause_.wait(lock);
+			}
 		});
-
 	qtbase::Post2RepeatedTask(kThreadVideoRender, task, std::chrono::milliseconds(BASE_SLEEP_TIME));
 }
 

@@ -5,12 +5,11 @@
 #include "../base_util/singleton.h"
 #include "QObject"
 #include "../base_util/weak_callback.h"	
-class FFMpegController;
-
+#include "../FFmpeg/ffmpeg_controller.h"
 class PlayerController:public QObject,public SupportWeakCallback
 {
-public:
 	Q_OBJECT
+public:
 	PlayerController();
 	~PlayerController();
 	SINGLETON_DEFINE(PlayerController);
@@ -18,6 +17,8 @@ public:
 	bool Start();
 	bool Open();
 	bool IsRunning();
+	void Pause();
+	void Resume();
 
 signals:
 	void SignalStartLoop();
@@ -31,4 +32,7 @@ private:
 	std::unique_ptr<FFMpegController> ffmpeg_control_;
 	std::shared_ptr<std::function<void(QAudio::State)>> audio_state_cb_;
 	WeakCallbackFlag weak_flag_;
+	std::condition_variable_any cv_pause_;
+	std::mutex pause_mutex_;
+	std::atomic_bool bool_flag_;
 };

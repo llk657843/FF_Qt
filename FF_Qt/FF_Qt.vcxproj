@@ -116,12 +116,14 @@
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <QtMoc Include="ffmpeg_qt.h" />
+    <ClInclude Include="ffmpeg_qt.h" />
   </ItemGroup>
   <ItemGroup>
     <QtMoc Include="player_controller\player_controller.h" />
+    <QtMoc Include="base_util\closure.h" />
+    <ClInclude Include="base_util\guard_ptr.h" />
     <ClInclude Include="time_strategy\time_base_define.h" />
-    <ClInclude Include="view_callback\view_callback.h" />
+    <QtMoc Include="view_callback\view_callback.h" />
     <QtMoc Include="AudioQt\audio_qt.h" />
     <ClInclude Include="AudioQt\audio_io_device.h" />
     <ClInclude Include="Audio\bytes_list.h" />

@@ -16,6 +16,8 @@ public:
 	void Play();
 	void WriteByteArray(QByteArray&,int64_t timestamp);
 	int64_t GetCurrentTimestamp();
+	void Pause();
+	void Resume();
 
 signals:
 	void SignalStart();

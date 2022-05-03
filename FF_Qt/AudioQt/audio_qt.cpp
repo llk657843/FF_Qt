@@ -91,3 +91,19 @@ int64_t AudioPlayerCore::GetCurrentTimestamp()
 	}
 	return 0;
 }
+
+void AudioPlayerCore::Pause()
+{
+	if(output_)
+	{
+		output_->suspend();
+	}
+}
+
+void AudioPlayerCore::Resume()
+{
+	if(output_)
+	{
+		output_->resume();
+	}
+}

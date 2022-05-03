@@ -58,7 +58,10 @@ public:
 	
 	void Init(const std::string& path = "");
 	void RegFailCallback(FailCallback fail_cb);
-	void Parse(bool b_internal = false);
+	void Parse(AVFormatContext*&,bool b_internal = false);
+	void PauseAudio();
+	void ResumeAudio();
+
 	void AsyncOpen();
 	bool GetImage(ImageInfo*& image);
 
