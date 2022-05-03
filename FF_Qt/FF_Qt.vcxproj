@@ -100,7 +100,7 @@
     <ClCompile Include="AudioQt\audio_io_device.cpp" />
     <ClCompile Include="AudioQt\audio_qt.cpp" />
     <ClCompile Include="Audio\bytes_list.cpp" />
-    <ClCompile Include="image_info\image_info.cpp" />
+    <ClCompile Include="player_controller\player_controller.cpp" />
     <ClCompile Include="Thread\pending_task.cpp" />
     <ClCompile Include="Thread\threadsafe_queue.cpp" />
     <ClCompile Include="Thread\thread_pool.cpp" />
@@ -119,6 +119,7 @@
     <QtMoc Include="ffmpeg_qt.h" />
   </ItemGroup>
   <ItemGroup>
+    <QtMoc Include="player_controller\player_controller.h" />
     <ClInclude Include="time_strategy\time_base_define.h" />
     <ClInclude Include="view_callback\view_callback.h" />
     <QtMoc Include="AudioQt\audio_qt.h" />

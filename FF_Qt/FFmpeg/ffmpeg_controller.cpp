@@ -294,7 +294,7 @@ void FFMpegController::AsyncOpen()
 		DecodeAll();
 	};
 	audio_player_core_->Play();
-	qtbase::Post2Task(kThreadVideoDecoder, video_task);
+	qtbase::Post2Task(kThreadDecoder, video_task);
 }
 
 bool FFMpegController::GetImage(ImageInfo*& image_info)

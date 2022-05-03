@@ -67,10 +67,10 @@
     <ClCompile Include="Audio\bytes_list.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="image_info\image_info.cpp">
+    <ClCompile Include="view_callback\view_callback.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="view_callback\view_callback.cpp">
+    <ClCompile Include="player_controller\player_controller.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -84,6 +84,9 @@
       <Filter>Header Files</Filter>
     </QtMoc>
     <QtMoc Include="AudioQt\audio_qt.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="player_controller\player_controller.h">
       <Filter>Header Files</Filter>
     </QtMoc>
   </ItemGroup>

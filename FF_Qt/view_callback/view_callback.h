@@ -4,6 +4,8 @@
 
 #include "../base_util/singleton.h"
 using AudioStateCallback = std::function<void(QAudio::State)>;
+//unused
+using OpenDoneCallback = std::function<void()>;
 class ViewCallback
 {
 public:

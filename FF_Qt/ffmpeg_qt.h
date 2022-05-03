@@ -21,28 +21,28 @@ public:
 
 signals:
 	void SignalImage(ImageInfo* image);
-	void SignalStartLoop();
-	void SignalStopLoop();
+	
 
 private:
 	void OnModifyUI();
+	void RegisterSignals();
 
 private slots:
 	void SlotImage(ImageInfo*);
-	void SlotStartLoop();
-	void SlotStopLoop();
+
 
 private:
 	void SlotStartClicked();
-	void InsertImage(QImage* image_ptr);
-	void ReadImage();
+	void SlotResume();
+	void SlotPause();
+	void SlotStop();
+
 	void StartLoopRender();
+	
 
 private:
 	Ui::FFMpegQtFormUI* ui;
 	int lb_width_;
 	int lb_height_;
-	std::unique_ptr<FFMpegController> ffmpeg_control_;
-	std::shared_ptr<std::function<void(QAudio::State)>> audio_state_cb_;
-	WeakCallbackFlag weak_flag_;
+	
 };

@@ -8,6 +8,7 @@ int main(int argc, char* argv[])
 {
     QApplication a(argc, argv);
     ThreadPool::GetInstance();
+    qRegisterMetaType<ImageInfo*>("ImageInfo*");
     FFMpegQt* wid = new FFMpegQt;
     wid->show();
 	a.exec();
