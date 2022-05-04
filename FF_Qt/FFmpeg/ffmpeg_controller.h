@@ -95,4 +95,6 @@ private:
 	OpenDoneCallback open_done_callback_;
 	AudioPlayerCore* audio_player_core_;
 	int frame_time_;
+	std::condition_variable cv_;
+	std::mutex mutex_;
 };

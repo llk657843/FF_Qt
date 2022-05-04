@@ -1,9 +1,12 @@
 #include "ffmpeg_qt.h"
 #include <iostream>
+#include <windows.h>
+
 #include "Thread/thread_pool_entrance.h"
 #include "ui_ffmpeg_qt.h"
 #include "player_controller/player_controller.h"
 #include "view_callback/view_callback.h"
+#include "QTimer"
 
 FFMpegQt::FFMpegQt(QWidget* wid) : QWidget(wid),ui(new Ui::FFMpegQtFormUI)
 {
@@ -11,7 +14,6 @@ FFMpegQt::FFMpegQt(QWidget* wid) : QWidget(wid),ui(new Ui::FFMpegQtFormUI)
 	setAttribute(Qt::WA_DeleteOnClose);
 	lb_width_ = 0;
 	lb_height_ = 0;
-
 	OnModifyUI();
 	RegisterSignals();
 }
@@ -20,6 +22,7 @@ FFMpegQt::~FFMpegQt()
 {
 	delete ui;
 	ui = nullptr;
+	//thread_.exit();
 }
 
 void FFMpegQt::OnModifyUI()
@@ -71,6 +74,7 @@ void FFMpegQt::SlotPause()
 
 void FFMpegQt::SlotStop()
 {
+	thread_.Run();
 }
 
 void FFMpegQt::StartLoopRender()
@@ -91,7 +95,7 @@ void FFMpegQt::ShowImage(ImageInfo* image_info)
 		return;
 	}
 	ui->lb_movie->setPixmap(QPixmap::fromImage(*image_info->image_));
-	repaint();
+	update();
 	delete image_info->image_;
 	delete image_info;
 }
@@ -103,4 +107,10 @@ QString FFMpegQt::GetTimeString(int64_t time_seconds)
 	int64_t show_min = time_seconds / 60;
 	res_string = QString::number(show_min) +":"+QString::number(show_sec);
 	return res_string;
+}
+
+void FFMpegQt::SlotTimer()
+{
+	int64_t start_time = time_util::GetCurrentTimeMst();
+	std::cout <<  start_time << std::endl;
 }

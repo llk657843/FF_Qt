@@ -19,6 +19,7 @@ PlayerController::PlayerController()
 PlayerController::~PlayerController()
 {
 	bool_flag_ = false;
+	weak_flag_.Cancel();
 	cv_pause_.notify_one();
 }
 
@@ -79,30 +80,37 @@ void PlayerController::Resume()
 
 void PlayerController::SlotStartLoop()
 {
-	auto task = weak_flag_.ToWeakCallback([=]()
+	auto time_out_cb = ToWeakCallback([=]()
 		{
-			int64_t start_time = 0; 
-			if (ffmpeg_control_)
-			{
-				ImageInfo* image_info = nullptr;
-				start_time = time_util::GetCurrentTimeMst();
-				if (ffmpeg_control_->GetImage(image_info) != false)
-				{
-					ViewCallback::GetInstance()->NotifyImageInfoCallback(image_info);
-				}
-			}
-			int64_t end_time = time_util::GetCurrentTimeMst();
-			std::cout << end_time - start_time << std::endl;
-			std::unique_lock<std::mutex> lock(pause_mutex_);
-			if (bool_flag_)
-			{
-				cv_pause_.wait(lock);
-			}
+			SlotMediaTimeout();
 		});
-	qtbase::Post2RepeatedTask(kThreadVideoRender, task, std::chrono::milliseconds(BASE_SLEEP_TIME));
+
+	time_thread_.RegTimeoutCallback(time_out_cb);
+	time_thread_.Run();
 }
 
 void PlayerController::SlotStopLoop()
 {
 	weak_flag_.Cancel();
+}
+
+void PlayerController::SlotMediaTimeout()
+{
+	if (ffmpeg_control_)
+	{
+		ImageInfo* image_info = nullptr;
+		if (ffmpeg_control_->GetImage(image_info) != false)
+		{
+			if (image_info && image_info->delay_time_ms_ > 0)
+			{
+				time_thread_.SetInterval(image_info->delay_time_ms_);
+			}
+			ViewCallback::GetInstance()->NotifyImageInfoCallback(image_info);
+		}
+		if (bool_flag_)
+		{
+			std::unique_lock<std::mutex> lock(pause_mutex_);
+			cv_pause_.wait(lock);
+		}
+	}
 }

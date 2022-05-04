@@ -13,6 +13,7 @@ int main(int argc, char* argv[])
     qRegisterMetaType<std::function<void()>>("std::function<void()>");
     FFMpegQt* wid = new FFMpegQt;
     wid->show();
+    //a.thread()->setPriority(QThread::Priority::HighestPriority);
 	a.exec();
     ThreadPool::GetInstance()->StopAll();
 	return 0;

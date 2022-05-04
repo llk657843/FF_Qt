@@ -164,7 +164,6 @@ void FFMpegController::DecodeCore(VideoDecoderFormat& video_decoder_format, Audi
 				av_frame_free(&frame);
 				continue;
 			}
-			
 			QImage* output = new QImage(video_decoder_format.width_, video_decoder_format.height_, QImage::Format_ARGB32);
 			auto func = [=]()
 			{
@@ -331,8 +330,6 @@ bool FFMpegController::GetImage(ImageInfo*& image_info)
 		int64_t audio_timestamp = 0;
 		
 		audio_timestamp = audio_player_core_->GetCurrentTimestamp();
-		
-		
 		if (audio_timestamp < 30)
 		{
 			//音频可能还没开始跑，先休息一下
@@ -341,35 +338,29 @@ bool FFMpegController::GetImage(ImageInfo*& image_info)
 		else if (image_info && image_info->timestamp_ > audio_timestamp)
 		{
 			//视频比音频快，则让视频渲染等一会儿再渲染
-			std::cout << "video fast then audio" << std::endl;
 			int64_t sleep_time = image_info->timestamp_ - audio_timestamp;
 			sleep_time = sleep_time > MAX_ADJUST_TIME ? MAX_ADJUST_TIME + normal_wait_time : sleep_time + normal_wait_time;
 			if (sleep_time > 0)
 			{
-				std::this_thread::sleep_for(std::chrono::milliseconds(sleep_time));
+				image_info->delay_time_ms_ = sleep_time;
 			}
 			return true;
 		}
 		else if (image_info && image_info->timestamp_ < audio_timestamp)
 		{
-			//std::cout << "audio fast then video" << std::endl;
 			//视频比音频慢，则让视频渲染加快
 			int sub_time = audio_timestamp - image_info->timestamp_;
 			sub_time = sub_time > MAX_ADJUST_TIME ? MAX_ADJUST_TIME : sub_time;
 			normal_wait_time -= sub_time;
-			if(normal_wait_time > 0)
+			if (normal_wait_time > 0)
 			{
-				int64_t start_time = time_util::GetCurrentTimeMst();
-				std::cout << "prepare:" << normal_wait_time<<" ";
-				std::this_thread::sleep_for(std::chrono::milliseconds(normal_wait_time));
-				int64_t end_time = time_util::GetCurrentTimeMst();
-				std::cout << end_time - start_time << std::endl;
+				image_info->delay_time_ms_ = normal_wait_time;
 			}
 			return true;
 		}
 		else if(image_info && image_info->timestamp_ <= audio_timestamp)
 		{
-			Sleep(normal_wait_time);
+			image_info->delay_time_ms_ = normal_wait_time;
 			return true;
 		}
 		else

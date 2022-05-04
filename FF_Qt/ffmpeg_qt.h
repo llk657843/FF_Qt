@@ -6,6 +6,7 @@
 #include <QWidget>
 
 #include "base_util/weak_callback.h"
+#include "player_controller/high_ratio_time_thread.h"
 
 class ImageInfo;
 
@@ -15,6 +16,7 @@ namespace Ui
 }
 class FFMpegQt : public QWidget,public SupportWeakCallback
 {
+	Q_OBJECT
 public:
 	FFMpegQt(QWidget* wid = nullptr);
 	~FFMpegQt();
@@ -35,9 +37,14 @@ private:
 
 	QString GetTimeString(int64_t time_seconds);
 
+private slots:
+	void SlotTimer();
+
+
 private:
 	Ui::FFMpegQtFormUI* ui;
 	int lb_width_;
 	int lb_height_;
 	int64_t all_time_;
+	HighRatioTimeThread thread_;
 };
