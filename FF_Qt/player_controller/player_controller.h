@@ -24,6 +24,7 @@ public:
 	bool IsRunning();
 	void Pause();
 	void Resume();
+	void SeekTime(int64_t seek_time);
 
 signals:
 	void SignalStartLoop();

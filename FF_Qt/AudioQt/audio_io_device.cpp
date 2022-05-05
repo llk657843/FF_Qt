@@ -33,3 +33,9 @@ int64_t AudioIoDevice::GetCurrentTimeStamp() const
 {
 	return current_read_timestamp_ + DURATION;
 }
+
+void AudioIoDevice::Clear()
+{
+	current_read_timestamp_ = 0;
+	bytes_list_.Clear();
+}

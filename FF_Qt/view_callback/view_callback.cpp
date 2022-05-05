@@ -5,6 +5,7 @@ ViewCallback::ViewCallback()
 	last_cb_time_ = 0;
 	image_info_callback_ = nullptr;
 	time_cb_ = nullptr;
+	parse_done_callback_ = nullptr;
 	connect(this,SIGNAL(SignalImageInfo(ImageInfo*)),this,SLOT(SlotImageInfo(ImageInfo*)));
 	connect(this,SIGNAL(SignalTimeUpdate(int64_t)),this,SLOT(SlotTimeUpdate(int64_t)));
 }
@@ -62,6 +63,19 @@ void ViewCallback::NotifyTimeCallback(int64_t timestamp)
 	}
 	last_cb_time_ = timestamp;
 	emit SignalTimeUpdate(timestamp);
+}
+
+void ViewCallback::RegParseDoneCallback(ParseDoneCallback parse_done)
+{
+	parse_done_callback_ = parse_done;
+}
+
+void ViewCallback::NotifyParseDone(int64_t duration)
+{
+	if(parse_done_callback_)
+	{
+		parse_done_callback_(duration);
+	}
 }
 
 void ViewCallback::SlotImageInfo(ImageInfo* image_info)

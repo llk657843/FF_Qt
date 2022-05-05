@@ -30,21 +30,16 @@ private:
 	void SlotResume();
 	void SlotPause();
 	void SlotStop();
+	void SlotSliderPress();
+	void SlotSliderMove(int);
 
-	void StartLoopRender();
 	void ShowTime(int64_t time);
 	void ShowImage(ImageInfo*);
-
 	QString GetTimeString(int64_t time_seconds);
-
-private slots:
-	void SlotTimer();
-
 
 private:
 	Ui::FFMpegQtFormUI* ui;
 	int lb_width_;
 	int lb_height_;
-	int64_t all_time_;
-	HighRatioTimeThread thread_;
+	int64_t total_time_s_;
 };

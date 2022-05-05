@@ -18,6 +18,8 @@ public:
 	int64_t GetCurrentTimestamp();
 	void Pause();
 	void Resume();
+	bool IsPaused();
+	void Clear();
 
 signals:
 	void SignalStart();

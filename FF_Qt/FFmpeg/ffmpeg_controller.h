@@ -45,11 +45,12 @@ using FailCallback = std::function<void(int code,const std::string& msg)>;
 using ImageCallback = std::function<void(QImage* image)>;
 using OpenDoneCallback = std::function<void()>;
 using DelayFunc = std::function<ImageInfo*(void)>;
+
 class AVFormatContext;
 class AVInputFormat;
 class SwsContext;
 class AVFrame;
-
+class AVPacket;
 class FFMpegController
 {
 public:
@@ -60,9 +61,15 @@ public:
 	void RegFailCallback(FailCallback fail_cb);
 	void Parse(AVFormatContext*&,bool b_internal = false);
 	void PauseAudio();
+	bool IsPaused();
+	void Seek(int64_t seek_time);
+
 	void ResumeAudio();
+	void ClearCache();
 
 	void AsyncOpen();
+
+
 	bool GetImage(ImageInfo*& image);
 
 	void RegImageCallback(ImageCallback image_cb);
@@ -83,7 +90,7 @@ private:
 	void InitAudioDecoderFormat(AudioDecoderFormat& audio_decoder);
 
 	void DecodeCore(VideoDecoderFormat&,AudioDecoderFormat&);
-
+	bool ThreadSafeReadFrame(AVPacket*&);
 
 private:
 	std::string path_;
@@ -94,7 +101,7 @@ private:
 	thread_safe_queue<DelayFunc> image_frames_;
 	OpenDoneCallback open_done_callback_;
 	AudioPlayerCore* audio_player_core_;
+
 	int frame_time_;
-	std::condition_variable cv_;
-	std::mutex mutex_;
+	std::mutex read_packet_mutex_;
 };

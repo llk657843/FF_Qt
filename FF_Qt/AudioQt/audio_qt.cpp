@@ -107,3 +107,20 @@ void AudioPlayerCore::Resume()
 		output_->resume();
 	}
 }
+
+bool AudioPlayerCore::IsPaused()
+{
+	if(output_)
+	{
+		return output_->state() == QAudio::State::SuspendedState;
+	}
+	return true;
+}
+
+void AudioPlayerCore::Clear()
+{
+	if(io_)
+	{
+		io_->Clear();
+	}
+}

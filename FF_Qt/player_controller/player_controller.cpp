@@ -78,6 +78,28 @@ void PlayerController::Resume()
 	}
 }
 
+void PlayerController::SeekTime(int64_t seek_time)
+{
+	//lock start
+	if (ffmpeg_control_)
+	{
+		Pause();
+		auto start_time = time_util::GetCurrentTimeMst();
+		while(!ffmpeg_control_->IsPaused())
+		{
+			std::this_thread::yield();
+			auto end_time = time_util::GetCurrentTimeMst();
+			if(end_time - start_time >= 100)
+			{
+				return;
+			}
+		}
+		ffmpeg_control_->ClearCache();
+		ffmpeg_control_->Seek(seek_time);
+	}
+	//lock end
+}
+
 void PlayerController::SlotStartLoop()
 {
 	auto time_out_cb = ToWeakCallback([=]()

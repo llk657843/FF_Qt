@@ -16,6 +16,7 @@ extern "C"
 #include "../Thread/thread_pool_entrance.h"
 #include "../AudioQt/audio_qt.h"
 #include "../time_strategy/time_base_define.h"
+#include "../view_callback/view_callback.h"
 const int MAX_AUDIO_FRAME_SIZE = 48000 * 2 * 16 * 0.125;
 FFMpegController::FFMpegController()
 {
@@ -149,7 +150,7 @@ void FFMpegController::DecodeCore(VideoDecoderFormat& video_decoder_format, Audi
 	AVPacket* packet = (AVPacket*)av_malloc(sizeof(AVPacket));
 	// 设置音频缓冲区间 16bit   44100  PCM数据, 双声道
 	uint8_t* out_buffer = (uint8_t*)av_malloc(MAX_AUDIO_FRAME_SIZE);
-	while (av_read_frame(format_context_, packet) >= 0)
+	while (ThreadSafeReadFrame(packet))
 	{
 		if (packet->stream_index == AVMEDIA_TYPE_VIDEO)
 		{
@@ -194,6 +195,12 @@ void FFMpegController::DecodeCore(VideoDecoderFormat& video_decoder_format, Audi
 		}
 	}
 	av_free(audio_decoder_format.swr_context_);
+}
+
+bool FFMpegController::ThreadSafeReadFrame(AVPacket*& packet)
+{
+	std::lock_guard<std::mutex> lock(read_packet_mutex_);
+	return av_read_frame(format_context_, packet) >= 0;
 }
 
 void FFMpegController::InitAudioDecoderFormat(AudioDecoderFormat& audio_decoder)
@@ -276,8 +283,7 @@ void FFMpegController::Parse(AVFormatContext*& context,bool b_internal)
 		CallFail(res,"find stream info failed");
 		return;
 	}
-	int64_t dur = context->duration;
-	printf("Parse completed,duration :%lld\n", dur);
+	ViewCallback::GetInstance()->NotifyParseDone(context->duration);
 	av_dump_format(context, NULL, path_.c_str(), 0);
 
 	//外部查询，则查完了就关掉
@@ -299,11 +305,43 @@ void FFMpegController::PauseAudio()
 	}
 }
 
+bool FFMpegController::IsPaused()
+{
+	if (audio_player_core_)
+	{
+		return audio_player_core_->IsPaused();
+	}
+	return true;
+}
+
+void FFMpegController::Seek(int64_t seek_time)
+{
+	std::lock_guard<std::mutex> lock(read_packet_mutex_);
+	auto video_index = av_find_best_stream(format_context_, AVMEDIA_TYPE_VIDEO, -1, -1, NULL, 0);
+
+	//transfer seek time to timebase
+	int64_t time_base_units = seek_time / 1000.0 / av_q2d(format_context_->streams[video_index]->codec->time_base);
+	int res = av_seek_frame(format_context_, video_index, seek_time, AVSEEK_FLAG_BACKWARD);
+	if(res < 0)
+	{
+		CallFail(res,"seek time failed");
+	}
+}
+
 void FFMpegController::ResumeAudio()
 {
 	if(audio_player_core_)
 	{
 		audio_player_core_->Resume();
+	}
+}
+
+void FFMpegController::ClearCache()
+{
+	image_frames_.clear();
+	if(audio_player_core_)
+	{
+		audio_player_core_->Clear();
 	}
 }
 

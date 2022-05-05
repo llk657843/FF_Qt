@@ -70,6 +70,16 @@ public:
 		internal_queue_.pop();
 	}
 
+	void clear()
+	{
+		std::lock_guard<std::shared_mutex> lock(shared_mutex_);
+		while(!is_empty_unlock())
+		{
+			internal_queue_.pop();
+		}
+	}
+
+
 private:
 	bool is_empty_unlock() const
 	{

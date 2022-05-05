@@ -4,7 +4,10 @@
 class ImageInfo
 {
 public:
-	ImageInfo() = default;
+	ImageInfo()
+	{
+		image_ = nullptr;
+	};
 	ImageInfo(int64_t timestamp, QImage* image)
 	{
 		image_ = image;
@@ -15,7 +18,7 @@ public:
 
 	~ImageInfo()
 	{
-		
+		delete image_;
 	}
 
 

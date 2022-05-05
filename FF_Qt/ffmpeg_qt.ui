@@ -67,7 +67,7 @@
        </widget>
       </item>
       <item>
-       <widget class="QSlider" name="slider">
+       <widget class="USlider" name="slider">
         <property name="orientation">
          <enum>Qt::Horizontal</enum>
         </property>
@@ -156,6 +156,13 @@
    </item>
   </layout>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>USlider</class>
+   <extends>QSlider</extends>
+   <header location="global">../../base_ui/uslider.h</header>
+  </customwidget>
+ </customwidgets>
  <resources/>
  <connections/>
 </ui>

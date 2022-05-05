@@ -100,6 +100,7 @@
     <ClCompile Include="AudioQt\audio_io_device.cpp" />
     <ClCompile Include="AudioQt\audio_qt.cpp" />
     <ClCompile Include="Audio\bytes_list.cpp" />
+    <ClCompile Include="base_ui\uslider.cpp" />
     <ClCompile Include="player_controller\high_ratio_time_thread.cpp" />
     <ClCompile Include="player_controller\player_controller.cpp" />
     <ClCompile Include="Thread\pending_task.cpp" />
@@ -122,6 +123,7 @@
   <ItemGroup>
     <QtMoc Include="player_controller\player_controller.h" />
     <QtMoc Include="base_util\closure.h" />
+    <QtMoc Include="base_ui\uslider.h" />
     <ClInclude Include="base_util\guard_ptr.h" />
     <QtMoc Include="player_controller\high_ratio_time_thread.h" />
     <ClInclude Include="time_strategy\time_base_define.h" />

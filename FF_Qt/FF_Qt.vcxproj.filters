@@ -76,6 +76,9 @@
     <ClCompile Include="player_controller\high_ratio_time_thread.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="base_ui\uslider.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="ffmpeg_qt.ui">
@@ -99,6 +102,9 @@
       <Filter>Header Files</Filter>
     </QtMoc>
     <QtMoc Include="player_controller\high_ratio_time_thread.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="base_ui\uslider.h">
       <Filter>Header Files</Filter>
     </QtMoc>
   </ItemGroup>

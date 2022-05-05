@@ -10,6 +10,7 @@ using AudioStateCallback = std::function<void(QAudio::State)>;
 using OpenDoneCallback = std::function<void()>;
 using ImageInfoCallback = std::function<void(ImageInfo*)>;
 using TimeCallback = std::function<void(int64_t timestamp)>;
+using ParseDoneCallback = std::function<void(int64_t duration)>;
 class ViewCallback : public QObject
 {
 	Q_OBJECT
@@ -31,6 +32,9 @@ public:
 	void RegTimeCallback(TimeCallback time_cb);
 	void NotifyTimeCallback(int64_t timestamp);
 
+	void RegParseDoneCallback(ParseDoneCallback);
+	void NotifyParseDone(int64_t duration);
+
 signals:
 	void SignalImageInfo(ImageInfo*);
 	void SignalTimeUpdate(int64_t);
@@ -44,4 +48,5 @@ private:
 	ImageInfoCallback image_info_callback_;
 	TimeCallback time_cb_;
 	int64_t last_cb_time_;
+	ParseDoneCallback parse_done_callback_;
 };
