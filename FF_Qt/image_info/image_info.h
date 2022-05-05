@@ -1,6 +1,6 @@
 #pragma once
-#include <qimage.h>
-
+#include "memory"
+#include "QImage"
 class ImageInfo
 {
 public:
@@ -8,9 +8,9 @@ public:
 	{
 		image_ = nullptr;
 	};
-	ImageInfo(int64_t timestamp, QImage* image)
+	ImageInfo(int64_t timestamp, std::shared_ptr<QImage> image)
 	{
-		image_ = image;
+		image_ = image_;
 		delay_time_ms_ = 0;
 		timestamp_ = timestamp;
 	}
@@ -18,12 +18,12 @@ public:
 
 	~ImageInfo()
 	{
-		delete image_;
+
 	}
 
 
 public:
-	QImage* image_;
+	std::shared_ptr<QImage> image_;
 	int64_t timestamp_;
 	int64_t delay_time_ms_;
 };

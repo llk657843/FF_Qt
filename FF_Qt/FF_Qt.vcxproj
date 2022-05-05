@@ -101,6 +101,8 @@
     <ClCompile Include="AudioQt\audio_qt.cpp" />
     <ClCompile Include="Audio\bytes_list.cpp" />
     <ClCompile Include="base_ui\uslider.cpp" />
+    <ClCompile Include="FFmpeg\audio_decoder.cpp" />
+    <ClCompile Include="FFmpeg\video_decoder.cpp" />
     <ClCompile Include="player_controller\high_ratio_time_thread.cpp" />
     <ClCompile Include="player_controller\player_controller.cpp" />
     <ClCompile Include="Thread\pending_task.cpp" />
@@ -126,6 +128,9 @@
     <QtMoc Include="base_ui\uslider.h" />
     <ClInclude Include="base_util\guard_ptr.h" />
     <QtMoc Include="player_controller\high_ratio_time_thread.h" />
+    <ClInclude Include="FFmpeg\audio_decoder.h" />
+    <ClInclude Include="FFmpeg\image_func_packet.h" />
+    <ClInclude Include="FFmpeg\video_decoder.h" />
     <ClInclude Include="time_strategy\time_base_define.h" />
     <QtMoc Include="view_callback\view_callback.h" />
     <QtMoc Include="AudioQt\audio_qt.h" />

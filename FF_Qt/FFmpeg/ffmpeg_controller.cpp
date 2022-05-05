@@ -26,7 +26,6 @@ FFMpegController::FFMpegController()
 	fail_cb_ = nullptr;
 	image_cb_ = nullptr;
 	audio_player_core_ = nullptr;
-	image_frames_.set_max_size(100);
 	InitSdk();
 }
 
@@ -108,7 +107,7 @@ ImageInfo* FFMpegController::PostImageTask(SwsContext* sws_context, AVFrame* fra
 
 		sws_scale(sws_context, frame->data, frame->linesize, 0, height, output_dst, output_line_size);
 		FreeFrame(frame);
-		image_info = new ImageInfo(timestamp,output);
+		//image_info = new ImageInfo(timestamp);
 		return image_info;
 	}
 	return nullptr;
@@ -195,12 +194,6 @@ void FFMpegController::DecodeCore(VideoDecoderFormat& video_decoder_format, Audi
 		}
 	}
 	av_free(audio_decoder_format.swr_context_);
-}
-
-bool FFMpegController::ThreadSafeReadFrame(AVPacket*& packet)
-{
-	std::lock_guard<std::mutex> lock(read_packet_mutex_);
-	return av_read_frame(format_context_, packet) >= 0;
 }
 
 void FFMpegController::InitAudioDecoderFormat(AudioDecoderFormat& audio_decoder)
@@ -348,6 +341,8 @@ void FFMpegController::ClearCache()
 void FFMpegController::AsyncOpen()
 {
 	Parse(format_context_,true);
+	video_decoder_.Init(format_context_);
+
 	InitAudioPlayerCore();
 	audio_player_core_->Play();
 	auto video_task = [=]()

@@ -2,27 +2,13 @@
 #include <functional>
 #include <qimage.h>
 #include <string>
+
+#include "video_decoder.h"
 #include "../image_info/image_info.h"
 #include "../Thread/threadsafe_queue.h"
 class SwsContext;
 class AVCodecContext;
 class SwrContext;
-struct VideoDecoderFormat
-{
-	VideoDecoderFormat()
-	{
-		video_stream_index_ = 0;
-		width_ = 0;
-		height_ = 0;
-		context_ = nullptr;
-		codec_context_ = nullptr;
-	}
-	int video_stream_index_;
-	SwsContext* context_;	//read only;
-	int width_;
-	int height_;
-	AVCodecContext* codec_context_;
-};
 
 struct AudioDecoderFormat
 {
@@ -86,11 +72,9 @@ private:
 	void FreeFrame(AVFrame* ptr);
 
 	void DecodeAll();
-	void InitVideoDecoderFormat(VideoDecoderFormat& video_decoder);
 	void InitAudioDecoderFormat(AudioDecoderFormat& audio_decoder);
 
 	void DecodeCore(VideoDecoderFormat&,AudioDecoderFormat&);
-	bool ThreadSafeReadFrame(AVPacket*&);
 
 private:
 	std::string path_;
@@ -98,10 +82,7 @@ private:
 	AVInputFormat* av_input_;
 	AVFormatContext* format_context_;
 	ImageCallback image_cb_;
-	thread_safe_queue<DelayFunc> image_frames_;
 	OpenDoneCallback open_done_callback_;
 	AudioPlayerCore* audio_player_core_;
-
-	int frame_time_;
-	std::mutex read_packet_mutex_;
+	VideoDecoder video_decoder_;
 };
