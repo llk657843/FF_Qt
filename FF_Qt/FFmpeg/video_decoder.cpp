@@ -11,7 +11,7 @@ extern "C"
 }
 VideoDecoder::VideoDecoder()
 {
-    format_context_ = nullptr;
+    codec_context_ = nullptr;
     video_stream_id_ = 0;
     frame_time_ = 0;
     width_ = 0;
@@ -22,60 +22,68 @@ VideoDecoder::VideoDecoder()
 
 VideoDecoder::~VideoDecoder()
 {
-    avformat_free_context(format_context_);
+    avformat_free_context(decoder_);
 }
 
-bool VideoDecoder::Init(AVFormatContext* av_context)
+bool VideoDecoder::Init(const std::string& path)
 {
-    video_stream_id_ = av_find_best_stream(av_context, AVMEDIA_TYPE_VIDEO, -1, -1, NULL, 0);
+    bool b_success = PrepareDeocde(path);
+    if(!b_success)
+    {
+        return b_success;
+    }
+    video_stream_id_ = av_find_best_stream(decoder_, AVMEDIA_TYPE_VIDEO, -1, -1, NULL, 0);
     //解码器上下文copy
-    AVCodecParameters* codec_param = av_context->streams[video_stream_id_]->codecpar;
-    if(!codec_param)
+    AVCodecParameters* codec_param = decoder_->streams[video_stream_id_]->codecpar;
+    if (!codec_param)
     {
         return false;
     }
     //创建编码器上下文
-    AVCodecContext* codec_ctx = avcodec_alloc_context3(av_context->video_codec);
+    AVCodecContext* codec_ctx = avcodec_alloc_context3(decoder_->video_codec);
     if (!codec_ctx) {
         return false;
     }
-   
+
     //复制编码参数到上下文中
     int ret = avcodec_parameters_to_context(codec_ctx, codec_param);
-    if (ret != 0) 
+    if (ret != 0)
     {
         return false;
     }
     time_base_ = codec_ctx->time_base;
     width_ = codec_ctx->width;
     height_ = codec_ctx->height;
+    frame_time_ = 1000.0 / decoder_->streams[video_stream_id_]->avg_frame_rate.num;
     //打开编码器
-    ret = avcodec_open2(codec_ctx, nullptr, nullptr);
+    auto codec_p = avcodec_find_decoder(codec_ctx->codec_id);
+    ret = avcodec_open2(codec_ctx, codec_p, nullptr);
     if (ret != 0) {
         return false;
     }
     sws_context_ = sws_getContext(width_, height_, codec_ctx->pix_fmt, width_, height_, AVPixelFormat::AV_PIX_FMT_RGB32, SWS_BICUBIC, NULL, NULL, NULL);
-    if(!sws_context_)
+    if (!sws_context_)
     {
         return false;
     }
-	return true;
+    return true;
 }
 
-void VideoDecoder::Run()
+
+bool VideoDecoder::Run()
 {
     packet_ = (AVPacket*)av_malloc(sizeof(AVPacket));
-    while(av_read_frame(format_context_, packet_) >= 0)
+    while(av_read_frame(decoder_, packet_) >= 0)
     {
         if (packet_->stream_index == AVMEDIA_TYPE_VIDEO)
         {
-            if (avcodec_send_packet(format_context_->streams[video_stream_id_]->codec, packet_) != 0)
+            if (avcodec_send_packet(codec_context_, packet_) != 0)
             {
                 continue;
             }
 
             AVFrame* frame = av_frame_alloc();
-            if (avcodec_receive_frame(format_context_->streams[video_stream_id_]->codec, frame) != 0)
+            if (avcodec_receive_frame(codec_context_, frame) != 0)
             {
                 av_frame_free(&frame);
                 continue;
@@ -92,6 +100,7 @@ void VideoDecoder::Run()
         }
     }
     av_free(packet_);
+    return true;
 }
 
 ImageInfo* VideoDecoder::PostImageTask(SwsContext* sws_context, AVFrame* frame, int width, int height, int64_t timestamp, std::shared_ptr<QImage> output)

@@ -23,17 +23,6 @@ public:
 		delay_func_ = delay_func;
 	}
 
-	ImageFunc& operator=(ImageFunc&& image_func) noexcept
-	{
-		if (this == &image_func)
-		{
-			return *this;
-		}
-		this->delay_func_ = image_func.delay_func_;
-		this->image_ = std::move(image_func.image_);
-		return *this;
-	}
-
 	ImageFunc& operator=(const ImageFunc& image_func) noexcept
 	{
 		if(this == &image_func)

@@ -3,6 +3,7 @@
 #include <qimage.h>
 #include <string>
 
+#include "audio_decoder.h"
 #include "video_decoder.h"
 #include "../image_info/image_info.h"
 #include "../Thread/threadsafe_queue.h"
@@ -45,7 +46,6 @@ public:
 	
 	void Init(const std::string& path = "");
 	void RegFailCallback(FailCallback fail_cb);
-	void Parse(AVFormatContext*&,bool b_internal = false);
 	void PauseAudio();
 	bool IsPaused();
 	void Seek(int64_t seek_time);
@@ -67,22 +67,17 @@ private:
 	void Close();
 	void CallOpenDone();
 	void InitAudioPlayerCore();
-
 	ImageInfo* PostImageTask(SwsContext*,AVFrame*,int width,int height,int64_t timestamp,QImage* image);
-	void FreeFrame(AVFrame* ptr);
-
 	void DecodeAll();
-	void InitAudioDecoderFormat(AudioDecoderFormat& audio_decoder);
-
-	void DecodeCore(VideoDecoderFormat&,AudioDecoderFormat&);
 
 private:
 	std::string path_;
 	FailCallback fail_cb_;
 	AVInputFormat* av_input_;
-	AVFormatContext* format_context_;
+	//AVFormatContext* format_context_;
 	ImageCallback image_cb_;
 	OpenDoneCallback open_done_callback_;
-	AudioPlayerCore* audio_player_core_;
+
 	VideoDecoder video_decoder_;
+	AudioDecoder audio_decoder_;
 };

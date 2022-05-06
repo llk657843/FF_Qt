@@ -1,6 +1,7 @@
 #pragma once
 #include <list>
 #include <vector>
+#include "base_decoder.h"
 #include "image_func_packet.h"
 #include "../Thread/threadsafe_queue.h"
 extern "C"
@@ -11,20 +12,20 @@ extern "C"
 class AVFormatContext;
 class SwsContext;
 class AVFrame;
-class VideoDecoder
+class VideoDecoder : public BaseDecoder
 {
 public:
 	VideoDecoder();
 	~VideoDecoder();
-	bool Init(AVFormatContext* av_context);
-	void Run();
+	bool Init(const std::string& path) override;
+	bool Run() override;
 
 
 private:
 	ImageInfo* PostImageTask(SwsContext* sws_context, AVFrame* frame, int width, int height, int64_t timestamp, std::shared_ptr<QImage> output);
 
 private:
-	AVFormatContext* format_context_;
+	AVCodecContext* codec_context_;
 	int video_stream_id_;
 	int frame_time_;
 	AVPacket* packet_;
