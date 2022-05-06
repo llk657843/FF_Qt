@@ -12,7 +12,7 @@ public:
 	virtual qint64 readData(char* data, qint64 maxlen) override;
 	virtual qint64 writeData(const char* data, qint64 len) override;
 
-	void Write(QByteArray& bytes,int64_t timestamp);
+	void Write(const QByteArray& bytes,int64_t timestamp);
 	int64_t GetCurrentTimeStamp() const;
 	void Clear();
 

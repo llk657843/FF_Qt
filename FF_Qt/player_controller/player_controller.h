@@ -11,6 +11,8 @@
 #include "QPointer"
 #include "QTimer"
 #include "QThread"
+class VideoDecoder;
+class AudioDecoder;
 class PlayerController:public QObject,public SupportWeakCallback
 {
 	Q_OBJECT
@@ -44,4 +46,6 @@ private:
 	std::atomic_bool bool_flag_;
 
 	HighRatioTimeThread time_thread_;
+
+	VideoDecoder* video_decoder_;
 };

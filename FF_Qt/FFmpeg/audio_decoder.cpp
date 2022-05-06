@@ -1,5 +1,8 @@
 #include "audio_decoder.h"
 #include <qbytearray.h>
+
+#include "../AudioQt/audio_qt.h"
+
 extern "C"
 {
 #include <libavformat/avformat.h>
@@ -8,6 +11,7 @@ extern "C"
 const int MAX_AUDIO_FRAME_SIZE = 48000 * 2 * 16 * 0.125;
 AudioDecoder::AudioDecoder()
 {
+	data_cb_ = nullptr;
 	channel_cnt_ = 0;
 	buffer_.set_max_size(200); //最多含200个缓存，约10秒缓存
 }
@@ -92,9 +96,32 @@ bool AudioDecoder::Run()
 			byte_array.append((char*)out_buffer, out_buffer_size);
 			duration_time = audio_in_frame->best_effort_timestamp * 1000.0 * av_q2d(av_codec_context_->pkt_timebase) ;
 			av_frame_free(&audio_in_frame);
-			buffer_.push_back(AudioUnitParam(std::forward<QByteArray>(byte_array),duration_time));
+			NotifyDataCallback(byte_array,duration_time);
+			//AudioPlayerCore::GetInstance()->WriteByteArray(byte_array, duration_time);
 		}
 	}
 	av_free(packet_);
 	return true;
+}
+
+void AudioDecoder::RegDataCallback(DataCallback cb)
+{
+	data_cb_ = cb;
+}
+
+void AudioDecoder::NotifyDataCallback(const QByteArray& bytes, int64_t timestamp)
+{
+	if(data_cb_)
+	{
+		data_cb_(bytes, timestamp);
+	}
+}
+
+bool AudioDecoder::GetData(AudioUnitParam& audio_unit)
+{
+	if(!buffer_.is_empty_lock())
+	{
+		return buffer_.get_front_read_write(audio_unit);
+	}
+	return false;
 }

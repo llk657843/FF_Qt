@@ -79,6 +79,11 @@ public:
 		}
 	}
 
+	bool is_empty_lock() const
+	{
+		std::shared_lock<std::shared_mutex> lock(shared_mutex_);
+		return internal_queue_.empty();
+	}
 
 private:
 	bool is_empty_unlock() const

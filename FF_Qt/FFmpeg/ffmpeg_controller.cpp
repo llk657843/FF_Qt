@@ -1,9 +1,6 @@
 #include "ffmpeg_controller.h"
-
-#include <iostream>
 #include <qimage.h>
 #include <QThread>
-
 extern "C"
 {
 #include "libavcodec/avcodec.h"
@@ -12,10 +9,6 @@ extern "C"
 #include "libswresample/swresample.h"
 #include "libavutil/imgutils.h"
 }
-#include "windows.h"
-#include "../Thread/thread_pool_entrance.h"
-#include "../AudioQt/audio_qt.h"
-#include "../time_strategy/time_base_define.h"
 #include "../view_callback/view_callback.h"
 const int MAX_AUDIO_FRAME_SIZE = 48000 * 2 * 16 * 0.125;
 FFMpegController::FFMpegController()
@@ -82,7 +75,6 @@ void FFMpegController::DecodeAll()
 {
 	//解析音频相关参数
 	AudioDecoderFormat audio_decoder_format;
-	InitAudioDecoderFormat(audio_decoder_format);
 	//开始解析
 	//DecodeCore(video_decoder_format, audio_decoder_format);
 	//释放资源
@@ -92,38 +84,27 @@ void FFMpegController::DecodeAll()
 ImageInfo* FFMpegController::PostImageTask(SwsContext* sws_context, AVFrame* frame, int width, int height,int64_t timestamp,QImage* output)
 {
 	//kThreadVideoRender
-	ImageInfo* image_info = nullptr;
-	if (frame)
-	{
-		int output_line_size[4];
-		
-		av_image_fill_linesizes(output_line_size, AV_PIX_FMT_ARGB, width);
-		uint8_t* output_dst[] = { output->bits() };
+	//ImageInfo* image_info = nullptr;
+	//if (frame)
+	//{
+	//	int output_line_size[4];
+	//	
+	//	av_image_fill_linesizes(output_line_size, AV_PIX_FMT_ARGB, width);
+	//	uint8_t* output_dst[] = { output->bits() };
 
-		sws_scale(sws_context, frame->data, frame->linesize, 0, height, output_dst, output_line_size);
-		FreeFrame(frame);
-		//image_info = new ImageInfo(timestamp);
-		return image_info;
-	}
+	//	sws_scale(sws_context, frame->data, frame->linesize, 0, height, output_dst, output_line_size);
+	//	FreeFrame(frame);
+	//	//image_info = new ImageInfo(timestamp);
+	//	return image_info;
+	//}
 	return nullptr;
-}
-
-void FFMpegController::FreeFrame(AVFrame* ptr)
-{
-	av_frame_free(&ptr);
-}
-
-
-void FFMpegController::InitAudioDecoderFormat(AudioDecoderFormat& audio_decoder)
-{
-
 }
 
 void FFMpegController::CallFail(int code, const std::string& msg)
 {
 	if(!msg.empty())
 	{
-		std::cout << msg << std::endl;
+		//std::cout << msg << std::endl;
 	}
 	Close();
 	if(fail_cb_)

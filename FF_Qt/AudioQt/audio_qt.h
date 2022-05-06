@@ -3,6 +3,8 @@
 #include <qobject.h>
 #include "../Thread/threadsafe_queue.h"
 #include "../base_util/weak_callback.h"
+#include "../base_util/singleton.h"
+#include "../FFmpeg/audio_decoder.h"
 class AudioIoDevice;
 class QIODevice;
 class QAudioOutput;
@@ -14,7 +16,7 @@ public:
 	~AudioPlayerCore();
 	void SetSamplerate(int sample_rate);
 	void Play();
-	void WriteByteArray(QByteArray&,int64_t timestamp);
+	void WriteByteArray(const QByteArray&,int64_t timestamp);
 	int64_t GetCurrentTimestamp();
 	void Pause();
 	void Resume();
@@ -28,8 +30,9 @@ private slots:
 	void SlotStart();
 
 private:
-	void InitAudioFormat();
 	void SlotStateChange(QAudio::State);
+	void StartLoopReadBytes();
+	void RegCallback();
 
 private:
 	QAudioOutput* output_;
@@ -37,4 +40,6 @@ private:
 	int sample_rate_;
 	int64_t start_time_;
 	int64_t end_time_;
+	bool b_stop_;
+	AudioDecoder audio_decoder_;
 };

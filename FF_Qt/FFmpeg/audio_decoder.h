@@ -8,6 +8,7 @@ class SwrContext;
 class AVCodecContext;
 class AVPacket;
 class AudioPlayerCore;
+using DataCallback = std::function<void(const QByteArray& bytes,int64_t timestamp)>;
 class AudioDecoder : public BaseDecoder
 {
 public:
@@ -16,6 +17,11 @@ public:
 	bool Init(const std::string& path) override;
 	bool Run() override;
 
+	void RegDataCallback(DataCallback);
+	void NotifyDataCallback(const QByteArray& bytes, int64_t timestamp);
+
+	bool GetData(AudioUnitParam&);
+
 private:
 	int audio_stream_id_;
 	AVCodecContext* av_codec_context_;
@@ -23,4 +29,5 @@ private:
 	SwrContext* swr_context_;
 	int channel_cnt_;
 	AVPacket* packet_;
+	DataCallback data_cb_;
 };

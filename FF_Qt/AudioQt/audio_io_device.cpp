@@ -24,7 +24,7 @@ qint64 AudioIoDevice::writeData(const char* data, qint64 len)
     return 0;
 }
 
-void AudioIoDevice::Write(QByteArray& bytes, int64_t timestamp)
+void AudioIoDevice::Write(const QByteArray& bytes, int64_t timestamp)
 {
 	bytes_list_.InsertBytes(bytes,timestamp);
 }
