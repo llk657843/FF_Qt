@@ -121,3 +121,11 @@ ImageInfo* VideoDecoder::PostImageTask(SwsContext* sws_context, AVFrame* frame, 
     }
     return nullptr;
 }
+
+bool VideoDecoder::GetImage(ImageInfo*& image_info)
+{
+    //kThreadVideoRender
+    ImageFunc delay_func;
+    bool b_get = image_funcs_.get_front_read_write(delay_func);
+    return b_get;
+}

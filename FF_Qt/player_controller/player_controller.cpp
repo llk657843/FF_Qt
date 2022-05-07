@@ -7,12 +7,14 @@
 #include "../Thread/thread_pool_entrance.h"
 #include "../time_strategy/time_base_define.h"
 #include "../base_util/guard_ptr.h"
+#include "../AudioQt/audio_qt.h"
 PlayerController::PlayerController()
 {
-	ffmpeg_control_ = std::make_unique<FFMpegController>();
+	path_ = "F:/周杰伦-一路向北-(国语)[Chedvd.com].avi";
 	bool_flag_ = false;
 	connect(this, SIGNAL(SignalStartLoop()), this, SLOT(SlotStartLoop()));
 	connect(this, SIGNAL(SignalStopLoop()), this, SLOT(SlotStopLoop()));
+
 	InitCallbacks();
 }
 
@@ -43,17 +45,17 @@ void PlayerController::InitCallbacks()
 
 bool PlayerController::Start()
 {
-	if(!ffmpeg_control_)
-	{
-		return false;
-	}
-	ffmpeg_control_->AsyncOpen();
+	audio_core_->Play();
+	
 	return true;
 }
 
 bool PlayerController::Open()
 {
-	ffmpeg_control_->Init("F:/周杰伦-一路向北-(国语)[Chedvd.com].avi");
+	video_decoder_ = new VideoDecoder;
+	audio_core_ = new AudioPlayerCore;
+	video_decoder_->Init(path_);
+	audio_core_->Init(path_);
 	return true;
 }
 
@@ -65,14 +67,12 @@ bool PlayerController::IsRunning()
 void PlayerController::Pause()
 {
 	bool_flag_ = true;
-	ffmpeg_control_->PauseAudio();
 }
 
 void PlayerController::Resume()
 {
 	if (bool_flag_) 
 	{
-		ffmpeg_control_->ResumeAudio();
 		bool_flag_ = false;
 		cv_pause_.notify_one();
 	}
@@ -81,22 +81,6 @@ void PlayerController::Resume()
 void PlayerController::SeekTime(int64_t seek_time)
 {
 	//lock start
-	if (ffmpeg_control_)
-	{
-		Pause();
-		auto start_time = time_util::GetCurrentTimeMst();
-		while(!ffmpeg_control_->IsPaused())
-		{
-			std::this_thread::yield();
-			auto end_time = time_util::GetCurrentTimeMst();
-			if(end_time - start_time >= 100)
-			{
-				return;
-			}
-		}
-		ffmpeg_control_->ClearCache();
-		ffmpeg_control_->Seek(seek_time);
-	}
 	//lock end
 }
 
@@ -118,7 +102,7 @@ void PlayerController::SlotStopLoop()
 
 void PlayerController::SlotMediaTimeout()
 {
-	if (ffmpeg_control_)
+	/*if (ffmpeg_control_)
 	{
 		ImageInfo* image_info = nullptr;
 		if (ffmpeg_control_->GetImage(image_info) != false)
@@ -134,5 +118,5 @@ void PlayerController::SlotMediaTimeout()
 			std::unique_lock<std::mutex> lock(pause_mutex_);
 			cv_pause_.wait(lock);
 		}
-	}
+	}*/
 }

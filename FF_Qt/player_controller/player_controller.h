@@ -13,6 +13,7 @@
 #include "QThread"
 class VideoDecoder;
 class AudioDecoder;
+class AudioPlayerCore;
 class PlayerController:public QObject,public SupportWeakCallback
 {
 	Q_OBJECT
@@ -38,14 +39,13 @@ private slots:
 	void SlotMediaTimeout();
 
 private:
-	std::unique_ptr<FFMpegController> ffmpeg_control_;
 	std::shared_ptr<std::function<void(QAudio::State)>> audio_state_cb_;
 	WeakCallbackFlag weak_flag_;
 	std::condition_variable_any cv_pause_;
 	std::mutex pause_mutex_;
 	std::atomic_bool bool_flag_;
-
 	HighRatioTimeThread time_thread_;
-
 	VideoDecoder* video_decoder_;
+	AudioPlayerCore* audio_core_;
+	std::string path_;
 };

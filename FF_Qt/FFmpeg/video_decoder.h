@@ -19,7 +19,7 @@ public:
 	~VideoDecoder();
 	bool Init(const std::string& path) override;
 	bool Run() override;
-
+	bool GetImage(ImageInfo*& image_info);
 
 private:
 	ImageInfo* PostImageTask(SwsContext* sws_context, AVFrame* frame, int width, int height, int64_t timestamp, std::shared_ptr<QImage> output);

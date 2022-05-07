@@ -13,6 +13,7 @@ AudioDecoder::AudioDecoder()
 {
 	data_cb_ = nullptr;
 	channel_cnt_ = 0;
+	out_sample_rate_ = 0;
 	buffer_.set_max_size(200); //最多含200个缓存，约10秒缓存
 }
 
@@ -53,12 +54,12 @@ bool AudioDecoder::Init(const std::string& path)
 	AVSampleFormat in_format = av_codec_context_->sample_fmt;
 	AVSampleFormat out_format = AVSampleFormat::AV_SAMPLE_FMT_S16;
 	int in_sample_rate = av_codec_context_->sample_rate;
-	int out_sample_rate = av_codec_context_->sample_rate;
+	out_sample_rate_ = av_codec_context_->sample_rate;
 	uint64_t in_ch_layout = av_codec_context_->channel_layout;
 	uint64_t out_ch_layout = AV_CH_LAYOUT_STEREO;
 
 	//给Swrcontext 分配空间，设置公共参数
-	swr_alloc_set_opts(swr_context_, out_ch_layout, out_format, out_sample_rate,
+	swr_alloc_set_opts(swr_context_, out_ch_layout, out_format, out_sample_rate_,
 		in_ch_layout, in_format, in_sample_rate, 0, NULL
 	);
 	// 初始化
@@ -97,7 +98,6 @@ bool AudioDecoder::Run()
 			duration_time = audio_in_frame->best_effort_timestamp * 1000.0 * av_q2d(av_codec_context_->pkt_timebase) ;
 			av_frame_free(&audio_in_frame);
 			NotifyDataCallback(byte_array,duration_time);
-			//AudioPlayerCore::GetInstance()->WriteByteArray(byte_array, duration_time);
 		}
 	}
 	av_free(packet_);
@@ -124,4 +124,9 @@ bool AudioDecoder::GetData(AudioUnitParam& audio_unit)
 		return buffer_.get_front_read_write(audio_unit);
 	}
 	return false;
+}
+
+int AudioDecoder::GetSamplerate() const
+{
+	return out_sample_rate_;
 }

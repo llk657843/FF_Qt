@@ -5,6 +5,7 @@ extern "C"
 }
 BaseDecoder::BaseDecoder()
 {
+	decoder_ = nullptr;
 }
 
 BaseDecoder::~BaseDecoder()

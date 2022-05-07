@@ -14,7 +14,7 @@ class AudioPlayerCore : public QObject,public SupportWeakCallback
 public:
 	AudioPlayerCore();
 	~AudioPlayerCore();
-	void SetSamplerate(int sample_rate);
+	bool Init(const std::string& path);
 	void Play();
 	void WriteByteArray(const QByteArray&,int64_t timestamp);
 	int64_t GetCurrentTimestamp();
@@ -31,8 +31,9 @@ private slots:
 
 private:
 	void SlotStateChange(QAudio::State);
-	void StartLoopReadBytes();
 	void RegCallback();
+	void Close();
+
 
 private:
 	QAudioOutput* output_;

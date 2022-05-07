@@ -11,6 +11,8 @@ AudioPlayerCore::AudioPlayerCore()
 {
 	b_stop_ = false;
 	output_ = nullptr;
+	io_ = nullptr;
+	output_ = nullptr;
 	sample_rate_ = 44100;
 	connect(this,SIGNAL(SignalStart()),this,SLOT(SlotStart()));
 	RegCallback();
@@ -20,9 +22,17 @@ AudioPlayerCore::~AudioPlayerCore()
 {
 }
 
-void AudioPlayerCore::SetSamplerate(int sample_rate)
+bool AudioPlayerCore::Init(const std::string& path)
 {
-	sample_rate_ = sample_rate;
+	bool b_init = audio_decoder_.Init(path);
+	if(!b_init)
+	{
+		return false;
+	}
+	Clear();
+	Close();
+	sample_rate_ = audio_decoder_.GetSamplerate();
+	return true;
 }
 
 void AudioPlayerCore::Play()
@@ -38,6 +48,12 @@ void AudioPlayerCore::Play()
 	io_ = new AudioIoDevice;
 	io_->open(QIODevice::ReadWrite);
 	connect(output_, &QAudioOutput::stateChanged, this, &AudioPlayerCore::SlotStateChange);
+	auto decoder_task = ToWeakCallback([=]()
+	{
+		audio_decoder_.Run();
+	});
+
+	qtbase::Post2Task(kThreadAudioDecoder,decoder_task);
 }
 
 void AudioPlayerCore::SlotStart()
@@ -62,11 +78,6 @@ void AudioPlayerCore::SlotStateChange(QAudio::State state)
 	}
 }
 
-void AudioPlayerCore::StartLoopReadBytes()
-{
-	
-}
-
 void AudioPlayerCore::RegCallback()
 {
 	//静态类，生命周期最长，此处可以选择不写weak callback
@@ -75,6 +86,10 @@ void AudioPlayerCore::RegCallback()
 		WriteByteArray(bytes, timestamp);
 	};
 	audio_decoder_.RegDataCallback(data_cb);
+}
+
+void AudioPlayerCore::Close()
+{
 }
 
 void AudioPlayerCore::WriteByteArray(const QByteArray& byte_array, int64_t timestamp)

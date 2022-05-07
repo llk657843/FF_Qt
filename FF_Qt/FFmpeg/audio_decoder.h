@@ -21,6 +21,7 @@ public:
 	void NotifyDataCallback(const QByteArray& bytes, int64_t timestamp);
 
 	bool GetData(AudioUnitParam&);
+	int GetSamplerate() const;
 
 private:
 	int audio_stream_id_;
@@ -30,4 +31,5 @@ private:
 	int channel_cnt_;
 	AVPacket* packet_;
 	DataCallback data_cb_;
+	int out_sample_rate_;
 };
