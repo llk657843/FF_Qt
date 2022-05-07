@@ -1,17 +1,17 @@
 #pragma once
-#include <list>
-#include <vector>
+extern "C"
+{
+#include <libavutil/rational.h>
+}
 #include "base_decoder.h"
 #include "image_func_packet.h"
 #include "../Thread/threadsafe_queue.h"
-extern "C"
-{
-#include <libavcodec/avcodec.h>
-}
 
+class AVCodecContext;
 class AVFormatContext;
 class SwsContext;
 class AVFrame;
+class AVPacket;
 class VideoDecoder : public BaseDecoder
 {
 public:
@@ -20,6 +20,7 @@ public:
 	bool Init(const std::string& path) override;
 	bool Run() override;
 	bool GetImage(ImageInfo*& image_info);
+	int GetFrameTime() const;
 
 private:
 	ImageInfo* PostImageTask(SwsContext* sws_context, AVFrame* frame, int width, int height, int64_t timestamp, std::shared_ptr<QImage> output);

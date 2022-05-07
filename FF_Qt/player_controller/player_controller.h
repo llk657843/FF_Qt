@@ -3,14 +3,13 @@
 #include <memory>
 #include <qaudio.h>
 
-#include "high_ratio_time_thread.h"
+#include "../Thread/high_ratio_time_thread.h"
 #include "../base_util/singleton.h"
 #include "QObject"
 #include "../base_util/weak_callback.h"	
-#include "../FFmpeg/ffmpeg_controller.h"
 #include "QPointer"
-#include "QTimer"
 #include "QThread"
+class ImageInfo;
 class VideoDecoder;
 class AudioDecoder;
 class AudioPlayerCore;
@@ -39,12 +38,16 @@ private slots:
 	void SlotMediaTimeout();
 
 private:
+	void InitAudioCore();
+	bool ParseImageInfo(ImageInfo*&);
+
+private:
 	std::shared_ptr<std::function<void(QAudio::State)>> audio_state_cb_;
 	WeakCallbackFlag weak_flag_;
 	std::condition_variable_any cv_pause_;
 	std::mutex pause_mutex_;
-	std::atomic_bool bool_flag_;
-	HighRatioTimeThread time_thread_;
+	std::atomic_bool pause_flag_;
+	HighRatioTimeThread video_render_thread_;
 	VideoDecoder* video_decoder_;
 	AudioPlayerCore* audio_core_;
 	std::string path_;

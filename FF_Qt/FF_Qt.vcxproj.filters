@@ -34,9 +34,6 @@
     <ClCompile Include="ffmpeg_qt.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="FFmpeg\ffmpeg_controller.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="base_util\weak_callback.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -73,9 +70,6 @@
     <ClCompile Include="player_controller\player_controller.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="player_controller\high_ratio_time_thread.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="base_ui\uslider.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -86,6 +80,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="FFmpeg\base_decoder.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Thread\high_ratio_time_thread.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -110,17 +107,14 @@
     <QtMoc Include="ffmpeg_qt.h">
       <Filter>Header Files</Filter>
     </QtMoc>
-    <QtMoc Include="player_controller\high_ratio_time_thread.h">
+    <QtMoc Include="base_ui\uslider.h">
       <Filter>Header Files</Filter>
     </QtMoc>
-    <QtMoc Include="base_ui\uslider.h">
+    <QtMoc Include="Thread\high_ratio_time_thread.h">
       <Filter>Header Files</Filter>
     </QtMoc>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="FFmpeg\ffmpeg_controller.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="base_util\singleton.h">
       <Filter>Header Files</Filter>
     </ClInclude>

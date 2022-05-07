@@ -8,6 +8,7 @@
 class AudioIoDevice;
 class QIODevice;
 class QAudioOutput;
+using PlayStartCallback = std::function<void()>;
 class AudioPlayerCore : public QObject,public SupportWeakCallback
 {
 	Q_OBJECT
@@ -16,12 +17,14 @@ public:
 	~AudioPlayerCore();
 	bool Init(const std::string& path);
 	void Play();
-	void WriteByteArray(const QByteArray&,int64_t timestamp);
+	
 	int64_t GetCurrentTimestamp();
 	void Pause();
 	void Resume();
 	bool IsPaused();
 	void Clear();
+	void RegPlayStartCallback(PlayStartCallback);
+	void NotifyPlayStartCallback();
 
 signals:
 	void SignalStart();
@@ -33,7 +36,7 @@ private:
 	void SlotStateChange(QAudio::State);
 	void RegCallback();
 	void Close();
-
+	void WriteByteArray(const QByteArray&, int64_t timestamp);
 
 private:
 	QAudioOutput* output_;
@@ -43,4 +46,5 @@ private:
 	int64_t end_time_;
 	bool b_stop_;
 	AudioDecoder audio_decoder_;
+	PlayStartCallback play_start_callback_;
 };

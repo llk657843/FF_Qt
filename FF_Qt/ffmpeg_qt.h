@@ -6,7 +6,7 @@
 #include <QWidget>
 
 #include "base_util/weak_callback.h"
-#include "player_controller/high_ratio_time_thread.h"
+#include "Thread/high_ratio_time_thread.h"
 
 class ImageInfo;
 

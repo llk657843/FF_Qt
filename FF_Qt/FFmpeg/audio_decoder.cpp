@@ -1,4 +1,7 @@
 #include "audio_decoder.h"
+
+#include <iostream>
+#include <ostream>
 #include <qbytearray.h>
 
 #include "../AudioQt/audio_qt.h"
@@ -95,7 +98,8 @@ bool AudioDecoder::Run()
 			// Ð´ÈëÎÄ¼þ
 			QByteArray byte_array;
 			byte_array.append((char*)out_buffer, out_buffer_size);
-			duration_time = audio_in_frame->best_effort_timestamp * 1000.0 * av_q2d(av_codec_context_->pkt_timebase) ;
+			auto timebase = decoder_->streams[audio_stream_id_]->codec->pkt_timebase;
+			duration_time = audio_in_frame->best_effort_timestamp * 1000.0 * av_q2d(timebase);
 			av_frame_free(&audio_in_frame);
 			NotifyDataCallback(byte_array,duration_time);
 		}

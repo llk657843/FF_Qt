@@ -2,7 +2,7 @@
 #include <functional>
 class ImageInfo;
 class QImage;
-using DelayParseFunc = std::function<ImageInfo* (std::unique_ptr<QImage>)>;
+using DelayParseFunc = std::function<ImageInfo* (std::shared_ptr<QImage>)>;
 
 class ImageFunc
 {

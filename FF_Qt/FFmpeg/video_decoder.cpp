@@ -40,28 +40,29 @@ bool VideoDecoder::Init(const std::string& path)
         return false;
     }
     //创建编码器上下文
-    AVCodecContext* codec_ctx = avcodec_alloc_context3(decoder_->video_codec);
-    if (!codec_ctx) {
+    codec_context_ = avcodec_alloc_context3(decoder_->video_codec);
+    if (!codec_context_) {
         return false;
     }
 
     //复制编码参数到上下文中
-    int ret = avcodec_parameters_to_context(codec_ctx, codec_param);
+    int ret = avcodec_parameters_to_context(codec_context_, codec_param);
     if (ret != 0)
     {
         return false;
     }
-    time_base_ = codec_ctx->time_base;
-    width_ = codec_ctx->width;
-    height_ = codec_ctx->height;
+    
+    width_ = codec_context_->width;
+    height_ = codec_context_->height;
     frame_time_ = 1000.0 / decoder_->streams[video_stream_id_]->avg_frame_rate.num;
     //打开编码器
-    auto codec_p = avcodec_find_decoder(codec_ctx->codec_id);
-    ret = avcodec_open2(codec_ctx, codec_p, nullptr);
+    auto codec_p = avcodec_find_decoder(codec_context_->codec_id);
+    ret = avcodec_open2(codec_context_, codec_p, nullptr);
     if (ret != 0) {
         return false;
     }
-    sws_context_ = sws_getContext(width_, height_, codec_ctx->pix_fmt, width_, height_, AVPixelFormat::AV_PIX_FMT_RGB32, SWS_BICUBIC, NULL, NULL, NULL);
+    time_base_ = codec_context_->time_base;
+    sws_context_ = sws_getContext(width_, height_, codec_context_->pix_fmt, width_, height_, AVPixelFormat::AV_PIX_FMT_RGB32, SWS_BICUBIC, NULL, NULL, NULL);
     if (!sws_context_)
     {
         return false;
@@ -92,7 +93,7 @@ bool VideoDecoder::Run()
             std::shared_ptr<QImage> output = std::make_shared<QImage>(width_, height_, QImage::Format_ARGB32);
 			auto func = [=](std::shared_ptr<QImage> img_ptr)
             {
-                int64_t timestamp = frame->best_effort_timestamp * av_q2d(time_base_) * 1000.0;
+                int64_t timestamp = frame->best_effort_timestamp * av_q2d(codec_context_->time_base) * 1000.0;
               
 				return PostImageTask(sws_context_, frame, width_, height_, timestamp, std::move(img_ptr));
             };
@@ -116,7 +117,7 @@ ImageInfo* VideoDecoder::PostImageTask(SwsContext* sws_context, AVFrame* frame, 
 
         sws_scale(sws_context, frame->data, frame->linesize, 0, height, output_dst, output_line_size);
         av_frame_free(&frame);
-        image_info = new ImageInfo(timestamp, std::move(output));
+        image_info = new ImageInfo(timestamp,output);
         return image_info;
     }
     return nullptr;
@@ -127,5 +128,14 @@ bool VideoDecoder::GetImage(ImageInfo*& image_info)
     //kThreadVideoRender
     ImageFunc delay_func;
     bool b_get = image_funcs_.get_front_read_write(delay_func);
-    return b_get;
+    if (b_get) 
+    {
+        image_info = delay_func.delay_func_(delay_func.image_);
+    }
+	return b_get;
+}
+
+int VideoDecoder::GetFrameTime() const
+{
+    return frame_time_;
 }

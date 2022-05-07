@@ -53,7 +53,10 @@ void HighRatioTimeThread::RegTimeoutCallback(TimeoutCallback cb)
 
 void HighRatioTimeThread::SetInterval(int64_t interval_time)
 {
-	timer_->setInterval(interval_time);
+	if (timer_->interval() != interval_time) 
+	{
+		timer_->setInterval(interval_time);
+	}
 }
 
 void HighRatioTimeThread::NotifyTimeoutCallback()

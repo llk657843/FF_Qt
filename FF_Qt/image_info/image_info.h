@@ -10,7 +10,7 @@ public:
 	};
 	ImageInfo(int64_t timestamp, std::shared_ptr<QImage> image)
 	{
-		image_ = image_;
+		image_ = image;
 		delay_time_ms_ = 0;
 		timestamp_ = timestamp;
 	}

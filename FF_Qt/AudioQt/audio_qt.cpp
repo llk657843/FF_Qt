@@ -14,6 +14,7 @@ AudioPlayerCore::AudioPlayerCore()
 	io_ = nullptr;
 	output_ = nullptr;
 	sample_rate_ = 44100;
+	play_start_callback_ = nullptr;
 	connect(this,SIGNAL(SignalStart()),this,SLOT(SlotStart()));
 	RegCallback();
 }
@@ -74,7 +75,7 @@ void AudioPlayerCore::SlotStateChange(QAudio::State state)
 	}
 	if(state == QAudio::State::ActiveState)
 	{
-		
+		NotifyPlayStartCallback();
 	}
 }
 
@@ -144,5 +145,18 @@ void AudioPlayerCore::Clear()
 	if(io_)
 	{
 		io_->Clear();
+	}
+}
+
+void AudioPlayerCore::RegPlayStartCallback(PlayStartCallback cb)
+{
+	play_start_callback_ = cb;
+}
+
+void AudioPlayerCore::NotifyPlayStartCallback()
+{
+	if(play_start_callback_)
+	{
+		play_start_callback_();
 	}
 }

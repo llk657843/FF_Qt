@@ -104,8 +104,8 @@
     <ClCompile Include="FFmpeg\audio_decoder.cpp" />
     <ClCompile Include="FFmpeg\base_decoder.cpp" />
     <ClCompile Include="FFmpeg\video_decoder.cpp" />
-    <ClCompile Include="player_controller\high_ratio_time_thread.cpp" />
     <ClCompile Include="player_controller\player_controller.cpp" />
+    <ClCompile Include="Thread\high_ratio_time_thread.cpp" />
     <ClCompile Include="Thread\pending_task.cpp" />
     <ClCompile Include="Thread\threadsafe_queue.cpp" />
     <ClCompile Include="Thread\thread_pool.cpp" />
@@ -116,7 +116,6 @@
     <QtRcc Include="FF_Qt.qrc" />
     <QtUic Include="ffmpeg_qt.ui" />
     <ClCompile Include="base_util\weak_callback.cpp" />
-    <ClCompile Include="FFmpeg\ffmpeg_controller.cpp" />
     <ClCompile Include="ffmpeg_qt.cpp" />
     <ClCompile Include="main.cpp" />
   </ItemGroup>
@@ -128,12 +127,12 @@
     <QtMoc Include="base_util\closure.h" />
     <QtMoc Include="base_ui\uslider.h" />
     <ClInclude Include="base_util\guard_ptr.h" />
-    <QtMoc Include="player_controller\high_ratio_time_thread.h" />
     <ClInclude Include="FFmpeg\audio_decoder.h" />
     <ClInclude Include="FFmpeg\audio_unit_param.h" />
     <ClInclude Include="FFmpeg\base_decoder.h" />
     <ClInclude Include="FFmpeg\image_func_packet.h" />
     <ClInclude Include="FFmpeg\video_decoder.h" />
+    <QtMoc Include="Thread\high_ratio_time_thread.h" />
     <ClInclude Include="time_strategy\time_base_define.h" />
     <QtMoc Include="view_callback\view_callback.h" />
     <QtMoc Include="AudioQt\audio_qt.h" />
@@ -149,7 +148,6 @@
     <ClInclude Include="Thread\time_util.h" />
     <ClInclude Include="base_util\singleton.h" />
     <ClInclude Include="base_util\weak_callback.h" />
-    <ClInclude Include="FFmpeg\ffmpeg_controller.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Condition="Exists('$(QtMsBuild)\qt.targets')">

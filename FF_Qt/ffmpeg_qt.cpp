@@ -7,7 +7,7 @@
 #include "player_controller/player_controller.h"
 #include "view_callback/view_callback.h"
 #include "QTimer"
-
+#include "image_info/image_info.h"
 FFMpegQt::FFMpegQt(QWidget* wid) : QWidget(wid),ui(new Ui::FFMpegQtFormUI)
 {
 	ui->setupUi(this);
