@@ -23,8 +23,7 @@ public:
 	void Resume();
 	bool IsPaused();
 	void Clear();
-	void RegPlayStartCallback(PlayStartCallback);
-	void NotifyPlayStartCallback();
+	void Seek(int64_t);
 
 signals:
 	void SignalStart();

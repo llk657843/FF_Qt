@@ -1,4 +1,5 @@
 #pragma once
+#include <mutex>
 #include <string>
 class AVFormatContext;
 class BaseDecoder
@@ -14,4 +15,5 @@ protected:
 
 protected:
 	AVFormatContext* decoder_;
+	std::mutex decode_mutex_;
 };

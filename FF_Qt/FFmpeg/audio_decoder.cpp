@@ -17,11 +17,16 @@ AudioDecoder::AudioDecoder()
 	data_cb_ = nullptr;
 	channel_cnt_ = 0;
 	out_sample_rate_ = 0;
-	buffer_.set_max_size(200); //最多含200个缓存，约10秒缓存
+	//buffer_.set_max_size(200); //最多含200个缓存，约10秒缓存
 }
 
 AudioDecoder::~AudioDecoder()
 {
+	if (decoder_) 
+	{
+		avformat_free_context(decoder_);
+		decoder_ = nullptr;
+	}
 }
 
 bool AudioDecoder::Init(const std::string& path)
@@ -87,6 +92,7 @@ bool AudioDecoder::Run()
 			//解码
 			if (avcodec_receive_frame(av_codec_context_, audio_in_frame) != 0)
 			{
+				av_packet_unref(packet_);
 				av_frame_free(&audio_in_frame);
 				continue;
 			}
@@ -100,11 +106,15 @@ bool AudioDecoder::Run()
 			byte_array.append((char*)out_buffer, out_buffer_size);
 			auto timebase = decoder_->streams[audio_stream_id_]->codec->pkt_timebase;
 			duration_time = audio_in_frame->best_effort_timestamp * 1000.0 * av_q2d(timebase);
+			av_frame_unref(audio_in_frame);
 			av_frame_free(&audio_in_frame);
 			NotifyDataCallback(byte_array,duration_time);
 		}
+		av_packet_unref(packet_);
 	}
-	av_free(packet_);
+	av_packet_free(&packet_);
+	avformat_free_context(decoder_);
+	decoder_ = nullptr;
 	return true;
 }
 

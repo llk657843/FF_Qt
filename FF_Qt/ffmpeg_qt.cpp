@@ -24,6 +24,19 @@ FFMpegQt::~FFMpegQt()
 	ui = nullptr;
 }
 
+bool FFMpegQt::eventFilter(QObject* watched, QEvent* event)
+{
+	if(watched == ui->lb_movie)
+	{
+		if(event->type() == QEvent::Show || event->Paint || event->type() == QEvent::Resize)
+		{
+			RefreshSize();
+		}
+	}
+
+	return QObject::eventFilter(watched, event);
+}
+
 void FFMpegQt::OnModifyUI()
 {
 	this->setMinimumSize(1300, 780);
@@ -36,10 +49,11 @@ void FFMpegQt::RegisterSignals()
 	connect(ui->btn_start, &QPushButton::clicked, this, &FFMpegQt::SlotStartClicked);
 	connect(ui->btn_resume, &QPushButton::clicked, this, &FFMpegQt::SlotResume);
 	connect(ui->btn_pause, &QPushButton::clicked, this, &FFMpegQt::SlotPause);
-	//connect(ui->btn_stop, &QPushButton::clicked, this, &FFMpegQt::SlotStop);
-	connect(ui->slider,&USlider::sliderIsPressed,this,&FFMpegQt::SlotSliderPress);
-	connect(ui->slider,&USlider::sliderIsMoved,this,&FFMpegQt::SlotSliderMove);
+	connect(ui->btn_stop, &QPushButton::clicked, this, &FFMpegQt::SlotStop);
+	//connect(ui->slider,&USlider::sliderIsMoved,this,&FFMpegQt::SlotSliderPress);
+	connect(ui->slider,&USlider::valueChangedByMouse,this,&FFMpegQt::SlotSliderMove);
 
+	ui->lb_movie->installEventFilter(this);
 	auto image_cb = ToWeakCallback([=](ImageInfo* image_info)
 		{
 		//ui thread
@@ -80,13 +94,39 @@ void FFMpegQt::SlotPause()
 	PlayerController::GetInstance()->Pause();
 }
 
+void FFMpegQt::SlotStop()
+{
+	for(int i = 0;i< 100000;i++)
+	{
+		QByteArray array_1 = "hahahahahahhaahhahahhhhhhhhhhhhhhhhhhhhhhhhhhhh";
+		bytes_.InsertBytes(array_1,0);
+	}
+	//bytes_.Clear();
+	int max_cnt = 30;
+	for (int i = 0; i < 300000; i++) 
+	{
+		char* my_char = new char[31]();
+		std::atomic_int64_t tp = 0;
+		auto get_size = bytes_.GetBytes(max_cnt,my_char,tp);
+		delete[] my_char;
+		if(get_size < max_cnt)
+		{
+			break;
+		}
+	}
+}
+
 void FFMpegQt::SlotSliderPress()
 {
-	SlotPause();
+	/*SlotPause();
+	auto value = ui->slider->value();
+	int64_t seek_time = (value / (ui->slider->tickInterval() * 1.0)) * total_time_s_;
+	PlayerController::GetInstance()->SeekTime(seek_time);*/
 }
 
 void FFMpegQt::SlotSliderMove(int value)
 {
+	//SlotPause();
 	int64_t seek_time = (value / (ui->slider->tickInterval() * 1.0)) * total_time_s_;
 	PlayerController::GetInstance()->SeekTime(seek_time);
 }
@@ -124,4 +164,14 @@ QString FFMpegQt::GetTimeString(int64_t time_seconds)
 	int show_min = time_seconds / 60;
 	res_string = res_string.sprintf("%02d:%02d",show_min,show_sec);
 	return res_string;
+}
+
+void FFMpegQt::RefreshSize()
+{
+	if(lb_width_ != ui->lb_movie->width() || lb_height_ != ui->lb_movie->height())
+	{
+		lb_width_ = ui->lb_movie->width();
+		lb_height_ = ui->lb_movie->height();
+		PlayerController::GetInstance()->SetImageSize(lb_width_,lb_height_);
+	}
 }

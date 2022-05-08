@@ -27,6 +27,7 @@ public:
 	void Pause();
 	void Resume();
 	void SeekTime(int64_t seek_time);
+	void SetImageSize(int width,int height);
 
 signals:
 	void SignalStartLoop();

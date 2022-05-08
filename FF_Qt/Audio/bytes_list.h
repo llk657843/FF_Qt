@@ -8,6 +8,10 @@ struct SingleByteArray
 	SingleByteArray(QByteArray bytes,int64_t timestamp) : byte_array_(std::move(bytes)),time_stamp_(timestamp)
 	{
 	}
+	~SingleByteArray()
+	{
+		byte_array_.clear();
+	}
 	int64_t time_stamp_;
 	QByteArray byte_array_;
 };

@@ -15,7 +15,7 @@ public:
 
 	~ImageFunc()
 	{
-		delay_func_ = nullptr;
+		image_.reset();
 	}
 
 	ImageFunc(std::shared_ptr<QImage> image, DelayParseFunc delay_func) : image_(std::move(image))

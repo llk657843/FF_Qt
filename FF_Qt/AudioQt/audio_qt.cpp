@@ -1,4 +1,6 @@
 #include "audio_qt.h"
+
+#include <iostream>
 #include <QAudioOutput>
 #include "QIODevice"
 #include "typeinfo"
@@ -59,23 +61,31 @@ void AudioPlayerCore::Play()
 
 void AudioPlayerCore::SlotStart()
 {
-	static std::once_flag once_flag;
-	std::call_once(once_flag, [=]()
+	if (output_ && io_) 
 	{
 		output_->start(io_);//²¥·Å¿ªÊ¼
-	});
+	}
 }
 
 void AudioPlayerCore::SlotStateChange(QAudio::State state)
 {
 	ViewCallback::GetInstance()->NotifyAudioStateCallback(state);
+	std::cout << state << std::endl;
 	if(state == QAudio::State::IdleState)
 	{
-
+		//Stoped
+		//output_->deleteLater();
+		//io_->deleteLater();
+		//output_ = nullptr;
+		//io_ = nullptr;
 	}
 	if(state == QAudio::State::ActiveState)
 	{
-		NotifyPlayStartCallback();
+		
+	}
+	if (state == QAudio::State::StoppedState)
+	{
+		
 	}
 }
 
@@ -148,15 +158,6 @@ void AudioPlayerCore::Clear()
 	}
 }
 
-void AudioPlayerCore::RegPlayStartCallback(PlayStartCallback cb)
+void AudioPlayerCore::Seek(int64_t timestamp)
 {
-	play_start_callback_ = cb;
-}
-
-void AudioPlayerCore::NotifyPlayStartCallback()
-{
-	if(play_start_callback_)
-	{
-		play_start_callback_();
-	}
 }

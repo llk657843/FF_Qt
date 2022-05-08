@@ -18,7 +18,7 @@ public:
 
 	~ImageInfo()
 	{
-
+		image_.reset();
 	}
 
 

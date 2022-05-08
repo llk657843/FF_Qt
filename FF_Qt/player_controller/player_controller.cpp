@@ -48,24 +48,25 @@ void PlayerController::InitCallbacks()
 bool PlayerController::Start()
 {
 	audio_core_->Play();
-	auto video_task = ToWeakCallback([=]()
-	{
-		video_decoder_->Run();
-	});
+	//auto video_task = ToWeakCallback([=]()
+	//{
+	//	video_decoder_->Run();
+	//});
 
-	qtbase::Post2Task(kThreadVideoDecoder, video_task);
+	//qtbase::Post2Task(kThreadVideoDecoder, video_task);
 	return true;
 }
 
 bool PlayerController::Open()
 {
-	video_decoder_ = new VideoDecoder;
+	//video_decoder_ = new VideoDecoder;
 	InitAudioCore();
-	bool b_open = video_decoder_->Init(path_);
-	if(!b_open)
+	bool b_open = false;
+	//bool b_open = video_decoder_->Init(path_);
+	/*if(!b_open)
 	{
 		return false;
-	}
+	}*/
 
 	b_open = audio_core_->Init(path_);
 	if (!b_open)
@@ -82,7 +83,11 @@ bool PlayerController::IsRunning()
 
 void PlayerController::Pause()
 {
-	pause_flag_ = true;
+	if (audio_core_) 
+	{
+		pause_flag_ = true;
+		audio_core_->Pause();
+	}
 }
 
 void PlayerController::Resume()
@@ -91,13 +96,30 @@ void PlayerController::Resume()
 	{
 		pause_flag_ = false;
 		cv_pause_.notify_one();
+		audio_core_->Resume();
 	}
 }
 
 void PlayerController::SeekTime(int64_t seek_time)
 {
 	//lock start
+	if (video_decoder_) 
+	{
+		video_decoder_->Seek(seek_time);
+	}
+	if(audio_core_)
+	{
+		audio_core_->Seek(seek_time);
+	}
 	//lock end
+}
+
+void PlayerController::SetImageSize(int width, int height)
+{
+	if (video_decoder_) 
+	{
+		video_decoder_->SetImageSize(width, height);
+	}
 }
 
 void PlayerController::SlotStartLoop()
