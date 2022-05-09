@@ -41,3 +41,21 @@ bool BaseDecoder::PrepareDeocde(const std::string& path)
 	av_free(av_input);
 	return true;
 }
+
+bool BaseDecoder::ReadFrame(AVPacket*& packet)
+{
+	std::lock_guard<std::mutex> lock(decode_mutex_);
+	return av_read_frame(decoder_, packet) >= 0;
+}
+
+bool BaseDecoder::SendPacket(AVCodecContext*& codec_context,AVPacket*& packet)
+{
+	std::lock_guard<std::mutex> lock(decode_mutex_);
+	return avcodec_send_packet(codec_context, packet) != 0;
+}
+
+bool BaseDecoder::ReceiveFrame(AVCodecContext*& codec_context, AVFrame*& frame)
+{
+	std::lock_guard<std::mutex> lock(decode_mutex_);
+	return avcodec_receive_frame(codec_context, frame) != 0;
+}

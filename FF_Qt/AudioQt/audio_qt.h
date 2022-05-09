@@ -36,6 +36,7 @@ private:
 	void RegCallback();
 	void Close();
 	void WriteByteArray(const QByteArray&, int64_t timestamp);
+	void SeekContinue();
 
 private:
 	QAudioOutput* output_;
@@ -46,4 +47,7 @@ private:
 	bool b_stop_;
 	AudioDecoder audio_decoder_;
 	PlayStartCallback play_start_callback_;
+	bool b_audio_seek_;
+	int64_t seek_time_;
+	std::atomic_bool b_start_;
 };

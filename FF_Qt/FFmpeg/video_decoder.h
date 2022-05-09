@@ -31,9 +31,7 @@ public:
 private:
 	ImageInfo* PostImageTask(std::shared_ptr<AVFrameWrapper> frame, int width, int height, int64_t timestamp, std::shared_ptr<QImage> output);
 	void RefreshScaleContext(int new_width,int new_height);
-	bool ReadFrame();
-	bool SendPacket();
-	bool ReceiveFrame(AVFrame*&);
+
 
 private:
 	AVCodecContext* codec_context_;

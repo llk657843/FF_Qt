@@ -1,7 +1,14 @@
 #pragma once
 #include <mutex>
 #include <string>
+extern "C"
+{
+#include <libavcodec/avcodec.h>
+}
 class AVFormatContext;
+class AVFrame;
+class AVCodecContext;
+class AVPacket;
 class BaseDecoder
 {
 public:
@@ -12,6 +19,9 @@ public:
 
 protected:
 	bool PrepareDeocde(const std::string& path);
+	bool ReadFrame(AVPacket*& packet);
+	bool SendPacket(AVCodecContext*&, AVPacket*&);
+	bool ReceiveFrame(AVCodecContext*&,AVFrame*&);
 
 protected:
 	AVFormatContext* decoder_;

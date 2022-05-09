@@ -11,10 +11,13 @@
 #include "../player_controller/player_controller.h"
 AudioPlayerCore::AudioPlayerCore()
 {
+	b_audio_seek_ = false;
 	b_stop_ = false;
+	seek_time_ = 0;
 	output_ = nullptr;
 	io_ = nullptr;
 	output_ = nullptr;
+	b_start_ = false;
 	sample_rate_ = 44100;
 	play_start_callback_ = nullptr;
 	connect(this,SIGNAL(SignalStart()),this,SLOT(SlotStart()));
@@ -61,8 +64,9 @@ void AudioPlayerCore::Play()
 
 void AudioPlayerCore::SlotStart()
 {
-	if (output_ && io_) 
+	if (output_ && io_ && !b_start_)
 	{
+		b_start_ = true;
 		output_->start(io_);//²¥·Å¿ªÊ¼
 	}
 }
@@ -70,17 +74,24 @@ void AudioPlayerCore::SlotStart()
 void AudioPlayerCore::SlotStateChange(QAudio::State state)
 {
 	ViewCallback::GetInstance()->NotifyAudioStateCallback(state);
-	if(state == QAudio::State::IdleState)
+	if (state == QAudio::State::IdleState)
 	{
 		
 	}
-	if(state == QAudio::State::ActiveState)
+	else if(state == QAudio::State::ActiveState)
 	{
 		
 	}
-	if (state == QAudio::State::StoppedState)
+	else if (state == QAudio::State::StoppedState)
 	{
 		
+	}
+	else if(state == QAudio::State::SuspendedState)
+	{
+		if (b_audio_seek_)
+		{
+			SeekContinue();
+		}
 	}
 }
 
@@ -100,7 +111,7 @@ void AudioPlayerCore::Close()
 
 void AudioPlayerCore::WriteByteArray(const QByteArray& byte_array, int64_t timestamp)
 {
-	if (io_) 
+	if (io_ && !b_audio_seek_)
 	{
 		io_->Write(byte_array,timestamp);
 		auto state = output_->state();
@@ -108,6 +119,20 @@ void AudioPlayerCore::WriteByteArray(const QByteArray& byte_array, int64_t times
 		{
 			emit SignalStart();
 		}
+	}
+}
+
+void AudioPlayerCore::SeekContinue()
+{
+	if (io_)
+	{
+		io_->Clear();
+		audio_decoder_.Seek(seek_time_);
+	}
+	if (output_) 
+	{
+		b_audio_seek_ = false;
+		output_->resume();
 	}
 }
 
@@ -157,10 +182,9 @@ void AudioPlayerCore::Seek(int64_t timestamp)
 {
 	if(output_)
 	{
+		b_audio_seek_ = true;
+		seek_time_ = timestamp;
 		output_->suspend();
 	}
-	if(io_)
-	{
-		
-	}
+
 }

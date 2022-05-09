@@ -10,7 +10,7 @@ struct SingleByteArray
 	}
 	~SingleByteArray()
 	{
-		byte_array_.clear();
+		
 	}
 	int64_t time_stamp_;
 	QByteArray byte_array_;

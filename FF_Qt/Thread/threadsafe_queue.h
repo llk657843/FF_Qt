@@ -31,7 +31,6 @@ public:
 		while (is_full_unlock())
 		{
 			is_sleep_.store(true);
-			std::cout << "sleep" << std::endl;
 			condition_variable_.wait(lock);
 		}
 		is_sleep_.store(false);

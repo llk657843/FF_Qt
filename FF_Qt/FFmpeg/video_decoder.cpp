@@ -82,18 +82,18 @@ bool VideoDecoder::Init(const std::string& path)
 bool VideoDecoder::Run()
 {
     packet_ = (AVPacket*)av_malloc(sizeof(AVPacket));
-    while(ReadFrame())
+    while(ReadFrame(packet_))
     {
         if (packet_->stream_index == AVMEDIA_TYPE_VIDEO)
         {
-            if (SendPacket())
+            if (SendPacket(codec_context_,packet_))
             {
                 av_packet_unref(packet_);
                 continue;
             }
 
             auto frame_ptr = std::make_shared<AVFrameWrapper>();
-            if (ReceiveFrame(frame_ptr->frame_))
+            if (ReceiveFrame(codec_context_,frame_ptr->frame_))
             {
                 av_packet_unref(packet_);
                 continue;
@@ -156,33 +156,15 @@ ImageInfo* VideoDecoder::PostImageTask(std::shared_ptr<AVFrameWrapper> frame, in
 void VideoDecoder::RefreshScaleContext(int new_width,int new_height)
 {
     std::lock_guard<std::mutex> lock(sws_mutex_);
-    std::cout << "lock start" << std::endl;
     //如果有人Init之后，重复调用Init，此处就会有并发风险,但理论上无并发风险
     sws_freeContext(sws_context_);
     sws_context_ = nullptr;
     width_ = new_width;
     height_ = new_height;
     sws_context_ = sws_getContext(src_width_, src_height_, format_, width_, height_, AVPixelFormat::AV_PIX_FMT_RGB32, SWS_BICUBIC, NULL, NULL, NULL);
-    std::cout << "lock end" << std::endl;
 }
 
-bool VideoDecoder::ReadFrame()
-{
-    std::lock_guard<std::mutex> lock(decode_mutex_);
-    return av_read_frame(decoder_, packet_) >= 0;
-}
 
-bool VideoDecoder::SendPacket()
-{
-    std::lock_guard<std::mutex> lock(decode_mutex_);
-    return avcodec_send_packet(codec_context_, packet_) != 0;
-}
-
-bool VideoDecoder::ReceiveFrame(AVFrame*& frame)
-{
-    std::lock_guard<std::mutex> lock(decode_mutex_);
-    return avcodec_receive_frame(codec_context_, frame) != 0;
-}
 
 bool VideoDecoder::GetImage(ImageInfo*& image_info)
 {
