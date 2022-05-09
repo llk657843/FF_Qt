@@ -4,6 +4,7 @@
 #include <ostream>
 #include <qbytearray.h>
 
+#include "AVFrameWrapper.h"
 #include "../AudioQt/audio_qt.h"
 
 extern "C"
@@ -87,27 +88,24 @@ bool AudioDecoder::Run()
 	{
 		if (packet_->stream_index == audio_stream_id_)
 		{
-			AVFrame* audio_in_frame = av_frame_alloc();
+			AVFrameWrapper frame_wrapper;
 			avcodec_send_packet(av_codec_context_, packet_);
 			//解码
-			if (avcodec_receive_frame(av_codec_context_, audio_in_frame) != 0)
+			if (avcodec_receive_frame(av_codec_context_, frame_wrapper.frame_) != 0)
 			{
 				av_packet_unref(packet_);
-				av_frame_free(&audio_in_frame);
 				continue;
 			}
 			//将每一帧数据转换成pcm
 			swr_convert(swr_context_, &out_buffer, MAX_AUDIO_FRAME_SIZE,
-				(const uint8_t**)audio_in_frame->data, audio_in_frame->nb_samples);
+				(const uint8_t**)frame_wrapper.frame_->data, frame_wrapper.frame_->nb_samples);
 			//获取实际的缓存大小
-			int out_buffer_size = av_samples_get_buffer_size(NULL,channel_cnt_, audio_in_frame->nb_samples, AV_SAMPLE_FMT_S16, 1);
+			int out_buffer_size = av_samples_get_buffer_size(NULL,channel_cnt_, frame_wrapper.frame_->nb_samples, AV_SAMPLE_FMT_S16, 1);
 			// 写入文件
 			QByteArray byte_array;
 			byte_array.append((char*)out_buffer, out_buffer_size);
 			auto timebase = decoder_->streams[audio_stream_id_]->codec->pkt_timebase;
-			duration_time = audio_in_frame->best_effort_timestamp * 1000.0 * av_q2d(timebase);
-			av_frame_unref(audio_in_frame);
-			av_frame_free(&audio_in_frame);
+			duration_time = frame_wrapper.frame_->best_effort_timestamp * 1000.0 * av_q2d(timebase);
 			NotifyDataCallback(byte_array,duration_time);
 		}
 		av_packet_unref(packet_);
@@ -131,16 +129,18 @@ void AudioDecoder::NotifyDataCallback(const QByteArray& bytes, int64_t timestamp
 	}
 }
 
-bool AudioDecoder::GetData(AudioUnitParam& audio_unit)
-{
-	if(!buffer_.is_empty_lock())
-	{
-		return buffer_.get_front_read_write(audio_unit);
-	}
-	return false;
-}
-
 int AudioDecoder::GetSamplerate() const
 {
 	return out_sample_rate_;
+}
+
+void AudioDecoder::Seek(int64_t seek_time)
+{
+	std::lock_guard<std::mutex> lock(decode_mutex_);
+
+	//image_funcs_.clear();
+	//image_funcs_.notify_one();
+	/*auto time_base = codec_context_->time_base;
+	int seek_frame = seek_time_ms / av_q2d(time_base) / 1000.0;
+	av_seek_frame(decoder_, video_stream_id_, seek_frame, AVSEEK_FLAG_BACKWARD);*/
 }

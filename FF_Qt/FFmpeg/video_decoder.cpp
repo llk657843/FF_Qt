@@ -1,4 +1,6 @@
 #include "video_decoder.h"
+
+#include "AVFrameWrapper.h"
 #include "QImage"
 #include "memory"
 #include "../image_info/image_info.h"
@@ -56,8 +58,8 @@ bool VideoDecoder::Init(const std::string& path)
         return false;
     }
     
-    width_ = codec_context_->width;
-    height_ = codec_context_->height;
+    width_ = codec_context_->width + 10;
+    height_ = codec_context_->height + 10;
     src_height_ = codec_context_->height;
     src_width_ = codec_param->width;
     frame_time_ = 1000.0 / decoder_->streams[video_stream_id_]->avg_frame_rate.num;
@@ -90,30 +92,28 @@ bool VideoDecoder::Run()
                 continue;
             }
 
-            AVFrame* frame = av_frame_alloc();
-            if (ReceiveFrame(frame))
+            auto frame_ptr = std::make_shared<AVFrameWrapper>();
+            if (ReceiveFrame(frame_ptr->frame_))
             {
                 av_packet_unref(packet_);
-                av_frame_unref(frame);
-                av_frame_free(&frame);
                 continue;
             }
             //解码线程
             int width = width_;
             int height = height_;
-            QImage* image = new QImage(width, height, QImage::Format_ARGB32);
-            std::shared_ptr<QImage> output(image);
-			auto func = [=](std::shared_ptr<QImage> img_ptr)
+            std::shared_ptr<QImage> output = std::make_shared<QImage>(width, height, QImage::Format_ARGB32);
+			auto func = [=](std::shared_ptr<QImage> img_ptr,const std::shared_ptr<AVFrameWrapper>& cached_frame)
             {
+                //kThreadVideoRender
                 AVRational time_base;
                 {
                     std::lock_guard<std::mutex> lock(decode_mutex_);
                     time_base = codec_context_->time_base;
                 }
-				int64_t timestamp = frame->best_effort_timestamp * av_q2d(time_base) * 1000.0;
-				return PostImageTask(frame, width, height, timestamp, std::move(img_ptr));
+				int64_t timestamp = cached_frame->frame_->best_effort_timestamp * av_q2d(time_base) * 1000.0;
+				return PostImageTask(std::move(cached_frame), width, height, timestamp, std::move(img_ptr));
             };
-            image_funcs_.push_back(ImageFunc(std::move(output),std::move(func)));
+            image_funcs_.push_back(ImageFunc(std::move(output),func, frame_ptr));
         }
         av_packet_unref(packet_);
     }
@@ -123,46 +123,47 @@ bool VideoDecoder::Run()
     return true;
 }
 
-ImageInfo* VideoDecoder::PostImageTask(AVFrame* frame, int width, int height, int64_t timestamp, std::shared_ptr<QImage> output)
+ImageInfo* VideoDecoder::PostImageTask(std::shared_ptr<AVFrameWrapper> frame, int width, int height, int64_t timestamp, std::shared_ptr<QImage> output)
 {
     //kThreadVideoRender
+    std::lock_guard<std::mutex> lock(sws_mutex_);
     ImageInfo* image_info = nullptr;
     std::shared_ptr<QImage> img_ptr = std::move(output);
     if(width != width_ || height != height_)
     {
         img_ptr.reset();
-        QImage* image = new QImage(width, height, QImage::Format_ARGB32);
-        std::shared_ptr<QImage> new_image_ptr(image);
+        std::shared_ptr<QImage> new_image_ptr = std::make_shared<QImage>(width_, height_, QImage::Format_ARGB32);
     	img_ptr.swap(new_image_ptr);
     }
-
-    if (frame)
+    auto local_frame = frame->Frame();
+    if (local_frame)
     {
-        int output_line_size[4];
+        int* linesize = local_frame->linesize;
+        uint8_t** data = local_frame->data;
+    	int output_line_size[4];
         av_image_fill_linesizes(output_line_size, AV_PIX_FMT_ARGB, width_);
-        uint8_t* output_dst[] = 
+        uint8_t* output_dst[] =
         {
-        	img_ptr->bits()
+            img_ptr->bits()
         };
-
-        {
-            std::lock_guard<std::mutex> lock(sws_mutex_);
-            sws_scale(sws_context_, frame->data, frame->linesize, 0, src_height_, output_dst, output_line_size);
-        }
-    	av_frame_free(&frame);
+    	sws_scale(sws_context_, data, linesize, 0, src_height_, output_dst, output_line_size);
         image_info = new ImageInfo(timestamp, img_ptr);
-        return image_info;
+    	return image_info;
     }
     return nullptr;
 }
 
-void VideoDecoder::RefreshScaleContext()
+void VideoDecoder::RefreshScaleContext(int new_width,int new_height)
 {
     std::lock_guard<std::mutex> lock(sws_mutex_);
+    std::cout << "lock start" << std::endl;
     //如果有人Init之后，重复调用Init，此处就会有并发风险,但理论上无并发风险
     sws_freeContext(sws_context_);
     sws_context_ = nullptr;
+    width_ = new_width;
+    height_ = new_height;
     sws_context_ = sws_getContext(src_width_, src_height_, format_, width_, height_, AVPixelFormat::AV_PIX_FMT_RGB32, SWS_BICUBIC, NULL, NULL, NULL);
+    std::cout << "lock end" << std::endl;
 }
 
 bool VideoDecoder::ReadFrame()
@@ -190,7 +191,7 @@ bool VideoDecoder::GetImage(ImageInfo*& image_info)
     bool b_get = image_funcs_.get_front_read_write(delay_func);
     if (b_get) 
     {
-        image_info = delay_func.delay_func_(delay_func.image_);
+        image_info = delay_func.delay_func_(delay_func.image_,delay_func.frame_);
     }
 	return b_get;
 }
@@ -204,9 +205,7 @@ void VideoDecoder::SetImageSize(int width, int height)
 {
     if(width_ != width || height_ != height)
     {
-        width_ = width;
-        height_ = height;
-        RefreshScaleContext();
+        RefreshScaleContext(width,height);
     }
 }
 

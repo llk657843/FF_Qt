@@ -172,5 +172,8 @@
     <ClInclude Include="FFmpeg\audio_unit_param.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="FFmpeg\AVFrameWrapper.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

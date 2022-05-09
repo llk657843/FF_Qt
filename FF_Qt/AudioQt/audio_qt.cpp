@@ -70,14 +70,9 @@ void AudioPlayerCore::SlotStart()
 void AudioPlayerCore::SlotStateChange(QAudio::State state)
 {
 	ViewCallback::GetInstance()->NotifyAudioStateCallback(state);
-	std::cout << state << std::endl;
 	if(state == QAudio::State::IdleState)
 	{
-		//Stoped
-		//output_->deleteLater();
-		//io_->deleteLater();
-		//output_ = nullptr;
-		//io_ = nullptr;
+		
 	}
 	if(state == QAudio::State::ActiveState)
 	{
@@ -160,4 +155,12 @@ void AudioPlayerCore::Clear()
 
 void AudioPlayerCore::Seek(int64_t timestamp)
 {
+	if(output_)
+	{
+		output_->suspend();
+	}
+	if(io_)
+	{
+		
+	}
 }

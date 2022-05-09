@@ -4,22 +4,6 @@
 #include "ffmpeg_qt.h"
 #include "QThread"
 #include "image_info/image_info.h"
-static int new_cnt = 0;
-static int delete_cnt = 0;
-void* operator new(unsigned int size)
-{
-	void* ptr = (void*)malloc(size);
-	//std::cout << "Alloc :" << ptr << std::endl;
-	new_cnt++;
-	return ptr;
-}
-
-void operator delete(void* ptr)
-{
-	delete_cnt++;
-	//std::cout << "Delete :" << ptr << std::endl;
-	free(ptr);
-}
 
 int main(int argc, char* argv[])
 {

@@ -48,25 +48,25 @@ void PlayerController::InitCallbacks()
 bool PlayerController::Start()
 {
 	audio_core_->Play();
-	//auto video_task = ToWeakCallback([=]()
-	//{
-	//	video_decoder_->Run();
-	//});
+	auto video_task = ToWeakCallback([=]()
+	{
+		video_decoder_->Run();
+	});
 
-	//qtbase::Post2Task(kThreadVideoDecoder, video_task);
+	qtbase::Post2Task(kThreadVideoDecoder, video_task);
 	return true;
 }
 
 bool PlayerController::Open()
 {
-	//video_decoder_ = new VideoDecoder;
+	video_decoder_ = new VideoDecoder;
 	InitAudioCore();
-	bool b_open = false;
-	//bool b_open = video_decoder_->Init(path_);
-	/*if(!b_open)
+	/*bool b_open = false;*/
+	bool b_open = video_decoder_->Init(path_);
+	if(!b_open)
 	{
 		return false;
-	}*/
+	}
 
 	b_open = audio_core_->Init(path_);
 	if (!b_open)

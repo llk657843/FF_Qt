@@ -19,14 +19,12 @@ public:
 
 	void RegDataCallback(DataCallback);
 	void NotifyDataCallback(const QByteArray& bytes, int64_t timestamp);
-
-	bool GetData(AudioUnitParam&);
 	int GetSamplerate() const;
+	void Seek(int64_t seek_time);
 
 private:
 	int audio_stream_id_;
 	AVCodecContext* av_codec_context_;
-	thread_safe_queue<AudioUnitParam> buffer_;
 	SwrContext* swr_context_;
 	int channel_cnt_;
 	AVPacket* packet_;

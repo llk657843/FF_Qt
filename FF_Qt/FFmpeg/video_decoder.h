@@ -15,6 +15,7 @@ class AVFormatContext;
 class SwsContext;
 class AVFrame;
 class AVPacket;
+class AVFrameWrapper;
 class VideoDecoder : public BaseDecoder
 {
 public:
@@ -28,8 +29,8 @@ public:
 	void Seek(int64_t seek_time);
 
 private:
-	ImageInfo* PostImageTask(AVFrame* frame, int width, int height, int64_t timestamp, std::shared_ptr<QImage> output);
-	void RefreshScaleContext();
+	ImageInfo* PostImageTask(std::shared_ptr<AVFrameWrapper> frame, int width, int height, int64_t timestamp, std::shared_ptr<QImage> output);
+	void RefreshScaleContext(int new_width,int new_height);
 	bool ReadFrame();
 	bool SendPacket();
 	bool ReceiveFrame(AVFrame*&);
