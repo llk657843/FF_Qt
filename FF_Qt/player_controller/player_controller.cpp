@@ -61,7 +61,6 @@ bool PlayerController::Open()
 {
 	video_decoder_ = new VideoDecoder;
 	InitAudioCore();
-	/*bool b_open = false;*/
 	bool b_open = video_decoder_->Init(path_);
 	if(!b_open)
 	{
@@ -78,7 +77,11 @@ bool PlayerController::Open()
 
 bool PlayerController::IsRunning()
 {
-	return false;
+	if(!audio_core_ || audio_core_ && audio_core_->IsRunning())
+	{
+		return false;
+	}
+	return true;
 }
 
 void PlayerController::Pause()
@@ -102,16 +105,18 @@ void PlayerController::Resume()
 
 void PlayerController::SeekTime(int64_t seek_time)
 {
-	//lock start
-	if (video_decoder_) 
+	auto cb = [=](int64_t seek_frame, int audio_id, bool b_success)
 	{
-		video_decoder_->Seek(seek_time);
-	}
-	if(audio_core_)
+			if (b_success && video_decoder_)
+			{
+				video_decoder_->Seek(seek_frame,audio_id);
+			}
+	};
+
+	if (audio_core_)
 	{
-		audio_core_->Seek(seek_time);
+		audio_core_->Seek(seek_time,cb);
 	}
-	//lock end
 }
 
 void PlayerController::SetImageSize(int width, int height)

@@ -1,6 +1,7 @@
 #pragma once
-#include "audio_unit_param.h"
+#include <qbytearray.h>
 #include "base_decoder.h"
+#include "decoder_callback.h"
 #include "../Thread/threadsafe_queue.h"
 class AVFormatContext;
 class AVFrame;
@@ -9,6 +10,7 @@ class AVCodecContext;
 class AVPacket;
 class AudioPlayerCore;
 using DataCallback = std::function<void(const QByteArray& bytes,int64_t timestamp)>;
+
 class AudioDecoder : public BaseDecoder
 {
 public:
@@ -20,7 +22,7 @@ public:
 	void RegDataCallback(DataCallback);
 	void NotifyDataCallback(const QByteArray& bytes, int64_t timestamp);
 	int GetSamplerate() const;
-	void Seek(int64_t seek_time);
+	void Seek(int64_t seek_time, SeekResCallback);
 
 private:
 	int audio_stream_id_;

@@ -128,9 +128,9 @@
     <QtMoc Include="base_ui\uslider.h" />
     <ClInclude Include="base_util\guard_ptr.h" />
     <ClInclude Include="FFmpeg\audio_decoder.h" />
-    <ClInclude Include="FFmpeg\audio_unit_param.h" />
     <ClInclude Include="FFmpeg\AVFrameWrapper.h" />
     <ClInclude Include="FFmpeg\base_decoder.h" />
+    <ClInclude Include="FFmpeg\decoder_callback.h" />
     <ClInclude Include="FFmpeg\image_func_packet.h" />
     <ClInclude Include="FFmpeg\video_decoder.h" />
     <QtMoc Include="Thread\high_ratio_time_thread.h" />

@@ -169,10 +169,10 @@
     <ClInclude Include="FFmpeg\base_decoder.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="FFmpeg\audio_unit_param.h">
+    <ClInclude Include="FFmpeg\AVFrameWrapper.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="FFmpeg\AVFrameWrapper.h">
+    <ClInclude Include="FFmpeg\decoder_callback.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

@@ -6,7 +6,7 @@
 
 #include "AVFrameWrapper.h"
 #include "../AudioQt/audio_qt.h"
-
+#include "../view_callback/view_callback.h"
 extern "C"
 {
 #include <libavformat/avformat.h>
@@ -18,7 +18,6 @@ AudioDecoder::AudioDecoder()
 	data_cb_ = nullptr;
 	channel_cnt_ = 0;
 	out_sample_rate_ = 0;
-	//buffer_.set_max_size(200); //最多含200个缓存，约10秒缓存
 }
 
 AudioDecoder::~AudioDecoder()
@@ -76,6 +75,7 @@ bool AudioDecoder::Init(const std::string& path)
 
 	// 获取声道数量
 	channel_cnt_ = av_get_channel_layout_nb_channels(out_ch_layout);
+	ViewCallback::GetInstance()->NotifyParseDone(decoder_->duration);
 	return true;
 }
 
@@ -113,8 +113,11 @@ bool AudioDecoder::Run()
 		}
 		av_packet_unref(packet_);
 	}
+	avcodec_free_context(&av_codec_context_);
 	av_packet_free(&packet_);
 	avformat_free_context(decoder_);
+	av_free(out_buffer);
+	swr_free(&swr_context_);
 	decoder_ = nullptr;
 	return true;
 }
@@ -137,10 +140,23 @@ int AudioDecoder::GetSamplerate() const
 	return out_sample_rate_;
 }
 
-void AudioDecoder::Seek(int64_t seek_time)
+void AudioDecoder::Seek(int64_t seek_time, SeekResCallback res_cb)
 {
 	std::lock_guard<std::mutex> lock(decode_mutex_);
-	auto timebase = decoder_->streams[audio_stream_id_]->codec->pkt_timebase;
-	int seek_frame = seek_time / av_q2d(timebase) / 1000.0;
-	av_seek_frame(decoder_, audio_stream_id_, seek_frame, AVSEEK_FLAG_BACKWARD);
+	if (decoder_) 
+	{
+		auto timebase = decoder_->streams[audio_stream_id_]->codec->pkt_timebase;
+		int seek_frame = seek_time / av_q2d(timebase) / 1000.0;
+		bool res = av_seek_frame(decoder_, audio_stream_id_, seek_frame, AVSEEK_FLAG_BACKWARD) >= 0 ? true : false;
+		if(res_cb)
+		{
+			res_cb(seek_frame, audio_stream_id_,res);
+		}
+	}
+	else {
+		if (res_cb)
+		{
+			res_cb(0, 0, false);
+		}
+	}
 }

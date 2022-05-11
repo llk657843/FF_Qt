@@ -27,6 +27,7 @@ public:
 	int GetFrameTime() const;
 	void SetImageSize(int width,int height);
 	void Seek(int64_t seek_time);
+	void Seek(int64_t seek_frame,int audio_stream_id);
 
 private:
 	ImageInfo* PostImageTask(std::shared_ptr<AVFrameWrapper> frame, int width, int height, int64_t timestamp, std::shared_ptr<QImage> output);
@@ -45,7 +46,5 @@ private:
 	AVPixelFormat format_;
 	thread_safe_queue<ImageFunc> image_funcs_;
 	AVRational time_base_;
-	SwsContext* sws_context_;
 	std::mutex sws_mutex_;
-
 };

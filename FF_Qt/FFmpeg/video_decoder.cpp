@@ -58,10 +58,10 @@ bool VideoDecoder::Init(const std::string& path)
         return false;
     }
     
-    width_ = codec_context_->width + 10;
-    height_ = codec_context_->height + 10;
+    width_ = codec_context_->width;
+    height_ = codec_context_->height;
     src_height_ = codec_context_->height;
-    src_width_ = codec_param->width;
+    src_width_ = codec_context_->width;
     frame_time_ = 1000.0 / decoder_->streams[video_stream_id_]->avg_frame_rate.num;
     //打开编码器
     auto codec_p = avcodec_find_decoder(codec_context_->codec_id);
@@ -71,11 +71,7 @@ bool VideoDecoder::Init(const std::string& path)
     }
     time_base_ = codec_context_->time_base;
     format_ = codec_context_->pix_fmt;
-    sws_context_ = sws_getContext(src_width_, src_height_, format_, width_, height_, AVPixelFormat::AV_PIX_FMT_RGB32, SWS_BICUBIC, NULL, NULL, NULL);
-    if (!sws_context_)
-    {
-        return false;
-    }
+    avcodec_parameters_free(&codec_param);
     return true;
 }
 
@@ -117,9 +113,12 @@ bool VideoDecoder::Run()
         }
         av_packet_unref(packet_);
     }
-    av_packet_free(&packet_);
+	av_packet_free(&packet_);
+    packet_ = nullptr;
     avformat_free_context(decoder_);
     decoder_ = nullptr;
+
+  
     return true;
 }
 
@@ -146,8 +145,10 @@ ImageInfo* VideoDecoder::PostImageTask(std::shared_ptr<AVFrameWrapper> frame, in
         {
             img_ptr->bits()
         };
-    	sws_scale(sws_context_, data, linesize, 0, src_height_, output_dst, output_line_size);
+        auto srs = sws_getContext(src_width_, src_height_, format_, width_, height_, AVPixelFormat::AV_PIX_FMT_RGB32, SWS_BICUBIC, NULL, NULL, NULL);
+    	sws_scale(srs, data, linesize, 0, src_height_, output_dst, output_line_size);
         image_info = new ImageInfo(timestamp, img_ptr);
+        sws_freeContext(srs);
     	return image_info;
     }
     return nullptr;
@@ -156,15 +157,9 @@ ImageInfo* VideoDecoder::PostImageTask(std::shared_ptr<AVFrameWrapper> frame, in
 void VideoDecoder::RefreshScaleContext(int new_width,int new_height)
 {
     std::lock_guard<std::mutex> lock(sws_mutex_);
-    //如果有人Init之后，重复调用Init，此处就会有并发风险,但理论上无并发风险
-    sws_freeContext(sws_context_);
-    sws_context_ = nullptr;
     width_ = new_width;
     height_ = new_height;
-    sws_context_ = sws_getContext(src_width_, src_height_, format_, width_, height_, AVPixelFormat::AV_PIX_FMT_RGB32, SWS_BICUBIC, NULL, NULL, NULL);
 }
-
-
 
 bool VideoDecoder::GetImage(ImageInfo*& image_info)
 {
@@ -199,4 +194,12 @@ void VideoDecoder::Seek(int64_t seek_time_ms)
     auto time_base = codec_context_->time_base;
     int seek_frame = seek_time_ms / av_q2d(time_base) / 1000.0;
     av_seek_frame(decoder_, video_stream_id_, seek_frame, AVSEEK_FLAG_BACKWARD);
+}
+
+void VideoDecoder::Seek(int64_t seek_frame, int audio_stream_id)
+{
+    std::lock_guard<std::mutex> lock(decode_mutex_);
+    image_funcs_.clear();
+    image_funcs_.notify_one();
+    av_seek_frame(decoder_, audio_stream_id, seek_frame, AVSEEK_FLAG_BACKWARD) >= 0 ? true : false;
 }

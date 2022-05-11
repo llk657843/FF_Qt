@@ -11,6 +11,7 @@
 #include "../player_controller/player_controller.h"
 AudioPlayerCore::AudioPlayerCore()
 {
+	seek_res_callback_ = nullptr;
 	b_audio_seek_ = false;
 	b_stop_ = false;
 	seek_time_ = 0;
@@ -60,6 +61,15 @@ void AudioPlayerCore::Play()
 	});
 
 	qtbase::Post2Task(kThreadAudioDecoder,decoder_task);
+}
+
+bool AudioPlayerCore::IsRunning()
+{
+	if(output_)
+	{
+		return output_->state() != QAudio::State::StoppedState;
+	}
+	return false;
 }
 
 void AudioPlayerCore::SlotStart()
@@ -127,7 +137,8 @@ void AudioPlayerCore::SeekContinue()
 	if (io_)
 	{
 		io_->Clear();
-		audio_decoder_.Seek(seek_time_);
+		audio_decoder_.Seek(seek_time_, seek_res_callback_);
+		seek_res_callback_ = nullptr;
 	}
 	if (output_) 
 	{
@@ -178,10 +189,11 @@ void AudioPlayerCore::Clear()
 	}
 }
 
-void AudioPlayerCore::Seek(int64_t timestamp)
+void AudioPlayerCore::Seek(int64_t timestamp,SeekResCallback res_cb)
 {
 	if(output_)
 	{
+		seek_res_callback_ = res_cb;
 		b_audio_seek_ = true;
 		seek_time_ = timestamp;
 		output_->suspend();

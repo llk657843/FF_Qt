@@ -80,8 +80,11 @@ void FFMpegQt::RegisterSignals()
 
 void FFMpegQt::SlotStartClicked()
 {
-	PlayerController::GetInstance()->Open();
-	PlayerController::GetInstance()->Start();
+	if (!PlayerController::GetInstance()->IsRunning()) 
+	{
+		PlayerController::GetInstance()->Open();
+		PlayerController::GetInstance()->Start();
+	}
 }
 
 void FFMpegQt::SlotResume()

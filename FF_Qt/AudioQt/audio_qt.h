@@ -17,13 +17,13 @@ public:
 	~AudioPlayerCore();
 	bool Init(const std::string& path);
 	void Play();
-	
+	bool IsRunning();
 	int64_t GetCurrentTimestamp();
 	void Pause();
 	void Resume();
 	bool IsPaused();
 	void Clear();
-	void Seek(int64_t);
+	void Seek(int64_t,SeekResCallback);
 
 signals:
 	void SignalStart();
@@ -50,4 +50,5 @@ private:
 	bool b_audio_seek_;
 	int64_t seek_time_;
 	std::atomic_bool b_start_;
+	SeekResCallback seek_res_callback_;
 };
