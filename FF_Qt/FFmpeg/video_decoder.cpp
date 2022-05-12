@@ -62,8 +62,6 @@ bool VideoDecoder::Init(const std::string& path)
         return false;
     }
     
-    width_ = codec_context_->width;
-    height_ = codec_context_->height;
     src_height_ = codec_context_->height;
     src_width_ = codec_context_->width;
     frame_time_ = 1000.0 / decoder_->streams[video_stream_id_]->avg_frame_rate.num;

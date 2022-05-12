@@ -1,4 +1,14 @@
 <RCC>
-    <qresource prefix="FF_Qt">
+    <qresource prefix="/FF_Qt">
+        <file>style/res/play.png</file>
+        <file>style/res/pause.png</file>
+        <file>style/res/stop.png</file>
+        <file>style/res/folder.png</file>
+        <file>style/res/close.png</file>
+        <file>style/res/fullscreen.png</file>
+        <file>style/res/max.png</file>
+        <file>style/res/min.png</file>
+        <file>style/res/main_shadow.png</file>
+        <file>style/res/pet.png</file>
     </qresource>
 </RCC>

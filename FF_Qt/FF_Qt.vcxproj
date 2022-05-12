@@ -56,6 +56,7 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|Win32'">
     <OutDir>$(SolutionDir)bin\</OutDir>
+    <ExecutablePath>$(SolutionDir)bin\;$(ExecutablePath)</ExecutablePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|Win32'">
   </PropertyGroup>
@@ -100,11 +101,17 @@
     <ClCompile Include="AudioQt\audio_io_device.cpp" />
     <ClCompile Include="AudioQt\audio_qt.cpp" />
     <ClCompile Include="Audio\bytes_list.cpp" />
+    <ClCompile Include="base_ui\base_popup_window.cpp" />
+    <ClCompile Include="base_ui\base_popup_window_tool.cpp" />
+    <ClCompile Include="base_ui\base_pop_shadow.cpp" />
+    <ClCompile Include="base_ui\base_shadow_form.cpp" />
     <ClCompile Include="base_ui\uslider.cpp" />
     <ClCompile Include="FFmpeg\audio_decoder.cpp" />
     <ClCompile Include="FFmpeg\base_decoder.cpp" />
     <ClCompile Include="FFmpeg\video_decoder.cpp" />
+    <ClCompile Include="ffmpeg_qt.cpp" />
     <ClCompile Include="player_controller\player_controller.cpp" />
+    <ClCompile Include="style\qss_manager.cpp" />
     <ClCompile Include="Thread\high_ratio_time_thread.cpp" />
     <ClCompile Include="Thread\pending_task.cpp" />
     <ClCompile Include="Thread\thread_pool.cpp" />
@@ -115,7 +122,6 @@
     <QtRcc Include="FF_Qt.qrc" />
     <QtUic Include="ffmpeg_qt.ui" />
     <ClCompile Include="base_util\weak_callback.cpp" />
-    <ClCompile Include="ffmpeg_qt.cpp" />
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -125,6 +131,10 @@
     <QtMoc Include="player_controller\player_controller.h" />
     <QtMoc Include="base_util\closure.h" />
     <QtMoc Include="base_ui\uslider.h" />
+    <ClInclude Include="base_ui\base_popup_window.h" />
+    <ClInclude Include="base_ui\base_popup_window_tool.h" />
+    <ClInclude Include="base_ui\base_pop_shadow.h" />
+    <ClInclude Include="base_ui\base_shadow_form.h" />
     <ClInclude Include="base_util\guard_ptr.h" />
     <ClInclude Include="FFmpeg\audio_decoder.h" />
     <ClInclude Include="FFmpeg\AVFrameWrapper.h" />
@@ -133,6 +143,7 @@
     <ClInclude Include="FFmpeg\image_func_packet.h" />
     <ClInclude Include="FFmpeg\video_decoder.h" />
     <QtMoc Include="Thread\high_ratio_time_thread.h" />
+    <ClInclude Include="style\qss_manager.h" />
     <ClInclude Include="time_strategy\time_base_define.h" />
     <QtMoc Include="view_callback\view_callback.h" />
     <QtMoc Include="AudioQt\audio_qt.h" />

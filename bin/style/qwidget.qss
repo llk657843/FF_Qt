@@ -1,0 +1,22 @@
+QWidget#wid_bg
+{
+	background-color:#1B1C21;
+	border-radius:7px;
+}
+
+QFrame#fr_top
+{
+	background-color:#1B1C21;
+	border-bottom:1px solid #27282E;
+	border-top-left-radius:7px;
+	border-top-right-radius:7px;
+}
+
+QWidget#wid_main_form_shadow_500
+{
+	border-image:url(:/FF_Qt/style/res/main_shadow.png) 37px 37px 37px 37px;
+	border-top: 37px transparent;
+    border-bottom: 37px transparent;
+    border-right: 37px transparent;
+    border-left: 37px transparent;
+}

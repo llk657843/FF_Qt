@@ -4,7 +4,7 @@
 #include "ffmpeg_qt.h"
 #include "QThread"
 #include "image_info/image_info.h"
-
+#include "style/qss_manager.h"
 int main(int argc, char* argv[])
 {
     QApplication a(argc, argv);
@@ -12,6 +12,9 @@ int main(int argc, char* argv[])
     qRegisterMetaType<ImageInfo*>("ImageInfo*");
     qRegisterMetaType<int64_t>("int64_t");
     qRegisterMetaType<std::function<void()>>("std::function<void()>");
+    QssManager qss_manager;
+    QString qss_path = a.applicationDirPath() + "/style/";
+    qss_manager.SetGlobalStyle(qss_path);
     FFMpegQt* wid = new FFMpegQt;
     wid->show();
 	a.exec();

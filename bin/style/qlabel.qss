@@ -1,0 +1,12 @@
+QLabel#lb_text_1
+{
+	color:#f9f9f9;
+	font-size:12px;
+}
+
+QLabel#lb_img
+{
+	background-image:url(:/FF_Qt/style/res/pet.png);
+	background-repeat:no-repeat;
+	background-position:center;
+}

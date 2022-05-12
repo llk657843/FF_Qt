@@ -22,7 +22,7 @@ public:
 	SINGLETON_DEFINE(PlayerController);
 	void InitCallbacks();
 	bool Start();
-	bool Open();
+	bool Open(int win_width,int win_height);
 	bool IsRunning();
 	void Pause();
 	void Resume();

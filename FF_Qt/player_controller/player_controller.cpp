@@ -16,7 +16,6 @@ PlayerController::PlayerController()
 	pause_flag_ = false;
 	connect(this, SIGNAL(SignalStartLoop()), this, SLOT(SlotStartLoop()));
 	connect(this, SIGNAL(SignalStopLoop()), this, SLOT(SlotStopLoop()));
-
 	InitCallbacks();
 }
 
@@ -57,9 +56,10 @@ bool PlayerController::Start()
 	return true;
 }
 
-bool PlayerController::Open()
+bool PlayerController::Open(int win_width,int win_height)
 {
 	video_decoder_ = new VideoDecoder;
+	video_decoder_->SetImageSize(win_width, win_height);
 	InitAudioCore();
 	bool b_open = video_decoder_->Init(path_);
 	if(!b_open)
@@ -140,21 +140,6 @@ void PlayerController::Stop()
 	{
 		audio_core_->AsyncStop();
 	}
-
-	/*auto task = [=]() {
-		if (video_decoder_) 
-		{
-			delete video_decoder_;
-			video_decoder_ = nullptr;
-		}
-		if (audio_core_) 
-		{
-			delete audio_core_;
-			audio_core_ = nullptr;
-		}
-	};
-
-	qtbase::Post2DelayedTask(kThreadMoreTask,task,std::chrono::seconds(5));*/
 }
 
 void PlayerController::SlotStartLoop()
@@ -194,6 +179,10 @@ void PlayerController::SlotMediaTimeout()
 
 void PlayerController::InitAudioCore()
 {
+	if (audio_core_) 
+	{
+		return;
+	}
 	audio_core_ = new AudioPlayerCore;
 }
 

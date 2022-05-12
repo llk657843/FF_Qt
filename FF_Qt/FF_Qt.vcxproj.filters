@@ -31,9 +31,6 @@
     <ClCompile Include="main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="ffmpeg_qt.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="base_util\weak_callback.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -80,6 +77,24 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Thread\high_ratio_time_thread.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="style\qss_manager.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ffmpeg_qt.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="base_ui\base_popup_window.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="base_ui\base_popup_window_tool.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="base_ui\base_pop_shadow.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="base_ui\base_shadow_form.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -170,6 +185,21 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="FFmpeg\decoder_callback.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="style\qss_manager.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="base_ui\base_popup_window.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="base_ui\base_popup_window_tool.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="base_ui\base_pop_shadow.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="base_ui\base_shadow_form.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

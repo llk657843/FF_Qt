@@ -8,22 +8,27 @@
 #include "Audio/bytes_list.h"
 #include "base_util/weak_callback.h"
 #include "Thread/high_ratio_time_thread.h"
-
+#include "base_ui/base_popup_window.h"
 class ImageInfo;
 
 namespace Ui
 {
 	class FFMpegQtFormUI;
 }
-class FFMpegQt : public QWidget,public SupportWeakCallback
+class FFMpegQt : public BasePopupWindow,public SupportWeakCallback
 {
 	Q_OBJECT
 public:
 	FFMpegQt(QWidget* wid = nullptr);
 	~FFMpegQt();
-
+	virtual std::wstring GetWindowId(void) const override;
+	virtual void InitWindow() override;
 protected:
 	bool eventFilter(QObject* watched, QEvent* event) override;
+
+
+signals:
+	void SignalClose();
 
 private:
 	void OnModifyUI();
@@ -34,8 +39,9 @@ private:
 	void SlotResume();
 	void SlotPause();
 	void SlotStop();
-	void SlotSliderPress();
 	void SlotSliderMove(int);
+	void SlotPauseResume(bool);
+	void SlotClose();
 
 	void ShowTime(int64_t time);
 	void ShowImage(ImageInfo*);
