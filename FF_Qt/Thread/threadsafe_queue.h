@@ -55,7 +55,7 @@ public:
 		{
 			mem = internal_queue_.front();
 			internal_queue_.pop();
-			notify_one();
+			notify_one(false);
 			return true;
 		}
 		return false;
@@ -84,9 +84,13 @@ public:
 		return internal_queue_.empty();
 	}
 
-	void notify_one()
+	void notify_one(bool b_force)
 	{
-		if (is_sleep_.load() == true && internal_queue_.size() <= half_size_)
+		if (b_force) 
+		{
+			condition_variable_.notify_one();
+		}
+		else if (is_sleep_.load() == true && internal_queue_.size() <= half_size_)
 		{
 			condition_variable_.notify_one();
 		}

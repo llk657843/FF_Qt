@@ -17,7 +17,11 @@ AudioDecoder::AudioDecoder()
 {
 	data_cb_ = nullptr;
 	channel_cnt_ = 0;
-	out_sample_rate_ = 0;
+	out_sample_rate_ = 0; 
+	stop_decode_cb_ = nullptr;
+	stop_flag_ = false;
+	out_buffer_ = nullptr;
+	b_running_ = false;
 }
 
 AudioDecoder::~AudioDecoder()
@@ -81,11 +85,19 @@ bool AudioDecoder::Init(const std::string& path)
 
 bool AudioDecoder::Run()
 {
+	//b_running判断函数是否正在执行
 	packet_ = (AVPacket*)av_malloc(sizeof(AVPacket));
 	int64_t duration_time = 0;
-	uint8_t* out_buffer = (uint8_t*)av_malloc(MAX_AUDIO_FRAME_SIZE);
+	out_buffer_ = (uint8_t*)av_malloc(MAX_AUDIO_FRAME_SIZE);
+	int out_buffer_size = 0;
+	b_running_ = true;
 	while (ReadFrame(packet_))
 	{
+		if (stop_flag_)
+		{
+			av_packet_unref(packet_);
+			break;
+		}
 		if (packet_->stream_index == audio_stream_id_)
 		{
 			AVFrameWrapper frame_wrapper;
@@ -100,12 +112,12 @@ bool AudioDecoder::Run()
 			QByteArray byte_array;
 			{
 				std::lock_guard<std::mutex> lock(decode_mutex_);
-				swr_convert(swr_context_, &out_buffer, MAX_AUDIO_FRAME_SIZE,
+				swr_convert(swr_context_, &out_buffer_, MAX_AUDIO_FRAME_SIZE,
 					(const uint8_t**)frame_wrapper.frame_->data, frame_wrapper.frame_->nb_samples);
 				//获取实际的缓存大小
-				int out_buffer_size = av_samples_get_buffer_size(NULL, channel_cnt_, frame_wrapper.frame_->nb_samples, AV_SAMPLE_FMT_S16, 1);
+				out_buffer_size = av_samples_get_buffer_size(NULL, channel_cnt_, frame_wrapper.frame_->nb_samples, AV_SAMPLE_FMT_S16, 1);
 				// 写入文件
-				byte_array.append((char*)out_buffer, out_buffer_size);
+				byte_array.append((char*)out_buffer_, out_buffer_size);
 				auto timebase = decoder_->streams[audio_stream_id_]->codec->pkt_timebase;
 				duration_time = frame_wrapper.frame_->best_effort_timestamp * 1000.0 * av_q2d(timebase);
 			}
@@ -113,12 +125,7 @@ bool AudioDecoder::Run()
 		}
 		av_packet_unref(packet_);
 	}
-	avcodec_free_context(&av_codec_context_);
-	av_packet_free(&packet_);
-	avformat_free_context(decoder_);
-	av_free(out_buffer);
-	swr_free(&swr_context_);
-	decoder_ = nullptr;
+	ReleaseAll();
 	return true;
 }
 
@@ -158,5 +165,33 @@ void AudioDecoder::Seek(int64_t seek_time, SeekResCallback res_cb)
 		{
 			res_cb(0, 0, false);
 		}
+	}
+}
+
+void AudioDecoder::AsyncStop(StopDecodeResCallback res_cb)
+{
+	stop_decode_cb_ = res_cb;
+	//happens before
+	stop_flag_ = true;
+	if (!b_running_) 
+	{
+		ReleaseAll();
+	}
+}
+
+void AudioDecoder::ReleaseAll()
+{
+	avcodec_free_context(&av_codec_context_);
+	av_packet_free(&packet_);
+	avformat_free_context(decoder_);
+	av_free(out_buffer_);
+	swr_free(&swr_context_);
+	decoder_ = nullptr;
+	stop_flag_ = false;
+	b_running_ = false;
+	if (stop_decode_cb_) 
+	{
+		stop_decode_cb_();
+		stop_decode_cb_ = nullptr;
 	}
 }

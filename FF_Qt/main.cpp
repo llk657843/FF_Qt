@@ -14,35 +14,7 @@ int main(int argc, char* argv[])
     qRegisterMetaType<std::function<void()>>("std::function<void()>");
     FFMpegQt* wid = new FFMpegQt;
     wid->show();
-
 	a.exec();
     ThreadPool::GetInstance()->StopAll();
 	return 0;
 }
-//
-//int main()
-//{
-//	ThreadSafeBytesList bytes_;
-//	for (int i = 0; i < 100000; i++)
-//	{
-//		QByteArray array_1 = "hahahahahahhaahhahahhhhhhhhhhhhhhhhhhhhhhhhhhhh";
-//		//int size = array_1.size();
-//		bytes_.InsertBytes(array_1, 0);
-//	}
-//	//bytes_.Clear();
-//	int max_cnt = 30;
-//	for (int i = 0; i < 100000; i++)
-//	{
-//		char* my_char = new char[48]();
-//		std::atomic_int64_t tp = 0;
-//		auto get_size = bytes_.GetBytes(max_cnt, my_char, tp);
-//		my_char[47] = '\0';
-//		delete[] my_char;
-//		//if (get_size < max_cnt)
-//		//{
-//		//	break;
-//		//}
-//	}
-//	std::cout << new_cnt <<" " << delete_cnt << std::endl;
-//	return 0;
-//}

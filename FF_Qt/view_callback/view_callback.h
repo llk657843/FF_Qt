@@ -35,6 +35,8 @@ public:
 	void RegParseDoneCallback(ParseDoneCallback);
 	void NotifyParseDone(int64_t duration);
 
+	void Clear();
+
 signals:
 	void SignalImageInfo(ImageInfo*);
 	void SignalTimeUpdate(int64_t);

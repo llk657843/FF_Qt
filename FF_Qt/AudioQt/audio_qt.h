@@ -24,6 +24,7 @@ public:
 	bool IsPaused();
 	void Clear();
 	void Seek(int64_t,SeekResCallback);
+	void AsyncStop();
 
 signals:
 	void SignalStart();

@@ -10,7 +10,7 @@ class AVCodecContext;
 class AVPacket;
 class AudioPlayerCore;
 using DataCallback = std::function<void(const QByteArray& bytes,int64_t timestamp)>;
-
+using StopDecodeResCallback = std::function<void()>;
 class AudioDecoder : public BaseDecoder
 {
 public:
@@ -23,6 +23,10 @@ public:
 	void NotifyDataCallback(const QByteArray& bytes, int64_t timestamp);
 	int GetSamplerate() const;
 	void Seek(int64_t seek_time, SeekResCallback);
+	void AsyncStop(StopDecodeResCallback);
+
+private:
+	void ReleaseAll();
 
 private:
 	int audio_stream_id_;
@@ -32,4 +36,8 @@ private:
 	AVPacket* packet_;
 	DataCallback data_cb_;
 	int out_sample_rate_;
+	StopDecodeResCallback stop_decode_cb_;
+	std::atomic_bool stop_flag_;
+	uint8_t* out_buffer_;
+	std::atomic_bool b_running_;
 };

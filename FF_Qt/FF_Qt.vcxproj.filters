@@ -40,9 +40,6 @@
     <ClCompile Include="Thread\thread_pool.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Thread\threadsafe_queue.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="Thread\pending_task.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>

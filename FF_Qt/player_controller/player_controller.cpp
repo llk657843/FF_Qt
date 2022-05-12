@@ -48,10 +48,10 @@ void PlayerController::InitCallbacks()
 bool PlayerController::Start()
 {
 	audio_core_->Play();
-	auto video_task = ToWeakCallback([=]()
+	auto video_task = [=]()
 	{
 		video_decoder_->Run();
-	});
+	};
 
 	qtbase::Post2Task(kThreadVideoDecoder, video_task);
 	return true;
@@ -125,6 +125,36 @@ void PlayerController::SetImageSize(int width, int height)
 	{
 		video_decoder_->SetImageSize(width, height);
 	}
+}
+
+void PlayerController::Stop()
+{
+	video_render_thread_.Stop();
+
+	if (video_decoder_)
+	{
+		video_decoder_->AsyncStop();
+	}
+
+	if (audio_core_) 
+	{
+		audio_core_->AsyncStop();
+	}
+
+	/*auto task = [=]() {
+		if (video_decoder_) 
+		{
+			delete video_decoder_;
+			video_decoder_ = nullptr;
+		}
+		if (audio_core_) 
+		{
+			delete audio_core_;
+			audio_core_ = nullptr;
+		}
+	};
+
+	qtbase::Post2DelayedTask(kThreadMoreTask,task,std::chrono::seconds(5));*/
 }
 
 void PlayerController::SlotStartLoop()

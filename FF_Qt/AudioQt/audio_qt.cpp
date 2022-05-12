@@ -94,7 +94,16 @@ void AudioPlayerCore::SlotStateChange(QAudio::State state)
 	}
 	else if (state == QAudio::State::StoppedState)
 	{
-		
+		if (output_) 
+		{
+			output_->deleteLater();
+			output_ = nullptr;
+		}
+		if (io_) 
+		{
+			io_->deleteLater();
+			io_ = nullptr;
+		}
 	}
 	else if(state == QAudio::State::SuspendedState)
 	{
@@ -199,4 +208,16 @@ void AudioPlayerCore::Seek(int64_t timestamp,SeekResCallback res_cb)
 		output_->suspend();
 	}
 
+}
+
+void AudioPlayerCore::AsyncStop()
+{
+	auto stop_cb = ToWeakCallback([=]() {
+		if (output_) 
+		{
+			output_->stop();
+			io_->Clear();
+		}
+	});
+	audio_decoder_.AsyncStop(stop_cb);
 }

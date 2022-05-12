@@ -1,7 +1,4 @@
 #include "high_ratio_time_thread.h"
-
-#include <iostream>
-
 HighRatioTimeThread::HighRatioTimeThread()
 {
 	timeout_callback_ = nullptr;
@@ -44,6 +41,12 @@ void HighRatioTimeThread::Run()
 		connect(timer_, &QTimer::timeout, this, &HighRatioTimeThread::SlotMediaTimeout, Qt::DirectConnection);
 		thread_->start();
 	});
+}
+
+void HighRatioTimeThread::Stop()
+{
+	timeout_callback_ = nullptr;
+	thread_->exit();
 }
 
 void HighRatioTimeThread::RegTimeoutCallback(TimeoutCallback cb)

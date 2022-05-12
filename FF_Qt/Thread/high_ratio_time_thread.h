@@ -11,7 +11,7 @@ public:
 	~HighRatioTimeThread();
 	void InitMediaTimer();
 	void Run();
-
+	void Stop();
 	void RegTimeoutCallback(TimeoutCallback);
 	void SetInterval(int64_t interval_time);
 	void NotifyTimeoutCallback();

@@ -28,11 +28,13 @@ public:
 	void SetImageSize(int width,int height);
 	void Seek(int64_t seek_time);
 	void Seek(int64_t seek_frame,int audio_stream_id);
+	void AsyncStop();
 
 private:
 	ImageInfo* PostImageTask(std::shared_ptr<AVFrameWrapper> frame, int width, int height, int64_t timestamp, std::shared_ptr<QImage> output);
 	void RefreshScaleContext(int new_width,int new_height);
 
+	void ReleaseAll();
 
 private:
 	AVCodecContext* codec_context_;
@@ -47,4 +49,6 @@ private:
 	thread_safe_queue<ImageFunc> image_funcs_;
 	AVRational time_base_;
 	std::mutex sws_mutex_;
+	std::atomic_bool b_stop_flag_;
+	std::atomic_bool b_running_flag_;
 };

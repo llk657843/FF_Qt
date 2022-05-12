@@ -78,6 +78,13 @@ void ViewCallback::NotifyParseDone(int64_t duration)
 	}
 }
 
+void ViewCallback::Clear()
+{
+	parse_done_callback_ = nullptr;
+	image_info_callback_ = nullptr;
+	time_cb_ = nullptr;
+}
+
 void ViewCallback::SlotImageInfo(ImageInfo* image_info)
 {
 	if (image_info_callback_)

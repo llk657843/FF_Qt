@@ -17,7 +17,7 @@ class ThreadPool : public SupportWeakCallback
 {
 public:
 	SINGLETON_DEFINE(ThreadPool);
-	explicit ThreadPool();
+	ThreadPool();
 	~ThreadPool();
 
 	void Post2Task(ThreadName thread_name, const ThreadTask& f);

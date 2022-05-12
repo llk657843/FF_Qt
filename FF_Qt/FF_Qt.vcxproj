@@ -107,7 +107,6 @@
     <ClCompile Include="player_controller\player_controller.cpp" />
     <ClCompile Include="Thread\high_ratio_time_thread.cpp" />
     <ClCompile Include="Thread\pending_task.cpp" />
-    <ClCompile Include="Thread\threadsafe_queue.cpp" />
     <ClCompile Include="Thread\thread_pool.cpp" />
     <ClCompile Include="Thread\thread_pool_entrance.cpp" />
     <ClCompile Include="Thread\thread_safe_priority_task_queue.cpp" />

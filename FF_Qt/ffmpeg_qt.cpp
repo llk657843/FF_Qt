@@ -8,6 +8,7 @@
 #include "view_callback/view_callback.h"
 #include "QTimer"
 #include "image_info/image_info.h"
+const int TIME_BASE = 1000;	//刻度盘
 FFMpegQt::FFMpegQt(QWidget* wid) : QWidget(wid),ui(new Ui::FFMpegQtFormUI)
 {
 	ui->setupUi(this);
@@ -56,7 +57,6 @@ void FFMpegQt::RegisterSignals()
 	ui->lb_movie->installEventFilter(this);
 	auto image_cb = ToWeakCallback([=](ImageInfo* image_info)
 		{
-		//ui thread
 			ShowImage(image_info);
 		});
 
@@ -72,6 +72,7 @@ void FFMpegQt::RegisterSignals()
 
 	auto parse_dur_cb = ToWeakCallback([=](int64_t timestamp)
 	{
+			//micro seconds -> seconds(show time)
 			total_time_s_ = (timestamp/1000)/1000;
 	});
 	ViewCallback::GetInstance()->RegParseDoneCallback(parse_dur_cb);
@@ -95,41 +96,21 @@ void FFMpegQt::SlotResume()
 void FFMpegQt::SlotPause()
 {
 	PlayerController::GetInstance()->Pause();
+	ViewCallback::GetInstance()->Clear();
+	ui->lb_movie->setPixmap(QPixmap());
 }
 
 void FFMpegQt::SlotStop()
 {
-	for(int i = 0;i< 100000;i++)
-	{
-		QByteArray array_1 = "hahahahahahhaahhahahhhhhhhhhhhhhhhhhhhhhhhhhhhh";
-		bytes_.InsertBytes(array_1,0);
-	}
-	//bytes_.Clear();
-	int max_cnt = 30;
-	for (int i = 0; i < 300000; i++) 
-	{
-		char* my_char = new char[31]();
-		std::atomic_int64_t tp = 0;
-		auto get_size = bytes_.GetBytes(max_cnt,my_char,tp);
-		delete[] my_char;
-		if(get_size < max_cnt)
-		{
-			break;
-		}
-	}
+	PlayerController::GetInstance()->Stop();
 }
 
 void FFMpegQt::SlotSliderPress()
 {
-	/*SlotPause();
-	auto value = ui->slider->value();
-	int64_t seek_time = (value / (ui->slider->tickInterval() * 1.0)) * total_time_s_;
-	PlayerController::GetInstance()->SeekTime(seek_time);*/
 }
 
 void FFMpegQt::SlotSliderMove(int value)
 {
-	//SlotPause();
 	int64_t seek_time = (value / (ui->slider->tickInterval() * 1.0)) * total_time_s_;
 	PlayerController::GetInstance()->SeekTime(seek_time);
 }
@@ -140,8 +121,7 @@ void FFMpegQt::ShowTime(int64_t time)
 	ui->lb_time->setText(GetTimeString(sec) +"/" + GetTimeString(total_time_s_));
 	if (total_time_s_ != 0) 
 	{
-		//以1/1000为一个刻度
-		int result = (sec / (total_time_s_ * 1.0)) * 1000.0;
+		int result = (sec / (total_time_s_ * 1.0)) * TIME_BASE;
 		if (result != ui->slider->value())
 		{
 			ui->slider->setValue(result);
