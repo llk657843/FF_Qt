@@ -182,11 +182,19 @@ void AudioDecoder::AsyncStop(StopDecodeResCallback res_cb)
 void AudioDecoder::ReleaseAll()
 {
 	avcodec_free_context(&av_codec_context_);
+	av_codec_context_ = nullptr;
+
 	av_packet_free(&packet_);
+	packet_ = nullptr;
 	avformat_free_context(decoder_);
-	av_free(out_buffer_);
-	swr_free(&swr_context_);
 	decoder_ = nullptr;
+
+	av_free(out_buffer_);
+	out_buffer_ = NULL;
+
+	swr_free(&swr_context_);
+	swr_context_ = nullptr;
+
 	stop_flag_ = false;
 	b_running_ = false;
 	if (stop_decode_cb_) 

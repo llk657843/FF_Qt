@@ -142,6 +142,11 @@ void PlayerController::Stop()
 	}
 }
 
+void PlayerController::SetPath(const std::string& path)
+{
+	path_ = path;
+}
+
 void PlayerController::SlotStartLoop()
 {
 	auto time_out_cb = ToWeakCallback([=]()

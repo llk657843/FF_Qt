@@ -23,7 +23,7 @@ VideoDecoder::VideoDecoder()
     height_ = 0;
     src_width_ = 0;
     packet_ = nullptr;
-    image_funcs_.set_max_size(200); //最多含200个缓存，约10秒缓存
+    image_funcs_.set_max_size(100); //最多含200个缓存，约10秒缓存
 }
 
 VideoDecoder::~VideoDecoder()
@@ -110,7 +110,7 @@ bool VideoDecoder::Run()
                 AVRational time_base;
                 {
                     std::lock_guard<std::mutex> lock(decode_mutex_);
-                    time_base = codec_context_->time_base;
+                    time_base = decoder_->streams[video_stream_id_]->time_base;
                 }
 				int64_t timestamp = cached_frame->frame_->best_effort_timestamp * av_q2d(time_base) * 1000.0;
 				return PostImageTask(std::move(cached_frame), width, height, timestamp, std::move(img_ptr));

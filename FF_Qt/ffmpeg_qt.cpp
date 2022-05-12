@@ -7,6 +7,7 @@
 #include "view_callback/view_callback.h"
 #include "QTimer"
 #include "image_info/image_info.h"
+#include "qfiledialog.h"
 const int TIME_BASE = 1000;	//¿Ì¶ÈÅÌ
 FFMpegQt::FFMpegQt(QWidget* wid) : BasePopupWindow(wid),ui(new Ui::FFMpegQtFormUI)
 {
@@ -101,6 +102,7 @@ void FFMpegQt::RegisterSignals()
 	connect(ui->btn_stop, &QPushButton::clicked, this, &FFMpegQt::SlotStop);
 	connect(ui->slider,&USlider::valueChangedByMouse,this,&FFMpegQt::SlotSliderMove);
 	connect(ui->btn_close,&QPushButton::clicked,this,&FFMpegQt::SlotClose);
+	connect(ui->btn_open_file,&QPushButton::clicked,this,&FFMpegQt::SlotOpenFile);
 	connect(this,&FFMpegQt::SignalClose,this,&FFMpegQt::close);
 	ui->lb_movie->installEventFilter(this);
 	auto image_cb = ToWeakCallback([=](ImageInfo* image_info)
@@ -144,13 +146,13 @@ void FFMpegQt::SlotResume()
 void FFMpegQt::SlotPause()
 {
 	PlayerController::GetInstance()->Pause();
-	ViewCallback::GetInstance()->Clear();
-	ui->lb_movie->setPixmap(QPixmap());
 }
 
 void FFMpegQt::SlotStop()
 {
 	PlayerController::GetInstance()->Stop();
+	ViewCallback::GetInstance()->Clear();
+	ui->lb_movie->setPixmap(QPixmap());
 }
 
 void FFMpegQt::SlotSliderMove(int value)
@@ -163,11 +165,11 @@ void FFMpegQt::SlotPauseResume(bool b_checked)
 {
 	if (b_checked) 
 	{
-		SlotResume();
+		SlotPause();
 	}
 	else 
 	{
-		SlotPause();
+		SlotResume();
 	}
 }
 
@@ -180,6 +182,12 @@ void FFMpegQt::SlotClose()
 		});
 
 	qtbase::Post2DelayedTask(kThreadMoreTask,delay_close,std::chrono::seconds(1));
+}
+
+void FFMpegQt::SlotOpenFile()
+{
+	QString name = QFileDialog::getOpenFileName();
+	PlayerController::GetInstance()->SetPath(name.toStdString());
 }
 
 void FFMpegQt::ShowTime(int64_t time)
@@ -203,7 +211,7 @@ void FFMpegQt::ShowImage(ImageInfo* image_info)
 		return;
 	}
 	ui->lb_movie->setPixmap(QPixmap::fromImage(*image_info->image_));
-	update();
+	repaint();
 	delete image_info;
 }
 

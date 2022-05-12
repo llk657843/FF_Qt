@@ -42,6 +42,7 @@ private:
 	void SlotSliderMove(int);
 	void SlotPauseResume(bool);
 	void SlotClose();
+	void SlotOpenFile();
 
 	void ShowTime(int64_t time);
 	void ShowImage(ImageInfo*);
