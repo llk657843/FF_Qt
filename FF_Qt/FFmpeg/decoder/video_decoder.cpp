@@ -3,8 +3,8 @@
 #include "AVFrameWrapper.h"
 #include "QImage"
 #include "memory"
-#include "../image_info/image_info.h"
-#include "../view_callback/view_callback.h"
+#include "../../image_info/image_info.h"
+#include "../../view_callback/view_callback.h"
 extern "C"
 {
 #include <libavcodec/avcodec.h>
@@ -37,11 +37,11 @@ VideoDecoder::~VideoDecoder()
 bool VideoDecoder::Init(const std::string& path)
 {
     bool b_success = PrepareDeocde(path);
-    ViewCallback::GetInstance()->NotifyParseDone(decoder_->duration);
     if(!b_success)
     {
         return b_success;
     }
+    ViewCallback::GetInstance()->NotifyParseDone(decoder_->duration);
     video_stream_id_ = av_find_best_stream(decoder_, AVMEDIA_TYPE_VIDEO, -1, -1, NULL, 0);
     //解码器上下文copy
     AVCodecParameters* codec_param = decoder_->streams[video_stream_id_]->codecpar;

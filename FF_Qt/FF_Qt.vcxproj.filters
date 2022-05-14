@@ -67,15 +67,6 @@
     <ClCompile Include="base_ui\uslider.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="FFmpeg\video_decoder.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="FFmpeg\audio_decoder.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="FFmpeg\base_decoder.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="Thread\high_ratio_time_thread.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -95,6 +86,27 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="base_ui\base_shadow_form.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="player_controller\encoder_controller.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="screen_capture\win_screen_cap.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="FFmpeg\decoder\audio_decoder.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="FFmpeg\decoder\base_decoder.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="FFmpeg\decoder\video_decoder.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="FFmpeg\encoder\base_encoder.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="FFmpeg\encoder\video_encoder.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -169,24 +181,6 @@
     <ClInclude Include="base_util\guard_ptr.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="FFmpeg\video_decoder.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="FFmpeg\audio_decoder.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="FFmpeg\image_func_packet.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="FFmpeg\base_decoder.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="FFmpeg\AVFrameWrapper.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="FFmpeg\decoder_callback.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="style\qss_manager.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -200,6 +194,42 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="base_ui\base_shadow_form.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="player_controller\encoder_controller.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="screen_capture\win_screen_cap.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="FFmpeg\decoder\audio_decoder.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="FFmpeg\decoder\AVFrameWrapper.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="FFmpeg\decoder\base_decoder.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="FFmpeg\decoder\decoder_callback.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="FFmpeg\decoder\image_func_packet.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="FFmpeg\decoder\video_decoder.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="FFmpeg\encoder\base_encoder.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="FFmpeg\encoder\video_encoder.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="FFmpeg\encoder\define\encoder_type.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="FFmpeg\encoder\define\bytes_info.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

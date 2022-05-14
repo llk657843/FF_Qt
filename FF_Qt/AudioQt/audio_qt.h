@@ -4,7 +4,7 @@
 #include "../Thread/threadsafe_queue.h"
 #include "../base_util/weak_callback.h"
 #include "../base_util/singleton.h"
-#include "../FFmpeg/audio_decoder.h"
+#include "../FFmpeg/decoder/audio_decoder.h"
 class AudioIoDevice;
 class QIODevice;
 class QAudioOutput;

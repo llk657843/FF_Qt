@@ -11,6 +11,7 @@ public:
 	~HighRatioTimeThread();
 	void InitMediaTimer();
 	void Run();
+	void SetConnectMainThread();
 	void Stop();
 	void RegTimeoutCallback(TimeoutCallback);
 	void SetInterval(int64_t interval_time);
@@ -25,4 +26,5 @@ private:
 	TimeoutCallback timeout_callback_;
 	std::once_flag once_flag_;
 	QThread* thread_;
+	bool b_main_thread_;
 };

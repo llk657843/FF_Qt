@@ -3,6 +3,7 @@ HighRatioTimeThread::HighRatioTimeThread()
 {
 	timeout_callback_ = nullptr;
 	thread_ = nullptr;
+	b_main_thread_ = false;
 	InitMediaTimer();
 }
 
@@ -38,9 +39,21 @@ void HighRatioTimeThread::Run()
 	{
 		timer_->start();
 		timer_->moveToThread(thread_);
-		connect(timer_, &QTimer::timeout, this, &HighRatioTimeThread::SlotMediaTimeout, Qt::DirectConnection);
+		if (b_main_thread_) 
+		{
+			connect(timer_, &QTimer::timeout, this, &HighRatioTimeThread::SlotMediaTimeout);
+		}
+		else 
+		{
+			connect(timer_, &QTimer::timeout, this, &HighRatioTimeThread::SlotMediaTimeout, Qt::DirectConnection);
+		}
 		thread_->start();
 	});
+}
+
+void HighRatioTimeThread::SetConnectMainThread()
+{
+	b_main_thread_ = true;
 }
 
 void HighRatioTimeThread::Stop()

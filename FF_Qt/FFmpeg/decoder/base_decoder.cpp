@@ -24,6 +24,9 @@ bool BaseDecoder::PrepareDeocde(const std::string& path)
 		return false;
 	}
 
+	AVDictionary* av_dic = nullptr;
+	av_dict_set(&av_dic,"rtsp_transport","tcp",0);
+
 	AVInputFormat* av_input = nullptr;
 	int res = avformat_open_input(&decoder_, path.c_str(), av_input, NULL);
 	if (res != 0)

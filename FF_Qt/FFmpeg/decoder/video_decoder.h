@@ -8,7 +8,7 @@ extern "C"
 }
 #include "base_decoder.h"
 #include "image_func_packet.h"
-#include "../Thread/threadsafe_queue.h"
+#include "../../Thread/threadsafe_queue.h"
 
 class AVCodecContext;
 class AVFormatContext;

@@ -151,13 +151,6 @@
           <number>10</number>
          </property>
          <item>
-          <widget class="QPushButton" name="btn_start">
-           <property name="text">
-            <string/>
-           </property>
-          </widget>
-         </item>
-         <item>
           <widget class="QPushButton" name="btn_pause_resume">
            <property name="text">
             <string/>
@@ -175,6 +168,13 @@
           <widget class="QPushButton" name="btn_open_file">
            <property name="text">
             <string/>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="btn_screen_shot">
+           <property name="text">
+            <string>录屏</string>
            </property>
           </widget>
          </item>

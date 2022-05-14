@@ -1,9 +1,8 @@
 #include "player_controller.h"
-
 #include <iostream>
 #include <qaudio.h>
 #include <windows.h>
-#include "../FFmpeg/video_decoder.h"
+#include "../FFmpeg/decoder/video_decoder.h"
 #include "../view_callback/view_callback.h"
 #include "../Thread/thread_pool_entrance.h"
 #include "../time_strategy/time_base_define.h"
@@ -12,7 +11,9 @@
 #include "../image_info/image_info.h"
 PlayerController::PlayerController()
 {
-	path_ = "F:/周杰伦-一路向北-(国语)[Chedvd.com].avi";
+	path_ = "";
+	//net_path_ = "http://220.161.87.62:8800/hls/1/index.m3u8";
+	//net_path_ = "https://r3-ndr.ykt.cbern.com.cn/edu_product/65/video/17b26a89547a11eb96b8fa20200c3759/76594798f8163d96296ba6263f2fbc62.1280.720.false/76594798f8163d96296ba6263f2fbc62.1280.720.m3u8";
 	pause_flag_ = false;
 	connect(this, SIGNAL(SignalStartLoop()), this, SLOT(SlotStartLoop()));
 	connect(this, SIGNAL(SignalStopLoop()), this, SLOT(SlotStopLoop()));
@@ -46,21 +47,40 @@ void PlayerController::InitCallbacks()
 
 bool PlayerController::Start()
 {
-	audio_core_->Play();
+	if(!video_decoder_)
+	{
+		std::cout << "warning, decoder not init!" << std::endl;
+		return false;
+	}
+
+
+	if (audio_core_) 
+	{
+		audio_core_->Play();
+	}
 	auto video_task = [=]()
 	{
 		video_decoder_->Run();
 	};
-
+	
 	qtbase::Post2Task(kThreadVideoDecoder, video_task);
 	return true;
 }
 
 bool PlayerController::Open(int win_width,int win_height)
 {
+	if(video_decoder_ || audio_core_)
+	{
+		std::cout << "release video decoder first" << std::endl;
+		return false;
+	}
 	video_decoder_ = new VideoDecoder;
 	video_decoder_->SetImageSize(win_width, win_height);
 	InitAudioCore();
+	if (!net_path_.empty()) 
+	{
+		path_ = net_path_;
+	}
 	bool b_open = video_decoder_->Init(path_);
 	if(!b_open)
 	{

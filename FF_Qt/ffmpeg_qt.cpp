@@ -8,6 +8,7 @@
 #include "QTimer"
 #include "image_info/image_info.h"
 #include "qfiledialog.h"
+#include "player_controller/encoder_controller.h"
 const int TIME_BASE = 1000;	//¿Ì¶ÈÅÌ
 FFMpegQt::FFMpegQt(QWidget* wid) : BasePopupWindow(wid),ui(new Ui::FFMpegQtFormUI)
 {
@@ -56,17 +57,16 @@ void FFMpegQt::OnModifyUI()
 	ui->slider->setTickInterval(1);
 	ui->fr_main->setObjectName("wid_bg");
 	ui->lb_movie->setObjectName("wid_bg");
-	ui->btn_start->setObjectName("btn_start_play");
-	ui->btn_start->setStyle(ui->btn_start->style());
-	ui->btn_start->setFixedSize(30, 30);
 	
 	ui->btn_pause_resume->setFixedSize(30, 30);
 
 	ui->btn_stop->setFixedSize(30, 30);
 	ui->btn_stop->setObjectName("btn_stop_1");
 	ui->fr_bottom->setFixedHeight(50);
+	ui->btn_pause_resume->setObjectName("btn_pause_resume");
 	ui->btn_pause_resume->setCheckable(true);
 	ui->btn_pause_resume->setChecked(false);
+	ui->btn_pause_resume->setStyle(ui->btn_pause_resume->style());
 	ui->btn_open_file->setObjectName("btn_folder");
 	ui->btn_open_file->setFixedSize(30, 30);
 	ui->lb_time->setObjectName("lb_text_1");
@@ -89,7 +89,6 @@ void FFMpegQt::OnModifyUI()
 	ui->btn_open_file->setCursor(Qt::PointingHandCursor);
 	ui->btn_min->setCursor(Qt::PointingHandCursor);
 	ui->btn_pause_resume->setCursor(Qt::PointingHandCursor);
-	ui->btn_start->setCursor(Qt::PointingHandCursor);
 	ui->btn_stop->setCursor(Qt::PointingHandCursor);
 	this->CheckoutShadowType(SHADOW_TYPE::SHADOW_TYPE_MAIN_FORM);
 	ui->lb_movie->setObjectName("lb_img");
@@ -97,12 +96,12 @@ void FFMpegQt::OnModifyUI()
 
 void FFMpegQt::RegisterSignals()
 {
-	connect(ui->btn_start, &QPushButton::clicked, this, &FFMpegQt::SlotStartClicked);
 	connect(ui->btn_pause_resume, &QPushButton::clicked, this, &FFMpegQt::SlotPauseResume);
 	connect(ui->btn_stop, &QPushButton::clicked, this, &FFMpegQt::SlotStop);
 	connect(ui->slider,&USlider::valueChangedByMouse,this,&FFMpegQt::SlotSliderMove);
 	connect(ui->btn_close,&QPushButton::clicked,this,&FFMpegQt::SlotClose);
 	connect(ui->btn_open_file,&QPushButton::clicked,this,&FFMpegQt::SlotOpenFile);
+	connect(ui->btn_screen_shot, &QPushButton::clicked, this, &FFMpegQt::SlotScreenShot);
 	connect(this,&FFMpegQt::SignalClose,this,&FFMpegQt::close);
 	ui->lb_movie->installEventFilter(this);
 	auto image_cb = ToWeakCallback([=](ImageInfo* image_info)
@@ -188,6 +187,12 @@ void FFMpegQt::SlotOpenFile()
 {
 	QString name = QFileDialog::getOpenFileName();
 	PlayerController::GetInstance()->SetPath(name.toStdString());
+	SlotStartClicked();
+}
+
+void FFMpegQt::SlotScreenShot()
+{
+	EncoderController::GetInstance()->ReadyEncode();
 }
 
 void FFMpegQt::ShowTime(int64_t time)

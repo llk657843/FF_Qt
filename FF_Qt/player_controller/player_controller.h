@@ -2,7 +2,6 @@
 #include <functional>
 #include <memory>
 #include <qaudio.h>
-
 #include "../Thread/high_ratio_time_thread.h"
 #include "../base_util/singleton.h"
 #include "QObject"
@@ -54,4 +53,5 @@ private:
 	VideoDecoder* video_decoder_;
 	AudioPlayerCore* audio_core_;
 	std::string path_;
+	std::string net_path_;
 };

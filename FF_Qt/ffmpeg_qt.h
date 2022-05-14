@@ -43,6 +43,7 @@ private:
 	void SlotPauseResume(bool);
 	void SlotClose();
 	void SlotOpenFile();
+	void SlotScreenShot();
 
 	void ShowTime(int64_t time);
 	void ShowImage(ImageInfo*);

@@ -32,7 +32,7 @@
   </ImportGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|Win32'" Label="QtSettings">
     <QtInstall>5.12.11_msvc2017</QtInstall>
-    <QtModules>core;gui;multimedia;widgets</QtModules>
+    <QtModules>core;gui;multimedia;widgets;winextras</QtModules>
     <QtBuildConfig>debug</QtBuildConfig>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|Win32'" Label="QtSettings">
@@ -106,11 +106,15 @@
     <ClCompile Include="base_ui\base_pop_shadow.cpp" />
     <ClCompile Include="base_ui\base_shadow_form.cpp" />
     <ClCompile Include="base_ui\uslider.cpp" />
-    <ClCompile Include="FFmpeg\audio_decoder.cpp" />
-    <ClCompile Include="FFmpeg\base_decoder.cpp" />
-    <ClCompile Include="FFmpeg\video_decoder.cpp" />
+    <ClCompile Include="FFmpeg\decoder\audio_decoder.cpp" />
+    <ClCompile Include="FFmpeg\decoder\base_decoder.cpp" />
+    <ClCompile Include="FFmpeg\decoder\video_decoder.cpp" />
+    <ClCompile Include="FFmpeg\encoder\base_encoder.cpp" />
+    <ClCompile Include="FFmpeg\encoder\video_encoder.cpp" />
     <ClCompile Include="ffmpeg_qt.cpp" />
+    <ClCompile Include="player_controller\encoder_controller.cpp" />
     <ClCompile Include="player_controller\player_controller.cpp" />
+    <ClCompile Include="screen_capture\win_screen_cap.cpp" />
     <ClCompile Include="style\qss_manager.cpp" />
     <ClCompile Include="Thread\high_ratio_time_thread.cpp" />
     <ClCompile Include="Thread\pending_task.cpp" />
@@ -136,13 +140,19 @@
     <ClInclude Include="base_ui\base_pop_shadow.h" />
     <ClInclude Include="base_ui\base_shadow_form.h" />
     <ClInclude Include="base_util\guard_ptr.h" />
-    <ClInclude Include="FFmpeg\audio_decoder.h" />
-    <ClInclude Include="FFmpeg\AVFrameWrapper.h" />
-    <ClInclude Include="FFmpeg\base_decoder.h" />
-    <ClInclude Include="FFmpeg\decoder_callback.h" />
-    <ClInclude Include="FFmpeg\image_func_packet.h" />
-    <ClInclude Include="FFmpeg\video_decoder.h" />
     <QtMoc Include="Thread\high_ratio_time_thread.h" />
+    <ClInclude Include="FFmpeg\decoder\audio_decoder.h" />
+    <ClInclude Include="FFmpeg\decoder\AVFrameWrapper.h" />
+    <ClInclude Include="FFmpeg\decoder\base_decoder.h" />
+    <ClInclude Include="FFmpeg\decoder\decoder_callback.h" />
+    <ClInclude Include="FFmpeg\decoder\image_func_packet.h" />
+    <ClInclude Include="FFmpeg\decoder\video_decoder.h" />
+    <ClInclude Include="FFmpeg\encoder\base_encoder.h" />
+    <ClInclude Include="FFmpeg\encoder\define\bytes_info.h" />
+    <ClInclude Include="FFmpeg\encoder\define\encoder_type.h" />
+    <ClInclude Include="FFmpeg\encoder\video_encoder.h" />
+    <ClInclude Include="player_controller\encoder_controller.h" />
+    <ClInclude Include="screen_capture\win_screen_cap.h" />
     <ClInclude Include="style\qss_manager.h" />
     <ClInclude Include="time_strategy\time_base_define.h" />
     <QtMoc Include="view_callback\view_callback.h" />

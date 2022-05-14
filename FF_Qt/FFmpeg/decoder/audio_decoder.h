@@ -2,7 +2,7 @@
 #include <qbytearray.h>
 #include "base_decoder.h"
 #include "decoder_callback.h"
-#include "../Thread/threadsafe_queue.h"
+#include "../../Thread/threadsafe_queue.h"
 class AVFormatContext;
 class AVFrame;
 class SwrContext;

@@ -5,8 +5,8 @@
 #include <qbytearray.h>
 
 #include "AVFrameWrapper.h"
-#include "../AudioQt/audio_qt.h"
-#include "../view_callback/view_callback.h"
+#include "../../AudioQt/audio_qt.h"
+#include "../../view_callback/view_callback.h"
 extern "C"
 {
 #include <libavformat/avformat.h>
