@@ -232,5 +232,8 @@
     <ClInclude Include="FFmpeg\encoder\define\bytes_info.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Thread\thread_safe_deque.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

@@ -193,6 +193,7 @@ void FFMpegQt::SlotOpenFile()
 void FFMpegQt::SlotScreenShot()
 {
 	EncoderController::GetInstance()->ReadyEncode();
+	EncoderController::GetInstance()->StartCatch();
 }
 
 void FFMpegQt::ShowTime(int64_t time)

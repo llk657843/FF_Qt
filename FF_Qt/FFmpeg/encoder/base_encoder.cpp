@@ -4,6 +4,7 @@ extern "C"
 {
 #include <libavutil/opt.h>
 #include <libavformat/avformat.h>
+#include <libswscale/swscale.h>
 }
 
 BaseEncoder::BaseEncoder()
@@ -38,11 +39,13 @@ bool BaseEncoder::PrepareEncode()
 	}
 
 	av_stream_ = avformat_new_stream(encoder_context_, coder);
+	
 	if (!av_stream_)
 	{
 		printf("Init avStream object is faild! \n");
 		return false;
 	}
+	video_index_ = av_stream_->index;
 	codec_context_->flags |= AV_CODEC_FLAG_QSCALE;
 	codec_context_->bit_rate = 4000000;
 	codec_context_->rc_min_rate = 4000000;
@@ -66,7 +69,7 @@ bool BaseEncoder::PrepareEncode()
 	av_opt_set(codec_context_->priv_data, "tune", "zerolatency", 0);
 
 	int res = avcodec_open2(codec_context_,coder,NULL);
-	if (!res) 
+	if (res != 0) 
 	{
 		return false;
 	}

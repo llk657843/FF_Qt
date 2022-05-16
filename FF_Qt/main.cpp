@@ -10,7 +10,7 @@
 int main(int argc, char* argv[])
 {
     QApplication a(argc, argv);
- /*   ThreadPool::GetInstance();
+    ThreadPool::GetInstance();
     qRegisterMetaType<ImageInfo*>("ImageInfo*");
     qRegisterMetaType<int64_t>("int64_t");
     qRegisterMetaType<std::function<void()>>("std::function<void()>");
@@ -18,9 +18,8 @@ int main(int argc, char* argv[])
     QString qss_path = a.applicationDirPath() + "/style/";
     qss_manager.SetGlobalStyle(qss_path);
     FFMpegQt* wid = new FFMpegQt;
-    wid->show();*/
-    EncoderController::GetInstance()->StartCatch();
+    wid->show();
 	a.exec();
-    //ThreadPool::GetInstance()->StopAll();
+    ThreadPool::GetInstance()->StopAll();
 	return 0;
 }

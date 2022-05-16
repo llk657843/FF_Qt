@@ -1,11 +1,9 @@
 #pragma once
-#include <functional>
 #include "iostream"
 #include "queue"
 #include "shared_mutex"
 const int DEFAULT_MAX_SIZE = 8;
-using RequirePushCallback = std::function<void()>;
-
+//存放元素阻塞，提取元素不阻塞，适用于存放速度远大于提取速度的场景
 template<typename T>
 class thread_safe_queue
 {

@@ -19,4 +19,5 @@ private:
 	std::unique_ptr<VideoEncoder> video_encoder_;
 	WinScreenCap* screen_cap_;
 	HighRatioTimeThread video_render_thread_;
+	int64_t start_time_;
 };

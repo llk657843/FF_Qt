@@ -154,6 +154,7 @@
     <ClInclude Include="player_controller\encoder_controller.h" />
     <ClInclude Include="screen_capture\win_screen_cap.h" />
     <ClInclude Include="style\qss_manager.h" />
+    <ClInclude Include="Thread\thread_safe_deque.h" />
     <ClInclude Include="time_strategy\time_base_define.h" />
     <QtMoc Include="view_callback\view_callback.h" />
     <QtMoc Include="AudioQt\audio_qt.h" />

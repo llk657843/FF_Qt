@@ -11,7 +11,7 @@ public:
 		
 	}
 
-private:
+public:
 	PRGBTRIPLE bytes_;
 	EncoderDataType data_type_;
 	int64_t frame_time_;
