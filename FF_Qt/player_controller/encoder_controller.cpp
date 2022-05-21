@@ -27,7 +27,7 @@ void EncoderController::ReadyEncode()
 	if (!video_encoder_) 
 	{
 		video_encoder_ = std::make_unique<VideoEncoder>();
-		video_encoder_->Init();
+		video_encoder_->Init("D:\\out.mp4");
 	}
 }
 
@@ -42,9 +42,10 @@ void EncoderController::StartCatch()
 		{
 			start_time_ = begin_time;
 		}
-
-		auto bytes = screen_cap_->GetDesktopScreen();
-		video_encoder_->PostImage(bytes,begin_time - start_time_);
+		auto bytes = screen_cap_->GetScreenBytes();
+		video_encoder_->PostImage(std::make_shared<BytesInfo>(bytes, begin_time - start_time_));
+		/*auto bytes = screen_cap_->GetDesktopScreen();
+		video_encoder_->PostImage(bytes,begin_time - start_time_);*/
 		});
 	video_render_thread_.RegTimeoutCallback(timeout_cb);
 	video_render_thread_.InitMediaTimer();
@@ -55,4 +56,10 @@ void EncoderController::StartCatch()
 	qtbase::Post2Task(kThreadVideoDecoder, [=]() {
 		video_encoder_->RunEncoder(); 
 		});
+}
+
+void EncoderController::StopCapture()
+{
+	video_render_thread_.Stop();
+	video_encoder_->Stop();
 }

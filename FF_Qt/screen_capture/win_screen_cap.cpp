@@ -27,7 +27,7 @@ void WinScreenCap::Init()
 	bi.bmiHeader.biBitCount = 24;
 	hBmp = CreateDIBSection(MemDC, &bi, DIB_RGB_COLORS, (void**)&Data, NULL, 0);
 	
-	m_hdib_ = (PRGBTRIPLE)malloc(1920 * 1080 * 3);//24位图像大小
+	m_hdib_ = (PRGBTRIPLE)malloc(bi.bmiHeader.biWidth * bi.bmiHeader.biHeight * 3);//24位图像大小
 }
 
 PRGBTRIPLE WinScreenCap::GetDesktopScreen()
@@ -36,6 +36,12 @@ PRGBTRIPLE WinScreenCap::GetDesktopScreen()
 	PRGBTRIPLE hdib = m_hdib_;
 	GetDIBits(MemDC, bitmap, 0, 1080, hdib, (LPBITMAPINFO)&bi, DIB_RGB_COLORS);
 	return hdib;
+}
+
+BYTE* WinScreenCap::GetScreenBytes()
+{
+	auto bitmap = GetCaptureBmp();
+	return Data;
 }
 
 HBITMAP WinScreenCap::GetCaptureBmp()

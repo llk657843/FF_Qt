@@ -100,10 +100,10 @@ bool AudioDecoder::Run()
 		}
 		if (packet_->stream_index == audio_stream_id_)
 		{
-			AVFrameWrapper frame_wrapper;
+			auto frame_wrapper = std::make_shared<AVFrameWrapper>();
 			SendPacket(av_codec_context_, packet_);
 			//解码
-			if (ReceiveFrame(av_codec_context_, frame_wrapper.frame_))
+			if (ReceiveFrame(av_codec_context_, frame_wrapper))
 			{
 				av_packet_unref(packet_);
 				continue;
@@ -113,13 +113,13 @@ bool AudioDecoder::Run()
 			{
 				std::lock_guard<std::mutex> lock(decode_mutex_);
 				swr_convert(swr_context_, &out_buffer_, MAX_AUDIO_FRAME_SIZE,
-					(const uint8_t**)frame_wrapper.frame_->data, frame_wrapper.frame_->nb_samples);
+					(const uint8_t**)frame_wrapper->Frame()->data, frame_wrapper->Frame()->nb_samples);
 				//获取实际的缓存大小
-				out_buffer_size = av_samples_get_buffer_size(NULL, channel_cnt_, frame_wrapper.frame_->nb_samples, AV_SAMPLE_FMT_S16, 1);
+				out_buffer_size = av_samples_get_buffer_size(NULL, channel_cnt_, frame_wrapper->Frame()->nb_samples, AV_SAMPLE_FMT_S16, 1);
 				// 写入文件
 				byte_array.append((char*)out_buffer_, out_buffer_size);
 				auto timebase = decoder_->streams[audio_stream_id_]->codec->pkt_timebase;
-				duration_time = frame_wrapper.frame_->best_effort_timestamp * 1000.0 * av_q2d(timebase);
+				duration_time = frame_wrapper->Frame()->best_effort_timestamp * 1000.0 * av_q2d(timebase);
 			}
 			NotifyDataCallback(byte_array,duration_time);
 		}

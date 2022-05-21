@@ -9,6 +9,7 @@ class AVFormatContext;
 class AVFrame;
 class AVCodecContext;
 class AVPacket;
+class AVFrameWrapper;
 class BaseDecoder
 {
 public:
@@ -21,7 +22,7 @@ protected:
 	bool PrepareDeocde(const std::string& path);
 	bool ReadFrame(AVPacket*& packet);
 	bool SendPacket(AVCodecContext*&, AVPacket*&);
-	bool ReceiveFrame(AVCodecContext*&,AVFrame*&);
+	bool ReceiveFrame(AVCodecContext*&, std::shared_ptr<AVFrameWrapper>);
 
 protected:
 	AVFormatContext* decoder_;

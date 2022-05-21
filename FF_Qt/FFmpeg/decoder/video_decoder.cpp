@@ -96,7 +96,7 @@ bool VideoDecoder::Run()
             }
 
             auto frame_ptr = std::make_shared<AVFrameWrapper>();
-            if (ReceiveFrame(codec_context_,frame_ptr->frame_))
+            if (ReceiveFrame(codec_context_,frame_ptr))
             {
                 av_packet_unref(packet_);
                 continue;
@@ -112,7 +112,7 @@ bool VideoDecoder::Run()
                     std::lock_guard<std::mutex> lock(decode_mutex_);
                     time_base = decoder_->streams[video_stream_id_]->time_base;
                 }
-				int64_t timestamp = cached_frame->frame_->best_effort_timestamp * av_q2d(time_base) * 1000.0;
+				int64_t timestamp = cached_frame->Frame()->best_effort_timestamp * av_q2d(time_base) * 1000.0;
 				return PostImageTask(std::move(cached_frame), width, height, timestamp, std::move(img_ptr));
             };
             image_funcs_.push_back(ImageFunc(std::make_shared<QImage>(width, height, QImage::Format_ARGB32),func, frame_ptr));

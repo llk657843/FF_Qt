@@ -1,4 +1,5 @@
 #include "base_decoder.h"
+#include "AVFrameWrapper.h"
 extern "C"
 {
 #include <libavformat/avformat.h>
@@ -57,8 +58,8 @@ bool BaseDecoder::SendPacket(AVCodecContext*& codec_context,AVPacket*& packet)
 	return avcodec_send_packet(codec_context, packet) != 0;
 }
 
-bool BaseDecoder::ReceiveFrame(AVCodecContext*& codec_context, AVFrame*& frame)
+bool BaseDecoder::ReceiveFrame(AVCodecContext*& codec_context, std::shared_ptr<AVFrameWrapper> frame)
 {
 	std::lock_guard<std::mutex> lock(decode_mutex_);
-	return avcodec_receive_frame(codec_context, frame) != 0;
+	return avcodec_receive_frame(codec_context, frame->Frame()) != 0;
 }

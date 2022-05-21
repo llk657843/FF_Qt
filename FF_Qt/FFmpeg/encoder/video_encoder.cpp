@@ -1,6 +1,8 @@
 #include "video_encoder.h"
 #include "define/bytes_info.h"
 #include "define/encoder_type.h"
+#include "QImage"
+#include "../../Thread/time_util.h"
 extern "C" 
 {
 #include "libavcodec/avcodec.h"
@@ -8,10 +10,17 @@ extern "C"
 #include <libavutil/imgutils.h>
 #include "libavutil/fifo.h"
 #include "libavformat/avformat.h"
+#include "../decoder/AVFrameWrapper.h"
+#include "av_packet_wrapper.h"
 }
-const int pix_size = 1920 * 1080;
+constexpr int pix_size = 1920 * 1080;
+constexpr int packet_max_size = pix_size * 3 + 1;
 VideoEncoder::VideoEncoder()
 {
+	sws_context_ = nullptr;
+	b_stop_ = false;
+	video_width_ = 1920;
+	video_height_ = 1080;
 	av_packet_ = nullptr;
 }
 
@@ -24,81 +33,100 @@ VideoEncoder::~VideoEncoder()
 	}
 }
 
-void VideoEncoder::Init()
+void VideoEncoder::Init(const std::string& file_name)
 {
-	PrepareEncode();
-	av_packet_ = (AVPacket*)av_malloc(sizeof(AVPacket));
-	av_init_packet(av_packet_);
-	av_frame_ = av_frame_alloc();
-
-	av_frame_->format = AV_PIX_FMT_YUV420P;
-	av_frame_->width = 1920;
-	av_frame_->height = 1080;
-	
-	sws_context_ = NULL;
-	sws_context_ = sws_getCachedContext(nullptr, 1920, 1080, AV_PIX_FMT_YUV420P, //src w,h,fmt
-		1920, 1080, AV_PIX_FMT_RGB24, //dst w,h,fmt
-		SWS_BICUBIC, //尺寸变化算法
-		NULL, NULL, NULL);
-	frame_size_ = av_image_get_buffer_size(AV_PIX_FMT_YUV420P, 1920, 1080, 1);
-	out_buffer_yuv420_ = new BYTE[frame_size_];
-	av_image_fill_arrays(av_frame_->data, av_frame_->linesize, out_buffer_yuv420_, AV_PIX_FMT_YUV420P, 1920, 1080, 1);
-
-	if (sws_context_ == NULL)
-	{
-		return ;
-	}
-
+	PrepareEncode(file_name);
 }
 
 void VideoEncoder::RunEncoder()
 {
-	while (!IsEnded()) 
+	int cnt = 0;
+	while (!IsEnded() && cnt++ < 10000) 
 	{
 		std::shared_ptr<BytesInfo> info;
 		bool b_get = msg_queue_.get_front_block(info);
 		if (b_get) 
 		{
+			//ParseImageInfo(info);
 			ParseBytesInfo(info);
 		}
-		else 
-		{
-			break;
-		}
 	}
+	av_write_trailer(format_context_);
 }
 
-void VideoEncoder::PostImage(void* bytes, int64_t start_timestamp_ms)
+void VideoEncoder::PostImage(std::shared_ptr<BytesInfo>&& ptr)
 {
-	msg_queue_.push_back_non_block(std::make_shared<BytesInfo>(EncoderDataType::BIT_MAP_IMAGE_TYPE,static_cast<PRGBTRIPLE>(bytes),start_timestamp_ms));
+	msg_queue_.push_back_non_block(ptr);
+}
+
+void VideoEncoder::Stop()
+{
+	b_stop_ = true;
+	msg_queue_.release();
 }
 
 bool VideoEncoder::IsEnded()
 {
-	return false;
+	return b_stop_;
 }
 
 void VideoEncoder::ParseBytesInfo(const std::shared_ptr<BytesInfo>& bytes_info)
 {
-	int out_ptr_ =0;
-	RGB24_TO_YUV420((unsigned char*)(bytes_info->bytes_),1920,1080, out_buffer_yuv420_);
-	
-	int ret = avcodec_encode_video2(codec_context_, av_packet_, av_frame_, &out_ptr_);
-	if (ret < 0)
+	std::shared_ptr<AVFrameWrapper> frame = CreateFrame(AVPixelFormat::AV_PIX_FMT_RGB24,video_width_,video_height_,(uint8_t*)bytes_info->real_bytes_);
+
+	auto dst_frame = CreateFrame(AVPixelFormat::AV_PIX_FMT_YUV420P, video_width_, video_height_,nullptr);
+	dst_frame->Frame()->pts = 0;
+	AVPacketWrapper av_packet;
+	av_packet.Init();
+	if (NeedConvert()) 
 	{
-		//编码错误,不理会此帧  
+		if (!sws_context_) 
+		{
+			sws_context_ = sws_getContext(codec_context_->width, codec_context_->height,
+				AV_PIX_FMT_RGB24,
+				codec_context_->width, codec_context_->height,
+				codec_context_->pix_fmt,
+				SWS_BICUBLIN, NULL, NULL, NULL);
+		}
+		sws_scale(sws_context_, frame->Frame()->data, frame->Frame()->linesize,
+			0, codec_context_->height, dst_frame->Frame()->data,dst_frame->Frame()->linesize);
+	}
+	dst_frame->Frame()->best_effort_timestamp = bytes_info->frame_time_;
+	dst_frame->Frame()->pts = bytes_info->frame_time_;
+	dst_frame->Frame()->pkt_dts = bytes_info->frame_time_;
+	//// Encode frame to packet.
+	int res = avcodec_send_frame(codec_context_, dst_frame->Frame());
+	if (res != 0) 
+	{
 		return;
 	}
-
-	if (out_ptr_ == 1)
+	res = avcodec_receive_packet(codec_context_, av_packet.Get());
+	if (res != 0) 
 	{
-		av_packet_->stream_index = video_index_;
-		av_packet_->pts = (bytes_info->frame_time_) / av_q2d(codec_context_->time_base) /1000.0;
-		av_packet_->dts = av_packet_->pts;
-		av_packet_->duration = 0;
-		ret = av_write_frame(encoder_context_, av_packet_);
+		return;
 	}
-	av_frame_unref(av_frame_);
+	
+	if (codec_context_->coded_frame->pts != AV_NOPTS_VALUE)
+	{
+		av_packet.Get()->pts = AV_NOPTS_VALUE;
+	}
+	if (codec_context_->coded_frame->key_frame)
+	{
+		av_packet.Get()->flags |= AV_PKT_FLAG_KEY;
+	}
+	av_packet.Get()->stream_index = v_stream_->index;
+	res = av_interleaved_write_frame(format_context_, av_packet.Get());
+	if (res != 0)
+	{
+		std::cout << "write frame failed" << std::endl;
+		return;
+	}
+}
+void VideoEncoder::ParseImageInfo(const std::shared_ptr<BytesInfo>& bytes_info)
+{
+	QImage image;
+	bool b_load = image.loadFromData((const uchar*)bytes_info->bytes_,pix_size);
+	image.save("D:\\1.png");
 }
 bool VideoEncoder::RGB24_TO_YUV420(unsigned char* RgbBuf, int w, int h, unsigned char* yuvBuf)
 {
@@ -150,4 +178,41 @@ unsigned char VideoEncoder::ClipValue(unsigned char x, unsigned char min_val, un
 	else {
 		return x;
 	}
+}
+
+std::shared_ptr<AVFrameWrapper> VideoEncoder::CreateFrame(const AVPixelFormat& pix_fmt, int width, int height,uint8_t* src_ptr)
+{
+	auto picture = std::make_shared<AVFrameWrapper>();
+	
+	int size = 0;
+
+	size = avpicture_get_size(pix_fmt, width, height);
+	
+	if(!src_ptr)
+	{
+		uint8_t* picture_buf = NULL;
+		picture_buf = (uint8_t*)av_malloc(size);
+		av_image_fill_arrays(picture->Frame()->data,picture->Frame()->linesize,picture_buf,pix_fmt, width, height,1);
+		picture_buf = NULL;
+		picture->SetManualFree(false);
+	}
+	else 
+	{
+		av_image_fill_arrays(picture->Frame()->data, picture->Frame()->linesize, src_ptr, pix_fmt, width, height, 1);
+		picture->SetManualFree(true);
+	}
+	picture->Frame()->width = video_width_;
+	picture->Frame()->height = video_height_;
+	picture->Frame()->format = pix_fmt;
+	return picture;
+}
+
+bool VideoEncoder::NeedConvert()
+{
+	bool b_res = false;
+	if (v_stream_ && v_stream_->codec)
+	{
+		b_res = (v_stream_->codec->pix_fmt != AV_PIX_FMT_RGB24);
+	}
+	return b_res;
 }

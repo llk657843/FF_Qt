@@ -103,6 +103,7 @@ void FFMpegQt::RegisterSignals()
 	connect(ui->btn_open_file,&QPushButton::clicked,this,&FFMpegQt::SlotOpenFile);
 	connect(ui->btn_screen_shot, &QPushButton::clicked, this, &FFMpegQt::SlotScreenShot);
 	connect(this,&FFMpegQt::SignalClose,this,&FFMpegQt::close);
+	connect(ui->btn_stop_capture,&QPushButton::clicked,this,&FFMpegQt::SlotStopScreenClicked);
 	ui->lb_movie->installEventFilter(this);
 	auto image_cb = ToWeakCallback([=](ImageInfo* image_info)
 		{
@@ -194,6 +195,11 @@ void FFMpegQt::SlotScreenShot()
 {
 	EncoderController::GetInstance()->ReadyEncode();
 	EncoderController::GetInstance()->StartCatch();
+}
+
+void FFMpegQt::SlotStopScreenClicked()
+{
+	EncoderController::GetInstance()->StopCapture();
 }
 
 void FFMpegQt::ShowTime(int64_t time)

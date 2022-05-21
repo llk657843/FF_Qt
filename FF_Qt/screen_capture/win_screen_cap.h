@@ -7,6 +7,7 @@ public:
 	~WinScreenCap();
 	void Init();
 	PRGBTRIPLE GetDesktopScreen();
+	BYTE* GetScreenBytes();
 
 private:
 	HBITMAP GetCaptureBmp();

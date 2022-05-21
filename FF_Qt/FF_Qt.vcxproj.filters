@@ -109,6 +109,9 @@
     <ClCompile Include="FFmpeg\encoder\video_encoder.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="FFmpeg\encoder\av_packet_wrapper.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="ffmpeg_qt.ui">
@@ -233,6 +236,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Thread\thread_safe_deque.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="FFmpeg\encoder\av_packet_wrapper.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

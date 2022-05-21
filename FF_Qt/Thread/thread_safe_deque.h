@@ -40,7 +40,7 @@ public:
 		try_wake_up(true);
 	}
 
-	bool get_front_block(T& object) 
+	bool get_front_block(T& object)
 	{
 		std::unique_lock<std::mutex> lock(mutex_);
 		while (is_empty_no_lock() && !b_end_)
@@ -49,13 +49,17 @@ public:
 			condition_variable_.wait(lock);
 			b_sleep_ = false;
 		}
-		if (b_end_) 
+		if (b_end_)
 		{
 			return false;
 		}
-		object = internal_queue_.front();
-		internal_queue_.pop();
-		return true;
+		if (!internal_queue_.empty())
+		{
+			object = internal_queue_.front();
+			internal_queue_.pop();
+			return true;
+		}
+		return false;
 	}
 
 private:

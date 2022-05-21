@@ -14,6 +14,7 @@ public:
 
 	void ReadyEncode();
 	void StartCatch();
+	void StopCapture();
 
 private:
 	std::unique_ptr<VideoEncoder> video_encoder_;

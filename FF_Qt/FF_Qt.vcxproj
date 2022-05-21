@@ -109,6 +109,7 @@
     <ClCompile Include="FFmpeg\decoder\audio_decoder.cpp" />
     <ClCompile Include="FFmpeg\decoder\base_decoder.cpp" />
     <ClCompile Include="FFmpeg\decoder\video_decoder.cpp" />
+    <ClCompile Include="FFmpeg\encoder\av_packet_wrapper.cpp" />
     <ClCompile Include="FFmpeg\encoder\base_encoder.cpp" />
     <ClCompile Include="FFmpeg\encoder\video_encoder.cpp" />
     <ClCompile Include="ffmpeg_qt.cpp" />
@@ -147,6 +148,7 @@
     <ClInclude Include="FFmpeg\decoder\decoder_callback.h" />
     <ClInclude Include="FFmpeg\decoder\image_func_packet.h" />
     <ClInclude Include="FFmpeg\decoder\video_decoder.h" />
+    <ClInclude Include="FFmpeg\encoder\av_packet_wrapper.h" />
     <ClInclude Include="FFmpeg\encoder\base_encoder.h" />
     <ClInclude Include="FFmpeg\encoder\define\bytes_info.h" />
     <ClInclude Include="FFmpeg\encoder\define\encoder_type.h" />

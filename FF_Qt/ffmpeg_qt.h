@@ -44,6 +44,7 @@ private:
 	void SlotClose();
 	void SlotOpenFile();
 	void SlotScreenShot();
+	void SlotStopScreenClicked();
 
 	void ShowTime(int64_t time);
 	void ShowImage(ImageInfo*);
