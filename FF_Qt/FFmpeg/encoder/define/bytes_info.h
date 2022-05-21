@@ -3,13 +3,13 @@
 #include "windows.h"
 #include <cstdint>
 #include <type_traits>
+extern "C" 
+{
+#include "libavutil/rational.h"
+}
 class BytesInfo
 {
 public:
-	BytesInfo(EncoderDataType type, PRGBTRIPLE&& bytes, int64_t frame_time) : bytes_(std::move(bytes)),data_type_(type),frame_time_(frame_time)
-	{
-		
-	}
 	BytesInfo(unsigned char* bytes, int64_t frame_time)
 	{
 		real_bytes_ = bytes;
@@ -17,12 +17,19 @@ public:
 	}
 	~BytesInfo()
 	{
-		//delete bytes_;
+
+	}
+	int64_t GetFrameTime(AVRational time_base)
+	{
+		return  frame_time_ / av_q2d(time_base) / 1000.0;
 	}
 
+
 public:
-	PRGBTRIPLE bytes_;
+	unsigned char* real_bytes_;
+
+private:
 	EncoderDataType data_type_;
 	int64_t frame_time_;
-	unsigned char* real_bytes_;
+	int64_t best_effort_video_;
 };

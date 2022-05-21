@@ -15,6 +15,7 @@ extern "C"
 const int MAX_AUDIO_FRAME_SIZE = 48000 * 2 * 16 * 0.125;
 AudioDecoder::AudioDecoder()
 {
+	av_codec_context_ = nullptr;
 	data_cb_ = nullptr;
 	channel_cnt_ = 0;
 	out_sample_rate_ = 0; 
@@ -22,6 +23,7 @@ AudioDecoder::AudioDecoder()
 	stop_flag_ = false;
 	out_buffer_ = nullptr;
 	b_running_ = false;
+	swr_context_ = nullptr;
 }
 
 AudioDecoder::~AudioDecoder()
@@ -41,8 +43,11 @@ bool AudioDecoder::Init(const std::string& path)
 		return false;
 	}
 	audio_stream_id_ = av_find_best_stream(decoder_, AVMEDIA_TYPE_AUDIO, -1, -1, NULL, 0);
+	if (audio_stream_id_ < 0) 
+	{
+		return false;		
+	}
 	AVCodecParameters* codec_param = decoder_->streams[audio_stream_id_]->codecpar;
-
 	//创建编码器上下文
 	av_codec_context_ = avcodec_alloc_context3(decoder_->audio_codec);
 	if (!av_codec_context_)

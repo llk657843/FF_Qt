@@ -26,9 +26,6 @@ private:
 	bool IsEnded();
 	void ParseBytesInfo(const std::shared_ptr<BytesInfo>& bytes_info);
 	void ParseImageInfo(const std::shared_ptr<BytesInfo>& bytes_info);
-	bool RGB24_TO_YUV420(unsigned char* RgbBuf, int w, int h, unsigned char* yuvBuf);
-
-	unsigned char ClipValue(unsigned char x, unsigned char min_val, unsigned char max_val);
 	std::shared_ptr<AVFrameWrapper> CreateFrame(const AVPixelFormat& pix_fmt, int width, int height,uint8_t* src);
 	bool NeedConvert();
 

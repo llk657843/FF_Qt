@@ -72,7 +72,8 @@ bool VideoEncoder::IsEnded()
 
 void VideoEncoder::ParseBytesInfo(const std::shared_ptr<BytesInfo>& bytes_info)
 {
-	std::shared_ptr<AVFrameWrapper> frame = CreateFrame(AVPixelFormat::AV_PIX_FMT_RGB24,video_width_,video_height_,(uint8_t*)bytes_info->real_bytes_);
+	AVPixelFormat src_format = AVPixelFormat::AV_PIX_FMT_BGR24;
+	std::shared_ptr<AVFrameWrapper> frame = CreateFrame(src_format,video_width_,video_height_,(uint8_t*)bytes_info->real_bytes_);
 
 	auto dst_frame = CreateFrame(AVPixelFormat::AV_PIX_FMT_YUV420P, video_width_, video_height_,nullptr);
 	dst_frame->Frame()->pts = 0;
@@ -82,8 +83,7 @@ void VideoEncoder::ParseBytesInfo(const std::shared_ptr<BytesInfo>& bytes_info)
 	{
 		if (!sws_context_) 
 		{
-			sws_context_ = sws_getContext(codec_context_->width, codec_context_->height,
-				AV_PIX_FMT_RGB24,
+			sws_context_ = sws_getContext(codec_context_->width, codec_context_->height,src_format,
 				codec_context_->width, codec_context_->height,
 				codec_context_->pix_fmt,
 				SWS_BICUBLIN, NULL, NULL, NULL);
@@ -91,9 +91,9 @@ void VideoEncoder::ParseBytesInfo(const std::shared_ptr<BytesInfo>& bytes_info)
 		sws_scale(sws_context_, frame->Frame()->data, frame->Frame()->linesize,
 			0, codec_context_->height, dst_frame->Frame()->data,dst_frame->Frame()->linesize);
 	}
-	dst_frame->Frame()->best_effort_timestamp = bytes_info->frame_time_;
-	dst_frame->Frame()->pts = bytes_info->frame_time_;
-	dst_frame->Frame()->pkt_dts = bytes_info->frame_time_;
+	dst_frame->Frame()->best_effort_timestamp = bytes_info->GetFrameTime(v_stream_->time_base);
+	dst_frame->Frame()->pts = bytes_info->GetFrameTime(v_stream_->time_base);
+	dst_frame->Frame()->pkt_dts = bytes_info->GetFrameTime(v_stream_->time_base);
 	//// Encode frame to packet.
 	int res = avcodec_send_frame(codec_context_, dst_frame->Frame());
 	if (res != 0) 
@@ -124,60 +124,9 @@ void VideoEncoder::ParseBytesInfo(const std::shared_ptr<BytesInfo>& bytes_info)
 }
 void VideoEncoder::ParseImageInfo(const std::shared_ptr<BytesInfo>& bytes_info)
 {
-	QImage image;
-	bool b_load = image.loadFromData((const uchar*)bytes_info->bytes_,pix_size);
-	image.save("D:\\1.png");
-}
-bool VideoEncoder::RGB24_TO_YUV420(unsigned char* RgbBuf, int w, int h, unsigned char* yuvBuf)
-{
-	unsigned char* ptrY, * ptrU, * ptrV, * ptrRGB;
-	memset(yuvBuf, 0, w * h * 3 / 2);
-	ptrY = yuvBuf;
-	ptrU = yuvBuf + w * h;
-	ptrV = ptrU + (w * h * 1 / 4);
-	unsigned char y, u, v, r, g, b;
-	for (int j = h - 1; j >= 0; j--) 
-	{
-		ptrRGB = RgbBuf + w * j * 3;
-		for (int i = 0; i < w; i++) 
-		{
-
-			b = *(ptrRGB++);
-			g = *(ptrRGB++);
-			r = *(ptrRGB++);
-
-
-			y = (unsigned char)((66 * r + 129 * g + 25 * b + 128) >> 8) + 16;
-			u = (unsigned char)((-38 * r - 74 * g + 112 * b + 128) >> 8) + 128;
-			v = (unsigned char)((112 * r - 94 * g - 18 * b + 128) >> 8) + 128;
-			*(ptrY++) = ClipValue(y, 0, 255);
-			if (j % 2 == 0 && i % 2 == 0) 
-			{
-				*(ptrU++) = ClipValue(u, 0, 255);
-			}
-			else 
-			{
-				if (i % 2 == 0) 
-				{
-					*(ptrV++) = ClipValue(v, 0, 255);
-				}
-			}
-		}
-	}
-	return true;
-}
-
-unsigned char VideoEncoder::ClipValue(unsigned char x, unsigned char min_val, unsigned char  max_val) 
-{
-	if (x > max_val) {
-		return max_val;
-	}
-	else if (x < min_val) {
-		return min_val;
-	}
-	else {
-		return x;
-	}
+	//QImage image;
+	//bool b_load = image.loadFromData((const uchar*)bytes_info->bytes_,pix_size);
+	//image.save("D:\\1.png");
 }
 
 std::shared_ptr<AVFrameWrapper> VideoEncoder::CreateFrame(const AVPixelFormat& pix_fmt, int width, int height,uint8_t* src_ptr)
