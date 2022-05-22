@@ -42,8 +42,7 @@ void VideoEncoder::Init(const std::string& file_name)
 
 void VideoEncoder::RunEncoder()
 {
-	int cnt = 0;
-	while (!IsEnded() && cnt++ < 10000) 
+	while (!IsEnded()) 
 	{
 		std::shared_ptr<BytesInfo> info;
 		bool b_get = msg_queue_.get_front_block(info);
