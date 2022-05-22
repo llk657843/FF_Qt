@@ -3,6 +3,7 @@
 #include "define/encoder_type.h"
 #include "QImage"
 #include "../../Thread/time_util.h"
+#include "qbitmap.h"
 extern "C" 
 {
 #include "libavcodec/avcodec.h"
@@ -22,6 +23,7 @@ VideoEncoder::VideoEncoder()
 	video_width_ = 1920;
 	video_height_ = 1080;
 	av_packet_ = nullptr;
+	pic_src_format_ = AVPixelFormat::AV_PIX_FMT_BGR24;
 }
 
 VideoEncoder::~VideoEncoder()
@@ -47,7 +49,6 @@ void VideoEncoder::RunEncoder()
 		bool b_get = msg_queue_.get_front_block(info);
 		if (b_get) 
 		{
-			//ParseImageInfo(info);
 			ParseBytesInfo(info);
 		}
 	}
@@ -72,9 +73,7 @@ bool VideoEncoder::IsEnded()
 
 void VideoEncoder::ParseBytesInfo(const std::shared_ptr<BytesInfo>& bytes_info)
 {
-	AVPixelFormat src_format = AVPixelFormat::AV_PIX_FMT_BGR24;
-	std::shared_ptr<AVFrameWrapper> frame = CreateFrame(src_format,video_width_,video_height_,(uint8_t*)bytes_info->real_bytes_);
-
+	std::shared_ptr<AVFrameWrapper> frame = CreateFrame(pic_src_format_,video_width_,video_height_,(uint8_t*)bytes_info->real_bytes_);
 	auto dst_frame = CreateFrame(AVPixelFormat::AV_PIX_FMT_YUV420P, video_width_, video_height_,nullptr);
 	dst_frame->Frame()->pts = 0;
 	AVPacketWrapper av_packet;
@@ -83,7 +82,7 @@ void VideoEncoder::ParseBytesInfo(const std::shared_ptr<BytesInfo>& bytes_info)
 	{
 		if (!sws_context_) 
 		{
-			sws_context_ = sws_getContext(codec_context_->width, codec_context_->height,src_format,
+			sws_context_ = sws_getContext(codec_context_->width, codec_context_->height, pic_src_format_,
 				codec_context_->width, codec_context_->height,
 				codec_context_->pix_fmt,
 				SWS_BICUBLIN, NULL, NULL, NULL);
@@ -122,12 +121,6 @@ void VideoEncoder::ParseBytesInfo(const std::shared_ptr<BytesInfo>& bytes_info)
 		return;
 	}
 }
-void VideoEncoder::ParseImageInfo(const std::shared_ptr<BytesInfo>& bytes_info)
-{
-	//QImage image;
-	//bool b_load = image.loadFromData((const uchar*)bytes_info->bytes_,pix_size);
-	//image.save("D:\\1.png");
-}
 
 std::shared_ptr<AVFrameWrapper> VideoEncoder::CreateFrame(const AVPixelFormat& pix_fmt, int width, int height,uint8_t* src_ptr)
 {
@@ -158,10 +151,5 @@ std::shared_ptr<AVFrameWrapper> VideoEncoder::CreateFrame(const AVPixelFormat& p
 
 bool VideoEncoder::NeedConvert()
 {
-	bool b_res = false;
-	if (v_stream_ && v_stream_->codec)
-	{
-		b_res = (v_stream_->codec->pix_fmt != AV_PIX_FMT_RGB24);
-	}
-	return b_res;
+	return pic_src_format_ != AV_PIX_FMT_YUV420P;
 }

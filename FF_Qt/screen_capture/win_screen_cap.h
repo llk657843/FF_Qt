@@ -6,11 +6,10 @@ public:
 	WinScreenCap();
 	~WinScreenCap();
 	void Init();
-	PRGBTRIPLE GetDesktopScreen();
 	BYTE* GetScreenBytes();
 
 private:
-	HBITMAP GetCaptureBmp();
+	void GetCaptureBmp();
 
 
 private:
@@ -19,6 +18,6 @@ private:
 	HDC     MemDC;
 	HBITMAP   hBmp;
 	BITMAPINFO   bi;
-	BYTE* Data;
+	BYTE* bit_data_;
 	PRGBTRIPLE m_hdib_;
 };

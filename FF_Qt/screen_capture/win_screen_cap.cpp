@@ -14,39 +14,28 @@ WinScreenCap::~WinScreenCap()
 
 void WinScreenCap::Init()
 {
-	auto win_id = QApplication::desktop()->winId();
-	QScreen* screen = QGuiApplication::primaryScreen();
 	hDC = GetDC(NULL);
 	MemDC = CreateCompatibleDC(hDC);
 	int cnt = 0;
 	memset(&bi, 0, sizeof(bi));
 	bi.bmiHeader.biSize = sizeof(BITMAPINFO);
 	bi.bmiHeader.biWidth = GetSystemMetrics(SM_CXSCREEN);
-	bi.bmiHeader.biHeight = GetSystemMetrics(SM_CYSCREEN);
+	bi.bmiHeader.biHeight = GetSystemMetrics(SM_CYSCREEN)*(-1);
 	bi.bmiHeader.biPlanes = 1;
 	bi.bmiHeader.biBitCount = 24;
-	hBmp = CreateDIBSection(MemDC, &bi, DIB_RGB_COLORS, (void**)&Data, NULL, 0);
+	hBmp = CreateDIBSection(MemDC, &bi, DIB_RGB_COLORS, (void**)&bit_data_, NULL, 0);
 	
 	m_hdib_ = (PRGBTRIPLE)malloc(bi.bmiHeader.biWidth * bi.bmiHeader.biHeight * 3);//24Î»Í¼Ïñ´óÐ¡
 }
 
-PRGBTRIPLE WinScreenCap::GetDesktopScreen()
-{
-	auto bitmap = GetCaptureBmp();
-	PRGBTRIPLE hdib = m_hdib_;
-	GetDIBits(MemDC, bitmap, 0, 1080, hdib, (LPBITMAPINFO)&bi, DIB_RGB_COLORS);
-	return hdib;
-}
-
 BYTE* WinScreenCap::GetScreenBytes()
 {
-	auto bitmap = GetCaptureBmp();
-	return Data;
+	GetCaptureBmp();
+	return bit_data_;
 }
 
-HBITMAP WinScreenCap::GetCaptureBmp()
+void WinScreenCap::GetCaptureBmp()
 {
 	SelectObject(MemDC, hBmp);
-	BitBlt(MemDC, 0, 0, bi.bmiHeader.biWidth, bi.bmiHeader.biHeight, hDC, 0, 0, SRCCOPY);
-	return hBmp;
+	BitBlt(MemDC, 0, 0, GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN), hDC, 0, 0, SRCCOPY);
 }
