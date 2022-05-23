@@ -7,6 +7,7 @@
 #include "style/qss_manager.h"
 #include "player_controller/encoder_controller.h"
 #include "windows.h"
+#include "audio_recorder/win_audio_recorder.h"
 int main(int argc, char* argv[])
 {
     QApplication a(argc, argv);
@@ -21,5 +22,6 @@ int main(int argc, char* argv[])
     wid->show();
 	a.exec();
     ThreadPool::GetInstance()->StopAll();
+
 	return 0;
 }

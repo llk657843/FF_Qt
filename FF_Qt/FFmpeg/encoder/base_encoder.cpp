@@ -7,7 +7,6 @@ extern "C"
 #include <libavformat/avformat.h>
 #include <libswscale/swscale.h>
 #include "libavcodec/avcodec.h"
-
 }
 const int MAX_BUFFER = 1920 * 1080 * 3;
 BaseEncoder::BaseEncoder()

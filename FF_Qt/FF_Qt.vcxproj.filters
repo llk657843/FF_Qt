@@ -112,6 +112,15 @@
     <ClCompile Include="FFmpeg\encoder\av_packet_wrapper.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="FFmpeg\encoder\audio_encoder.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="FFmpeg\encoder\define\encoder_critical_sec.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="audio_recorder\win_audio_recorder.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="ffmpeg_qt.ui">
@@ -239,6 +248,15 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="FFmpeg\encoder\av_packet_wrapper.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="FFmpeg\encoder\audio_encoder.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="FFmpeg\encoder\define\encoder_critical_sec.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="audio_recorder\win_audio_recorder.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

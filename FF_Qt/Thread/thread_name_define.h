@@ -6,7 +6,10 @@ enum ThreadName
 	kThreadAudioRender,
 	kThreadAudioDecoder,
 	kThreadHTTP,              //ÓÃ»§apiÍøÂçÇëÇó
-	kThreadLog,
 	kThreadMoreTask,
+	kThreadVideoEncoder,
+	kThreadVideoCapture,
+	kThreadAudioEncoder,
+	kThreadAudioCapture,
 };
-const int ThreadCnt = 7;
+const int ThreadCnt = 10;
