@@ -103,9 +103,6 @@
     <ClCompile Include="FFmpeg\decoder\video_decoder.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="FFmpeg\encoder\base_encoder.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="FFmpeg\encoder\video_encoder.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -119,6 +116,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="audio_recorder\win_audio_recorder.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="audio_recorder\audio_data_cb.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -232,9 +232,6 @@
     <ClInclude Include="FFmpeg\decoder\video_decoder.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="FFmpeg\encoder\base_encoder.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="FFmpeg\encoder\video_encoder.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -257,6 +254,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="audio_recorder\win_audio_recorder.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="audio_recorder\audio_data_cb.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

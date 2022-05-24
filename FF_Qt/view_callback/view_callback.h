@@ -11,6 +11,7 @@ using OpenDoneCallback = std::function<void()>;
 using ImageInfoCallback = std::function<void(ImageInfo*)>;
 using TimeCallback = std::function<void(int64_t timestamp)>;
 using ParseDoneCallback = std::function<void(int64_t duration)>;
+
 class ViewCallback : public QObject
 {
 	Q_OBJECT

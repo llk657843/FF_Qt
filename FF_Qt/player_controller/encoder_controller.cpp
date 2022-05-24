@@ -13,6 +13,7 @@
 #include "../Thread/thread_pool_entrance.h"
 #include "../FFmpeg/encoder/audio_encoder.h"
 #include "../FFmpeg/encoder/define/encoder_critical_sec.h"
+#include "../audio_recorder/audio_data_cb.h"
 EncoderController::EncoderController()
 {
 	video_encoder_ = nullptr;
@@ -28,38 +29,35 @@ void EncoderController::ReadyEncode()
 {
 	std::string path = "D:\\out.mp4";
 	InitEnocderInfo(path);
-	if (!video_encoder_) 
-	{
-		video_encoder_ = std::make_unique<VideoEncoder>();
-		video_encoder_->Init(path);
-	}
+	InitVideoEncoder();
 	InitAudio();
-}
+	encoder_info_->OpenIo();
+	encoder_info_->WriteHeader();
 
+	InitScreenCap();
+}
 
 void EncoderController::StartCatch()
 {
-	//InitScreenCap();
-	//
-	//auto timeout_cb = ToWeakCallback([=]() {
-	//	int64_t begin_time = time_util::GetCurrentTimeMst();
-	//	if (start_time_ == 0) 
-	//	{
-	//		start_time_ = begin_time;
-	//	}
-	//	auto bytes = screen_cap_->GetScreenBytes();
-	//	video_encoder_->PostImage(std::make_shared<BytesInfo>(bytes, begin_time - start_time_));
-	//	});
-	//video_capture_thread_.RegTimeoutCallback(timeout_cb);
-	//video_capture_thread_.InitMediaTimer();
-	//video_capture_thread_.SetInterval(40);
-	//video_capture_thread_.Run();
+	auto timeout_cb = ToWeakCallback([=]() {
+		int64_t begin_time = time_util::GetCurrentTimeMst();
+		if (start_time_ == 0) 
+		{
+			start_time_ = begin_time;
+		}
+		auto bytes = screen_cap_->GetScreenBytes();
+		video_encoder_->PostImage(std::make_shared<BytesInfo>(bytes, begin_time - start_time_));
+		});
+	video_capture_thread_.RegTimeoutCallback(timeout_cb);
+	video_capture_thread_.InitMediaTimer();
+	video_capture_thread_.SetInterval(40);
+	video_capture_thread_.Run();
 
-	//
-	//qtbase::Post2Task(kThreadAudioEncoder, [=]() {
-	//	video_encoder_->RunEncoder(); 
-	//	});
+	
 	qtbase::Post2Task(kThreadAudioEncoder, [=]() {
+		video_encoder_->RunEncoder(); 
+		});
+	qtbase::Post2Task(kThreadAudioCapture, [=]() {
 		recorder_.RecordWave();
 		});
 }
@@ -100,7 +98,23 @@ void EncoderController::InitAudio()
 	if (audio_encoder_) 
 	{
 		std::cout << "audio encoder already init." << std::endl;
+		return;
 	}
 	audio_encoder_ = std::make_unique<AudioEncoder>();
 	audio_encoder_->Init(encoder_info_);
+
+	auto task = [=](const QByteArray& bytes, int64_t timestamp_ms) {
+		audio_encoder_->PushBytes(bytes, timestamp_ms);
+	};
+
+	AudioDataCallback::GetInstance()->RegRecordBufferCallback(task);
+}
+
+void EncoderController::InitVideoEncoder()
+{
+	if (!video_encoder_)
+	{
+		video_encoder_ = std::make_unique<VideoEncoder>();
+		video_encoder_->Init(encoder_info_);
+	}
 }

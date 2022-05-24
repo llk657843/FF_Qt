@@ -2,10 +2,12 @@
 #include "mmsystem.h"
 #include "cstdio"
 #include <iostream>
+#include "audio_data_cb.h"
 #define FRAGMENT_SIZE 4096        // 设置缓存区大小  
-#define FRAGMENT_NUM 4            // 设置缓存区个数
+
 WinAudioRecorder::WinAudioRecorder()
 {
+
 }
 
 WinAudioRecorder::~WinAudioRecorder()
@@ -23,7 +25,7 @@ DWORD CALLBACK MicCallback(HWAVEIN hwavein, UINT uMsg, DWORD dwInstance, DWORD d
 	}
 	case WIM_DATA:
 	{
-		printf("\n缓冲区%d存满...\n", ((LPWAVEHDR)dwParam1)->dwUser);
+		AudioDataCallback::GetInstance()->NotifyBufferCallback(((LPWAVEHDR)dwParam1)->lpData);
 		waveInAddBuffer(hwavein, (LPWAVEHDR)dwParam1, sizeof(WAVEHDR));
 		break;
 	}
@@ -40,38 +42,41 @@ DWORD CALLBACK MicCallback(HWAVEIN hwavein, UINT uMsg, DWORD dwInstance, DWORD d
 
 void WinAudioRecorder::RecordWave()
 {
-	HWAVEIN phwi;
-
 	WAVEFORMATEX pwfx = WaveInitFormat(2, 44100, 16);
-	auto mmResult = waveInOpen(&phwi, WAVE_MAPPER, &pwfx, (DWORD)(MicCallback), NULL, CALLBACK_FUNCTION);//3
+	auto mmResult = waveInOpen(&phwi_, WAVE_MAPPER, &pwfx, (DWORD)(MicCallback), NULL, CALLBACK_FUNCTION);//3
 
 	if (MMSYSERR_NOERROR == mmResult)
 	{
-		static WAVEHDR waveHDR[FRAGMENT_NUM];
-		for (int i = 0; i < FRAGMENT_NUM; i++) 
+		for (int i = 0; i < FRAGMENT_NUM; i++)
 		{
-			waveHDR[i].lpData = new char[FRAGMENT_SIZE];
-			waveHDR[i].dwBufferLength = FRAGMENT_SIZE;
-			waveHDR[i].dwBytesRecorded = 0;
-			waveHDR[i].dwUser = i;
-			waveHDR[i].dwFlags = 0;
-			waveHDR[i].dwLoops = 1;
-			waveHDR[i].lpNext = NULL;
-			waveHDR[i].reserved = 0;
-			waveInUnprepareHeader(phwi, &waveHDR[i], sizeof(WAVEHDR));
+			wave_hdr_[i].lpData = new char[FRAGMENT_SIZE];
+			wave_hdr_[i].dwBufferLength = FRAGMENT_SIZE;
+			wave_hdr_[i].dwBytesRecorded = 0;
+			wave_hdr_[i].dwUser = i;
+			wave_hdr_[i].dwFlags = 0;
+			wave_hdr_[i].dwLoops = 1;
+			wave_hdr_[i].lpNext = NULL;
+			wave_hdr_[i].reserved = 0;
+			waveInUnprepareHeader(phwi_, &wave_hdr_[i], sizeof(WAVEHDR));
 			//准备缓冲区
-			waveInPrepareHeader(phwi, &waveHDR[i], sizeof(WAVEHDR));
+			waveInPrepareHeader(phwi_, &wave_hdr_[i], sizeof(WAVEHDR));
 			//添加buffer到音频采集
-			waveInAddBuffer(phwi, &waveHDR[i], sizeof(WAVEHDR));
+			waveInAddBuffer(phwi_, &wave_hdr_[i], sizeof(WAVEHDR));
 		}
-		if (MMSYSERR_NOERROR == mmResult)
+		mmResult = waveInStart(phwi_);
+		if (MMSYSERR_NOERROR != mmResult)
 		{
-			if (MMSYSERR_NOERROR == mmResult)
-			{
-				mmResult = waveInStart(phwi);//6
-				printf("\n请求开始录音\n");
-			}
+			std::cout << "Record start failed" << std::endl;
 		}
+	}
+}
+
+void WinAudioRecorder::StopRecord()
+{
+	auto res = waveInStop(phwi_);
+	if (res != MMSYSERR_NOERROR) 
+	{
+		std::cout << "Record end failed" << std::endl;
 	}
 }
 
@@ -87,3 +92,4 @@ WAVEFORMATEX WinAudioRecorder::WaveInitFormat(WORD nCh, DWORD nSampleRate, WORD 
 	m_WaveFormat.cbSize = 0;
 	return m_WaveFormat;
 }
+

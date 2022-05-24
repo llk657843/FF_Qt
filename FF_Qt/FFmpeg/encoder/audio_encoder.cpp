@@ -31,6 +31,17 @@ void AudioEncoder::Init(const std::weak_ptr<EncoderCriticalSec>& encoder_infos)
 	OpenAudio();
 }
 
+void AudioEncoder::PushBytes(const QByteArray& bytes, int64_t timestamp_ms)
+{
+	if (!audio_stream_) 
+	{
+		return;
+	}
+	AVCodecContext* ctx = audio_stream_->codec;
+
+	
+}
+
 bool AudioEncoder::AddAudioStream()
 {
 	auto encoder_ptr = encoder_infos_.lock();
@@ -38,7 +49,6 @@ bool AudioEncoder::AddAudioStream()
 	{
 		return false;
 	}
-	
 
 	// Try create stream.
 	audio_stream_ = encoder_ptr->CreateNewStream();
@@ -50,7 +60,7 @@ bool AudioEncoder::AddAudioStream()
 
 	// Codec.
 	AVCodecContext* codec_ctx = audio_stream_->codec;
-	codec_ctx->codec_id = AVCodecID::AV_CODEC_ID_AAC;
+	codec_ctx->codec_id = AVCodecID::AV_CODEC_ID_PCM_S16LE;
 	codec_ctx->codec_type = AVMEDIA_TYPE_AUDIO;
 	// Set format
 	codec_ctx->bit_rate = 128000;

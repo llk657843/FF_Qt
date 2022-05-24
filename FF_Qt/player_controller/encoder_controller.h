@@ -24,6 +24,7 @@ private:
 	void InitScreenCap();
 
 	void InitAudio();
+	void InitVideoEncoder();
 
 private:
 	std::unique_ptr<VideoEncoder> video_encoder_;
