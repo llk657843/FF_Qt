@@ -25,7 +25,6 @@ VideoEncoder::VideoEncoder()
 	b_stop_ = false;
 	video_width_ = 1920;
 	video_height_ = 1080;
-	av_packet_ = nullptr;
 	v_stream_ = nullptr;
 	codec_context_ = nullptr;
 	pic_src_format_ = AVPixelFormat::AV_PIX_FMT_BGR24;
@@ -33,17 +32,16 @@ VideoEncoder::VideoEncoder()
 
 VideoEncoder::~VideoEncoder()
 {
-	if (av_packet_) 
-	{
-		av_free(av_packet_);
-		av_packet_ = nullptr;
-	}
 }
 
 void VideoEncoder::Init(const std::weak_ptr<EncoderCriticalSec>& info)
 {
 	encoder_info_ = info;
 	AddVideoStream();
+	if (!OpenVideo()) 
+	{
+		std::cout << "open video failed" << std::endl;
+	}
 }
 
 void VideoEncoder::RunEncoder()
@@ -106,6 +104,10 @@ void VideoEncoder::ParseBytesInfo(const std::shared_ptr<BytesInfo>& bytes_info)
 	int res = avcodec_send_frame(codec_context_, dst_frame->Frame());
 	if(res != 0)
 	{
+		char* error_buf = new char[100];
+		av_make_error_string(error_buf,100,res);
+		std::cout << error_buf << std::endl;
+		delete[] error_buf;
 		return;
 	}
 	res = avcodec_receive_packet(codec_context_, av_packet.Get());
@@ -168,23 +170,21 @@ bool VideoEncoder::NeedConvert()
 	return pic_src_format_ != AV_PIX_FMT_YUV420P;
 }
 
-AVStream* VideoEncoder::AddVideoStream()
+void VideoEncoder::AddVideoStream()
 {
-	codec_context_ = nullptr;
-	AVStream* v_stream = nullptr;
 	std::shared_ptr<EncoderCriticalSec> encoder_shared_ptr = encoder_info_.lock();
 	if (!encoder_shared_ptr)
 	{
-		return NULL;
+		return ;
 	}
 
-	v_stream = encoder_shared_ptr->CreateNewStream();
-	if (!v_stream)
+	v_stream_ = encoder_shared_ptr->CreateNewStream();
+	if (!v_stream_)
 	{
 		printf("Cannot add new vidoe stream\n");
-		return NULL;
+		return ;
 	}
-	codec_context_ = v_stream->codec;
+	codec_context_ = v_stream_->codec;
 	codec_context_->codec_id = (AVCodecID)encoder_shared_ptr->GetVideoCodecId();
 	codec_context_->codec_type = AVMEDIA_TYPE_VIDEO;
 	codec_context_->frame_number = 0;
@@ -218,7 +218,6 @@ AVStream* VideoEncoder::AddVideoStream()
 
 	// Some formats want stream headers to be separate.
 	codec_context_->flags |= AV_CODEC_FLAG_GLOBAL_HEADER;
-	return v_stream;
 }
 
 bool VideoEncoder::OpenVideo()

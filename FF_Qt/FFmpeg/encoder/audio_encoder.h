@@ -18,4 +18,5 @@ private:
 private:
 	std::weak_ptr<EncoderCriticalSec> encoder_infos_;
 	AVStream* audio_stream_;
+	int channel_cnt_;
 };

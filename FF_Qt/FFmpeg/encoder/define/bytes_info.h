@@ -3,6 +3,7 @@
 #include "windows.h"
 #include <cstdint>
 #include <type_traits>
+#include "iostream"
 extern "C" 
 {
 #include "libavutil/rational.h"
@@ -14,6 +15,7 @@ public:
 	{
 		real_bytes_ = bytes;
 		frame_time_ = frame_time;
+		av_frame_time_ = 0;
 	}
 	~BytesInfo()
 	{
@@ -21,9 +23,12 @@ public:
 	}
 	int64_t GetFrameTime(AVRational time_base)
 	{
-		return  frame_time_ / av_q2d(time_base) / 1000.0;
+		if (av_frame_time_ == 0) 
+		{
+			av_frame_time_ = frame_time_ / av_q2d(time_base) / 1000.0;
+		}
+		return av_frame_time_;
 	}
-
 
 public:
 	unsigned char* real_bytes_;
@@ -32,4 +37,5 @@ private:
 	EncoderDataType data_type_;
 	int64_t frame_time_;
 	int64_t best_effort_video_;
+	int64_t av_frame_time_;
 };
