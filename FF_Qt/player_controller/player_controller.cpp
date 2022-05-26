@@ -81,14 +81,9 @@ bool PlayerController::Open(int win_width,int win_height)
 	{
 		path_ = net_path_;
 	}
-	bool b_open = video_decoder_->Init(path_);
-	if(!b_open)
-	{
-		return false;
-	}
-
-	b_open = audio_core_->Init(path_);
-	if (!b_open)
+	bool b_open_video = video_decoder_->Init(path_);
+	bool b_open_audio = audio_core_->Init(path_);
+	if (!b_open_audio && !b_open_video)
 	{
 		return false;
 	}

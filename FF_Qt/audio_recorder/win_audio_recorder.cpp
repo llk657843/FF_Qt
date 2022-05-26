@@ -25,7 +25,8 @@ DWORD CALLBACK MicCallback(HWAVEIN hwavein, UINT uMsg, DWORD dwInstance, DWORD d
 	}
 	case WIM_DATA:
 	{
-		AudioDataCallback::GetInstance()->NotifyBufferCallback(((LPWAVEHDR)dwParam1)->lpData);
+		auto param = (LPWAVEHDR)dwParam1;
+		AudioDataCallback::GetInstance()->NotifyBufferCallback(param->lpData,param->dwBufferLength);
 		waveInAddBuffer(hwavein, (LPWAVEHDR)dwParam1, sizeof(WAVEHDR));
 		break;
 	}
@@ -85,7 +86,7 @@ WAVEFORMATEX WinAudioRecorder::WaveInitFormat(WORD nCh, DWORD nSampleRate, WORD 
 	WAVEFORMATEX m_WaveFormat;
 	m_WaveFormat.wFormatTag = WAVE_FORMAT_PCM;
 	m_WaveFormat.nChannels = nCh;
-	m_WaveFormat.nSamplesPerSec = nSampleRate;
+	m_WaveFormat.nSamplesPerSec = nSampleRate; 
 	m_WaveFormat.nAvgBytesPerSec = nSampleRate * nCh * BitsPerSample / 8;
 	m_WaveFormat.nBlockAlign = m_WaveFormat.nChannels * BitsPerSample / 8;
 	m_WaveFormat.wBitsPerSample = BitsPerSample;

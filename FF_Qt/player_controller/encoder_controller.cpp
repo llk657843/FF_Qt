@@ -19,6 +19,7 @@ EncoderController::EncoderController()
 	video_encoder_ = nullptr;
 	audio_encoder_ = nullptr;
 	start_time_ = 0;
+	audio_core_.InitLoop();
 }
 
 EncoderController::~EncoderController()
@@ -31,7 +32,7 @@ void EncoderController::ReadyEncode()
 	std::string path = "D:\\out.mp4";
 	InitEnocderInfo(path);
 	InitVideoEncoder();
-	//InitAudio();
+	InitAudio();
 	encoder_info_->OpenIo();
 	encoder_info_->WriteHeader();
 
@@ -58,15 +59,20 @@ void EncoderController::StartCatch()
 	qtbase::Post2Task(kThreadVideoEncoder, [=]() {
 		video_encoder_->RunEncoder(); 
 		});
-	/*qtbase::Post2Task(kThreadAudioCapture, [=]() {
+	qtbase::Post2Task(kThreadAudioCapture, [=]() {
 		recorder_.RecordWave();
-		});*/
+		});
 }
 
 void EncoderController::StopCapture()
 {
 	video_capture_thread_.Stop();
-	video_encoder_->Stop();
+	if (video_encoder_) 
+	{
+		video_encoder_->Stop();
+	}
+	recorder_.StopRecord();
+	encoder_info_->WriteTrailer();
 }
 
 void EncoderController::InitEnocderInfo(const std::string& file_path)

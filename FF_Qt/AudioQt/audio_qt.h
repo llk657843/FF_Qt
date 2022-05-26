@@ -16,6 +16,7 @@ public:
 	AudioPlayerCore();
 	~AudioPlayerCore();
 	bool Init(const std::string& path);
+	void InitLoop();
 	void Play();
 	bool IsRunning();
 	int64_t GetCurrentTimestamp();
@@ -38,6 +39,8 @@ private:
 	void Close();
 	void WriteByteArray(const QByteArray&, int64_t timestamp);
 	void SeekContinue();
+	void RunDecoder();
+	void AudioFmtInit();
 
 private:
 	QAudioOutput* output_;

@@ -10,6 +10,7 @@ extern "C"
 EncoderCriticalSec::EncoderCriticalSec()
 {
 	format_context_ = nullptr;
+	end_vote_ = 0;
 }
 
 EncoderCriticalSec::~EncoderCriticalSec()
@@ -58,13 +59,17 @@ bool EncoderCriticalSec::WriteHeader()
 AVStream* EncoderCriticalSec::CreateNewStream()
 {
 	std::lock_guard<std::mutex> lock(format_ctx_mtx_);
+	end_vote_++;
 	return avformat_new_stream(format_context_, NULL);
 }
 
 void EncoderCriticalSec::WriteTrailer()
 {
 	std::lock_guard<std::mutex> lock(format_ctx_mtx_);
-	av_write_trailer(format_context_);
+	if (--end_vote_ == 0) 
+	{
+		av_write_trailer(format_context_);
+	}
 }
 
 int EncoderCriticalSec::GetVideoCodecId() const
@@ -80,5 +85,12 @@ int EncoderCriticalSec::GetAudioCodecId() const
 bool EncoderCriticalSec::WriteFrame(AVPacketWrapper& av_packet)
 {
 	std::lock_guard<std::mutex> lock(format_ctx_mtx_);
-	return av_interleaved_write_frame(format_context_,av_packet.Get()) == 0;
+	if (end_vote_ > 0) 
+	{
+		return av_interleaved_write_frame(format_context_, av_packet.Get()) == 0;
+	}
+	else 
+	{
+		return false;
+	}
 }

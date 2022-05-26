@@ -4,6 +4,7 @@
 #include "../Thread/high_ratio_time_thread.h"
 #include "../base_util/weak_callback.h"	
 #include "../audio_recorder/win_audio_recorder.h"
+#include "../AudioQt/audio_qt.h"
 class VideoEncoder;
 class WinScreenCap;
 class AudioEncoder;
@@ -33,5 +34,6 @@ private:
 	std::unique_ptr<WinScreenCap> screen_cap_;
 	WinAudioRecorder recorder_;
 	HighRatioTimeThread video_capture_thread_;
+	AudioPlayerCore audio_core_;
 	int64_t start_time_;
 };

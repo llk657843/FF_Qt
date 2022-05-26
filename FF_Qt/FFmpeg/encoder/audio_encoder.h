@@ -1,8 +1,14 @@
 #pragma once
 #include "memory"
 #include "qbytearray.h"
+#include "../decoder/AVFrameWrapper.h"
+extern "C" 
+{
+#include "libavutil\samplefmt.h"
+}
 class EncoderCriticalSec;
 class AVStream;
+class SwrContext;
 class AudioEncoder 
 {
 public:
@@ -14,9 +20,12 @@ public:
 private:
 	bool AddAudioStream();
 	bool OpenAudio();
+	void InitResample();
+	std::shared_ptr<AVFrameWrapper> CreateFrame(AVSampleFormat sample_fmt,const QByteArray&,bool b_fill_bytes);
 
 private:
 	std::weak_ptr<EncoderCriticalSec> encoder_infos_;
 	AVStream* audio_stream_;
 	int channel_cnt_;
+	SwrContext* swr_context_;
 };

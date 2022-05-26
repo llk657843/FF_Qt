@@ -10,7 +10,7 @@ public:
 	AudioDataCallback();
 	~AudioDataCallback();
 	void RegRecordBufferCallback(RecordBufferCallback);
-	void NotifyBufferCallback(char* bytes);
+	void NotifyBufferCallback(char* bytes,int byte_size);
 
 private:
 	RecordBufferCallback record_buffer_cb_;

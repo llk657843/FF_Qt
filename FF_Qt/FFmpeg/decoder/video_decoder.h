@@ -51,4 +51,5 @@ private:
 	std::mutex sws_mutex_;
 	std::atomic_bool b_stop_flag_;
 	std::atomic_bool b_running_flag_;
+	bool b_init_success_;
 };

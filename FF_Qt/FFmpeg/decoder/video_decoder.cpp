@@ -20,6 +20,7 @@ VideoDecoder::VideoDecoder()
     src_height_ = 0;
     width_ = 0;
     b_stop_flag_ = false;
+    b_init_success_ = false;
     height_ = 0;
     src_width_ = 0;
     packet_ = nullptr;
@@ -44,6 +45,10 @@ bool VideoDecoder::Init(const std::string& path)
     ViewCallback::GetInstance()->NotifyParseDone(decoder_->duration);
     video_stream_id_ = av_find_best_stream(decoder_, AVMEDIA_TYPE_VIDEO, -1, -1, NULL, 0);
     //解码器上下文copy
+    if (video_stream_id_ < 0) 
+    {
+        return false;
+    }
     AVCodecParameters* codec_param = decoder_->streams[video_stream_id_]->codecpar;
     if (!codec_param)
     {
@@ -73,11 +78,16 @@ bool VideoDecoder::Init(const std::string& path)
     }
     time_base_ = codec_context_->time_base;
     format_ = codec_context_->pix_fmt;
+    b_init_success_ = true;
     return true;
 }
 
 bool VideoDecoder::Run()
 {
+    if(!b_init_success_)
+    {
+        return false;
+    }
     b_running_flag_ = true;
     packet_ = (AVPacket*)av_malloc(sizeof(AVPacket));
     while(ReadFrame(packet_))
@@ -165,6 +175,10 @@ void VideoDecoder::RefreshScaleContext(int new_width,int new_height)
 
 void VideoDecoder::ReleaseAll()
 {
+    if (!b_init_success_)
+    {
+        return;
+    }
     std::lock_guard<std::mutex> lock(decode_mutex_);
     image_funcs_.clear();
     b_running_flag_ = false;

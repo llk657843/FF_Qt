@@ -1,5 +1,5 @@
 #include "audio_qt.h"
-
+#include "../audio_recorder/audio_data_cb.h"
 #include <iostream>
 #include <QAudioOutput>
 #include "QIODevice"
@@ -42,25 +42,16 @@ bool AudioPlayerCore::Init(const std::string& path)
 	return true;
 }
 
+void AudioPlayerCore::InitLoop()
+{
+	sample_rate_ = 44100;
+	AudioFmtInit();
+}
+
 void AudioPlayerCore::Play()
 {
-	QAudioFormat fmt;//设置音频输出格式
-	fmt.setSampleRate(sample_rate_);//1秒的音频采样率
-	fmt.setSampleSize(16);//声音样本的大小
-	fmt.setChannelCount(2);//声道
-	fmt.setCodec("audio/pcm");//解码格式
-	fmt.setByteOrder(QAudioFormat::LittleEndian);
-	fmt.setSampleType(QAudioFormat::UnSignedInt);//设置音频类型
-	output_ = new QAudioOutput(fmt);
-	io_ = new AudioIoDevice;
-	io_->open(QIODevice::ReadWrite);
-	connect(output_, &QAudioOutput::stateChanged, this, &AudioPlayerCore::SlotStateChange);
-	auto decoder_task = ToWeakCallback([=]()
-	{
-		audio_decoder_.Run();
-	});
-
-	qtbase::Post2Task(kThreadAudioDecoder,decoder_task);
+	AudioFmtInit();
+	RunDecoder();
 }
 
 bool AudioPlayerCore::IsRunning()
@@ -122,6 +113,7 @@ void AudioPlayerCore::RegCallback()
 		WriteByteArray(bytes, timestamp);
 	};
 	audio_decoder_.RegDataCallback(data_cb);
+	//AudioDataCallback::GetInstance()->RegRecordBufferCallback(data_cb);
 }
 
 void AudioPlayerCore::Close()
@@ -154,6 +146,32 @@ void AudioPlayerCore::SeekContinue()
 		b_audio_seek_ = false;
 		output_->resume();
 	}
+}
+
+void AudioPlayerCore::RunDecoder()
+{
+	auto decoder_task = ToWeakCallback([=]()
+		{
+			audio_decoder_.Run();
+		});
+
+	qtbase::Post2Task(kThreadAudioDecoder, decoder_task);
+}
+
+void AudioPlayerCore::AudioFmtInit()
+{
+	QAudioFormat fmt;//设置音频输出格式
+	fmt.setSampleRate(sample_rate_);//1秒的音频采样率
+	fmt.setSampleSize(16);//声音样本的大小
+	fmt.setChannelCount(2);//声道
+	fmt.setCodec("audio/pcm");//解码格式
+	fmt.setByteOrder(QAudioFormat::LittleEndian);
+	fmt.setSampleType(QAudioFormat::UnSignedInt);//设置音频类型
+	output_ = new QAudioOutput(fmt);
+	io_ = new AudioIoDevice;
+	io_->open(QIODevice::ReadWrite);
+	connect(output_, &QAudioOutput::stateChanged, this, &AudioPlayerCore::SlotStateChange);
+
 }
 
 int64_t AudioPlayerCore::GetCurrentTimestamp()

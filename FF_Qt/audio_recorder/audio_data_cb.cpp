@@ -13,12 +13,11 @@ void AudioDataCallback::RegRecordBufferCallback(RecordBufferCallback cb)
 	record_buffer_cb_ = cb;
 }
 
-void AudioDataCallback::NotifyBufferCallback(char* bytes)
+void AudioDataCallback::NotifyBufferCallback(char* bytes,int byte_size)
 {
 	if (record_buffer_cb_)
 	{
-		QByteArray cb_bytes;
-		cb_bytes.append(bytes);
+		QByteArray cb_bytes(bytes,byte_size);
 		int64_t start_time = time_util::GetCurrentTimeMst();
 		auto task = [=]() {
 			if (record_buffer_cb_)
