@@ -28,4 +28,5 @@ private:
 	AVStream* audio_stream_;
 	int channel_cnt_;
 	SwrContext* swr_context_;
+	int last_frame_timestamp_;
 };

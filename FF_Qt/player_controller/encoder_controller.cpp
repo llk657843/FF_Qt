@@ -14,6 +14,8 @@
 #include "../FFmpeg/encoder/audio_encoder.h"
 #include "../FFmpeg/encoder/define/encoder_critical_sec.h"
 #include "../audio_recorder/audio_data_cb.h"
+#define INCLUDE_VIDEO
+//#define INCLUDE_AUDIO
 EncoderController::EncoderController()
 {
 	video_encoder_ = nullptr;
@@ -31,19 +33,24 @@ void EncoderController::ReadyEncode()
 {
 	std::string path = "D:\\out.mp4";
 	InitEnocderInfo(path);
+#ifdef INCLUDE_VIDEO
 	InitVideoEncoder();
+	InitScreenCap();
+#endif // INCLUDE_VIDEO
+
+#ifdef INCLUDE_AUDIO
 	InitAudio();
+#endif // INCLUDE_AUDIO
 	encoder_info_->OpenIo();
 	encoder_info_->WriteHeader();
-
-	InitScreenCap();
 }
 
 void EncoderController::StartCatch()
 {
+#ifdef INCLUDE_VIDEO
 	auto timeout_cb = ToWeakCallback([=]() {
 		int64_t begin_time = time_util::GetCurrentTimeMst();
-		if (start_time_ == 0) 
+		if (start_time_ == 0)
 		{
 			start_time_ = begin_time;
 		}
@@ -54,14 +61,20 @@ void EncoderController::StartCatch()
 	video_capture_thread_.InitMediaTimer();
 	video_capture_thread_.SetInterval(40);
 	video_capture_thread_.Run();
+	qtbase::Post2Task(kThreadVideoEncoder, [=]() {
+		video_encoder_->RunEncoder();
+		});
+#endif // INCLUDE_VIDEO
 
 	
-	qtbase::Post2Task(kThreadVideoEncoder, [=]() {
-		video_encoder_->RunEncoder(); 
-		});
+	
+#ifdef INCLUDE_AUDIO
 	qtbase::Post2Task(kThreadAudioCapture, [=]() {
-		recorder_.RecordWave();
-		});
+	recorder_.RecordWave();
+	});
+#endif // INCLUDE_AUDIO
+
+
 }
 
 void EncoderController::StopCapture()

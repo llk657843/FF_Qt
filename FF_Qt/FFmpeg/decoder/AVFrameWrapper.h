@@ -3,34 +3,51 @@ extern "C"
 {
 #include <libavutil/frame.h>
 }
+
+enum FreeDataType
+{
+	NO_NEED_TO_FREE,
+	FREE_DATA_RAW,
+	FREE_DATA_AV,
+};
+
 class AVFrameWrapper
 {
 public:
 	AVFrameWrapper()
 	{
 		frame_ = av_frame_alloc();
-		b_manual_ = false;
+		free_type_ = NO_NEED_TO_FREE;
 	}
 	~AVFrameWrapper()
 	{
 		if (frame_) 
 		{
-			if (b_manual_) 
+			if(free_type_ == FREE_DATA_RAW)
 			{
-				std::unique_ptr<unsigned char*> ptr = std::make_unique<unsigned char*>(std::move(frame_->data[0]));
-				frame_->data[0] = NULL;
+				for (int i = 0; i < 8; i++) 
+				{
+					if (frame_->data[i] != NULL) 
+					{
+						std::unique_ptr<unsigned char*> ptr = std::make_unique<unsigned char*>(std::move(frame_->data[i]));
+						frame_->data[i] = NULL;
+					}
+				}
 			}
-			else 
+			else if (free_type_ == FREE_DATA_AV)
 			{
-				av_free(frame_->data[0]);
+				if (frame_->data[0])
+				{
+					av_free(frame_->data[0]);
+				}
 			}
 			av_frame_unref(frame_);
 			av_frame_free(&frame_);
 		}
 	}
-	void SetManualFree(bool b_manual)
+	void SetFreeType(FreeDataType free_type)
 	{
-		b_manual_ = b_manual;
+		free_type_ = free_type;
 	}
 
 	AVFrame* Frame()
@@ -40,5 +57,5 @@ public:
 
 private:
 	AVFrame* frame_;
-	bool b_manual_ = false;
+	FreeDataType free_type_;
 };

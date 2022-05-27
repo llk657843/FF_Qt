@@ -104,10 +104,9 @@ void VideoEncoder::ParseBytesInfo(const std::shared_ptr<BytesInfo>& bytes_info)
 	int res = avcodec_send_frame(codec_context_, dst_frame->Frame());
 	if(res != 0)
 	{
-		char* error_buf = new char[100];
+		char error_buf[100];
 		av_make_error_string(error_buf,100,res);
 		std::cout << error_buf << std::endl;
-		delete[] error_buf;
 		return;
 	}
 	res = avcodec_receive_packet(codec_context_, av_packet.Get());
@@ -151,13 +150,12 @@ std::shared_ptr<AVFrameWrapper> VideoEncoder::CreateFrame(const AVPixelFormat& p
 		uint8_t* picture_buf = NULL;
 		picture_buf = (uint8_t*)av_malloc(size);
 		av_image_fill_arrays(picture->Frame()->data,picture->Frame()->linesize,picture_buf,pix_fmt, width, height,1);
-		picture_buf = NULL;
-		picture->SetManualFree(false);
+		picture->SetFreeType(FreeDataType::FREE_DATA_AV);
 	}
 	else 
 	{
 		av_image_fill_arrays(picture->Frame()->data, picture->Frame()->linesize, src_ptr, pix_fmt, width, height, 1);
-		picture->SetManualFree(true);
+		picture->SetFreeType(FreeDataType::FREE_DATA_RAW);
 	}
 	picture->Frame()->width = video_width_;
 	picture->Frame()->height = video_height_;

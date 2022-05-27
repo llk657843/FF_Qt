@@ -15,6 +15,7 @@ AudioEncoder::AudioEncoder()
 	channel_cnt_ = 2;
 	audio_stream_ = nullptr;
 	swr_context_ = nullptr;
+	last_frame_timestamp_ = 0;
 }
 
 AudioEncoder::~AudioEncoder()
@@ -47,25 +48,7 @@ void AudioEncoder::PushBytes(const QByteArray& bytes, int64_t timestamp_ms)
 	AVCodecContext* ctx = audio_stream_->codec;
 	std::shared_ptr<AVFrameWrapper> dst_frame = CreateFrame(AV_SAMPLE_FMT_FLTP,bytes,false);
 	std::shared_ptr<AVFrameWrapper> src_frame = CreateFrame(AV_SAMPLE_FMT_S16, bytes,true);
-	static int64_t last_frame = 0;
-	//if(timestamp_ms == 0)
-	//{
-	//	dst_frame->Frame()->pts = 0;
-	//	src_frame->Frame()->pts = 0;
-	//	
-	//}
-	//else 
-	//{
-	//	dst_frame->Frame()->pts = last_frame + av_rescale_q(dst_frame->Frame()->nb_samples, ctx->time_base, audio_stream_->time_base);
-	//	src_frame->Frame()->pts = last_frame + av_rescale_q(src_frame->Frame()->nb_samples, ctx->time_base, audio_stream_->time_base);
-	//	last_frame = dst_frame->Frame()->pts;
-	//	
-	//}
-	//dst_frame->Frame()->best_effort_timestamp = dst_frame->Frame()->pts;
-	//src_frame->Frame()->best_effort_timestamp = src_frame->Frame()->pts;
-	//std::cout << "last frame time :" << last_frame <<std::endl;
-	//dst_frame->Frame()->pkt_dts = dst_frame->Frame()->pts;
-	//src_frame->Frame()->pkt_dts = src_frame->Frame()->pts;
+	
 	int res = swr_convert(swr_context_, dst_frame->Frame()->data, MAX_AUDIO_FRAME_SIZE,
 		(const uint8_t **)src_frame->Frame()->data, src_frame->Frame()->nb_samples);
 	if (res < 0) 
@@ -73,7 +56,10 @@ void AudioEncoder::PushBytes(const QByteArray& bytes, int64_t timestamp_ms)
 		std::cout << "convert audio failed" << std::endl;
 		return;
 	}
-	dst_frame->Frame()->pts = last_frame++;
+	auto time_base = ctx->pkt_timebase;
+	dst_frame->Frame()->best_effort_timestamp  = timestamp_ms / 1000.0 / av_q2d(time_base);
+	dst_frame->Frame()->pts = dst_frame->Frame()->best_effort_timestamp;
+	
 	res = avcodec_send_frame(ctx, dst_frame->Frame());
 	if(res != 0)
 	{
@@ -181,7 +167,7 @@ std::shared_ptr<AVFrameWrapper> AudioEncoder::CreateFrame(AVSampleFormat sample_
 		frame_wrapper->Frame()->channel_layout = AV_CH_LAYOUT_STEREO;
 		frame_wrapper->Frame()->format = sample_fmt;
 		res = avcodec_fill_audio_frame(frame_wrapper->Frame(), channel_cnt_, sample_fmt, (const uint8_t*)bytes.data(), bytes.size(), 1);
-		frame_wrapper->SetManualFree(true);
+		frame_wrapper->SetFreeType(FreeDataType::FREE_DATA_RAW);
 	}
 	else 
 	{
@@ -190,7 +176,7 @@ std::shared_ptr<AVFrameWrapper> AudioEncoder::CreateFrame(AVSampleFormat sample_
 		frame_wrapper->Frame()->format = sample_fmt;
 		frame_wrapper->Frame()->channel_layout = AV_CH_LAYOUT_STEREO;
 		res = av_frame_get_buffer(frame_wrapper->Frame(), 0);
-		frame_wrapper->SetManualFree(true);
+		frame_wrapper->SetFreeType(FreeDataType::FREE_DATA_RAW);
 		if(res < 0)
 		{
 			std::cout << "frame init failed" << std::endl;
