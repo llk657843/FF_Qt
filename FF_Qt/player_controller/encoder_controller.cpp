@@ -15,7 +15,7 @@
 #include "../FFmpeg/encoder/define/encoder_critical_sec.h"
 #include "../audio_recorder/audio_data_cb.h"
 #define INCLUDE_VIDEO
-//#define INCLUDE_AUDIO
+#define INCLUDE_AUDIO
 EncoderController::EncoderController()
 {
 	video_encoder_ = nullptr;
@@ -84,7 +84,9 @@ void EncoderController::StopCapture()
 	{
 		video_encoder_->Stop();
 	}
+#ifdef INCLUDE_AUDIO
 	recorder_.StopRecord();
+#endif // INCLUDE_AUDIO
 	encoder_info_->WriteTrailer();
 }
 

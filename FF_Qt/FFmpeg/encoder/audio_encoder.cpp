@@ -16,6 +16,8 @@ AudioEncoder::AudioEncoder()
 	audio_stream_ = nullptr;
 	swr_context_ = nullptr;
 	last_frame_timestamp_ = 0;
+	last_pts_ = 0;
+	start_time_ = 0;
 }
 
 AudioEncoder::~AudioEncoder()
@@ -56,26 +58,29 @@ void AudioEncoder::PushBytes(const QByteArray& bytes, int64_t timestamp_ms)
 		std::cout << "convert audio failed" << std::endl;
 		return;
 	}
-	auto time_base = ctx->pkt_timebase;
-	dst_frame->Frame()->best_effort_timestamp  = timestamp_ms / 1000.0 / av_q2d(time_base);
-	dst_frame->Frame()->pts = dst_frame->Frame()->best_effort_timestamp;
-	
-	res = avcodec_send_frame(ctx, dst_frame->Frame());
-	if(res != 0)
+	if(start_time_ == 0)
 	{
-		std::cout << "send audio frame failed" << std::endl;
-		return;
+		start_time_ = timestamp_ms;
 	}
+	auto time_base = audio_stream_->time_base;
+	dst_frame->Frame()->pts = last_pts_;
+	last_pts_ += dst_frame->Frame()->nb_samples;
+
+	std::shared_ptr<EncoderCriticalSec> shared_info = encoder_infos_.lock();
+	if(!SendFrame(dst_frame))
+	{
+		return ;
+	}
+
 	AVPacketWrapper av_packet;
 	av_packet.Init();
-	av_packet.Get()->flags |= AV_PKT_FLAG_KEY;
-	av_packet.Get()->stream_index = audio_stream_->index;
 	res = avcodec_receive_packet(ctx,av_packet.Get());
 	if(res != 0)
 	{
 		return;
 	}
-	std::shared_ptr<EncoderCriticalSec> shared_info = encoder_infos_.lock();
+	av_packet.Get()->flags |= AV_PKT_FLAG_KEY;
+	av_packet.Get()->stream_index = audio_stream_->index;
 	if(shared_info)
 	{
 		shared_info->WriteFrame(av_packet);
@@ -92,6 +97,7 @@ bool AudioEncoder::AddAudioStream()
 
 	// Try create stream.
 	audio_stream_ = encoder_ptr->CreateNewStream();
+	audio_stream_->id = 1;
 	if (!audio_stream_)
 	{
 		printf("Cannot add new audio stream\n");
@@ -100,7 +106,6 @@ bool AudioEncoder::AddAudioStream()
 
 	// Codec.
 	AVCodecContext* codec_ctx = audio_stream_->codec;
-	//codec_ctx->codec_id = AVCodecID::AV_CODEC_ID_PCM_S16LE;
 	codec_ctx->codec_id = (AVCodecID)encoder_ptr->GetAudioCodecId();
 	codec_ctx->codec_type = AVMEDIA_TYPE_AUDIO;
 	// Set format
@@ -188,4 +193,23 @@ std::shared_ptr<AVFrameWrapper> AudioEncoder::CreateFrame(AVSampleFormat sample_
 		std::cout << "fill audio frame failed" << std::endl;
 	}
 	return frame_wrapper;
+}
+
+
+bool AudioEncoder::SendFrame(std::shared_ptr<AVFrameWrapper> frame_wrapper)
+{
+	AVCodecContext* ctx = audio_stream_->codec;
+	if (ctx)
+	{
+		int res = avcodec_send_frame(ctx, frame_wrapper->Frame());
+		if (res != 0)
+		{
+			char error_buf[100];
+			av_make_error_string(error_buf, 100, res);
+			std::cout << error_buf << std::endl;
+			return false;
+		}
+		return true;
+	}
+	return false;
 }

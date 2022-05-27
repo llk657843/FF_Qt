@@ -6,6 +6,7 @@
 class AVFormatContext;
 class AVStream;
 class AVFrameWrapper;
+
 class EncoderCriticalSec 
 {
 public:
@@ -22,10 +23,10 @@ public:
 	int GetAudioCodecId() const;
 	bool WriteFrame(AVPacketWrapper&);
 
-
 private:
 	AVFormatContext* format_context_;
 	std::mutex format_ctx_mtx_;
 	std::string file_path_;
 	int end_vote_;
+	int64_t last_frame_timestamp_;
 };

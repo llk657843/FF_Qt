@@ -32,6 +32,7 @@ private:
 	bool NeedConvert();
 	void AddVideoStream();
 	bool OpenVideo();
+	bool SendFrame(std::shared_ptr<AVFrameWrapper> frame_wrapper);
 
 private:
 	int frame_size_;
@@ -44,4 +45,5 @@ private:
 	int video_height_;
 	AVStream* v_stream_;
 	AVCodecContext* codec_context_;
+	int frame_cnt_;
 };

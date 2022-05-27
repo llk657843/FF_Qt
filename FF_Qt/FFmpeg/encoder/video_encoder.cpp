@@ -26,6 +26,7 @@ VideoEncoder::VideoEncoder()
 	video_width_ = 1920;
 	video_height_ = 1080;
 	v_stream_ = nullptr;
+	frame_cnt_ = 0;
 	codec_context_ = nullptr;
 	pic_src_format_ = AVPixelFormat::AV_PIX_FMT_BGR24;
 }
@@ -82,9 +83,7 @@ void VideoEncoder::ParseBytesInfo(const std::shared_ptr<BytesInfo>& bytes_info)
 {
 	std::shared_ptr<AVFrameWrapper> frame = CreateFrame(pic_src_format_,video_width_,video_height_,(uint8_t*)bytes_info->real_bytes_);
 	auto dst_frame = CreateFrame(AVPixelFormat::AV_PIX_FMT_YUV420P, video_width_, video_height_,nullptr);
-	dst_frame->Frame()->pts = 0;
-	AVPacketWrapper av_packet;
-	av_packet.Init();
+
 	if (NeedConvert()) 
 	{
 		if (!sws_context_) 
@@ -97,42 +96,37 @@ void VideoEncoder::ParseBytesInfo(const std::shared_ptr<BytesInfo>& bytes_info)
 		sws_scale(sws_context_, frame->Frame()->data, frame->Frame()->linesize,
 			0,video_height_, dst_frame->Frame()->data,dst_frame->Frame()->linesize);
 	}
-	dst_frame->Frame()->best_effort_timestamp = bytes_info->GetFrameTime(v_stream_->time_base);
+	int old_frame_cnt = frame_cnt_++;
 	dst_frame->Frame()->pts = bytes_info->GetFrameTime(v_stream_->time_base);
-	dst_frame->Frame()->pkt_dts = bytes_info->GetFrameTime(v_stream_->time_base);
-	//// Encode frame to packet.
-	int res = avcodec_send_frame(codec_context_, dst_frame->Frame());
-	if(res != 0)
+	
+	if (!SendFrame(dst_frame)) 
 	{
-		char error_buf[100];
-		av_make_error_string(error_buf,100,res);
-		std::cout << error_buf << std::endl;
 		return;
 	}
-	res = avcodec_receive_packet(codec_context_, av_packet.Get());
+
+	AVPacketWrapper av_packet;
+	av_packet.Init();
+	int res = avcodec_receive_packet(codec_context_, av_packet.Get());
 	if (res != 0) 
 	{
 		return;
 	}
-	
-	if (codec_context_->coded_frame->pts != AV_NOPTS_VALUE)
-	{
-		av_packet.Get()->pts = AV_NOPTS_VALUE;
-	}
+
+	av_packet.Get()->pts = av_rescale(old_frame_cnt , v_stream_->time_base.den,codec_context_->time_base.den);
 	if (codec_context_->coded_frame->key_frame)
 	{
 		av_packet.Get()->flags |= AV_PKT_FLAG_KEY;
 	}
+
 	av_packet.Get()->stream_index = v_stream_->index;
 	std::shared_ptr<EncoderCriticalSec> encoder_shared_ptr = encoder_info_.lock();
 	if (!encoder_shared_ptr)
 	{
 		return;
 	}
-		
+
 	if (!encoder_shared_ptr->WriteFrame(av_packet))
 	{
-		std::cout << "write frame failed" << std::endl;
 		return;
 	}
 }
@@ -233,5 +227,22 @@ bool VideoEncoder::OpenVideo()
 		return false;
 	}
 	return true;
+}
 
+bool VideoEncoder::SendFrame(std::shared_ptr<AVFrameWrapper> frame_wrapper)
+{
+	AVCodecContext* ctx = v_stream_->codec;
+	if (ctx)
+	{
+		int res = avcodec_send_frame(ctx, frame_wrapper->Frame());
+		if (res != 0)
+		{
+			char error_buf[100];
+			av_make_error_string(error_buf, 100, res);
+			std::cout << error_buf << std::endl;
+			return false;
+		}
+		return true;
+	}
+	return false;
 }

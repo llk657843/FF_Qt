@@ -1,4 +1,6 @@
 #include "encoder_critical_sec.h"
+#include "../../decoder/AVFrameWrapper.h"
+#include "iostream"
 extern "C"
 {
 #include <libavutil/opt.h>
@@ -85,7 +87,7 @@ int EncoderCriticalSec::GetAudioCodecId() const
 bool EncoderCriticalSec::WriteFrame(AVPacketWrapper& av_packet)
 {
 	std::lock_guard<std::mutex> lock(format_ctx_mtx_);
-	if (end_vote_ > 0) 
+	if (end_vote_ > 0)
 	{
 		return av_interleaved_write_frame(format_context_, av_packet.Get()) == 0;
 	}

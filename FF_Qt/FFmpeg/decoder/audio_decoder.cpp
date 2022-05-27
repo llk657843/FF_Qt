@@ -41,12 +41,14 @@ bool AudioDecoder::Init(const std::string& path)
 	if(!b_success)
 	{
 		return false;
+	
 	}
 	audio_stream_id_ = av_find_best_stream(decoder_, AVMEDIA_TYPE_AUDIO, -1, -1, NULL, 0);
 	if (audio_stream_id_ < 0) 
 	{
 		return false;		
 	}
+	
 	AVCodecParameters* codec_param = decoder_->streams[audio_stream_id_]->codecpar;
 	//创建编码器上下文
 	av_codec_context_ = avcodec_alloc_context3(decoder_->audio_codec);
