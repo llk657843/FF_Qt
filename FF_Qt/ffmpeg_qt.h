@@ -1,16 +1,14 @@
 #pragma once
 #include <memory>
-#include <mutex>
 #include <qaudio.h>
 #include <queue>
 #include <QWidget>
-
 #include "Audio/bytes_list.h"
 #include "base_util/weak_callback.h"
 #include "Thread/high_ratio_time_thread.h"
 #include "base_ui/base_popup_window.h"
 class ImageInfo;
-
+class RecordSettingForm;
 namespace Ui
 {
 	class FFMpegQtFormUI;
@@ -51,10 +49,13 @@ private:
 	QString GetTimeString(int64_t time_seconds);
 	void RefreshSize();
 
+	void ShowSettingForm();
+
 private:
 	Ui::FFMpegQtFormUI* ui;
 	int lb_width_;
 	int lb_height_;
 	int64_t total_time_s_;
 	ThreadSafeBytesList bytes_;
+	QPointer<RecordSettingForm> record_form_;
 };

@@ -14,6 +14,7 @@
 #include "../FFmpeg/encoder/audio_encoder.h"
 #include "../FFmpeg/encoder/define/encoder_critical_sec.h"
 #include "../audio_recorder/audio_data_cb.h"
+#include <QtCore/qfileinfo.h>
 #define INCLUDE_VIDEO
 #define INCLUDE_AUDIO
 EncoderController::EncoderController()
@@ -31,8 +32,7 @@ EncoderController::~EncoderController()
 
 void EncoderController::ReadyEncode()
 {
-	std::string path = "D:\\out.mp4";
-	InitEnocderInfo(path);
+	InitEnocderInfo(file_path_.toStdString());
 #ifdef INCLUDE_VIDEO
 	InitVideoEncoder();
 	InitScreenCap();
@@ -49,17 +49,18 @@ void EncoderController::StartCatch()
 {
 #ifdef INCLUDE_VIDEO
 	auto timeout_cb = ToWeakCallback([=]() {
-		int64_t begin_time = time_util::GetCurrentTimeMst();
-		if (start_time_ == 0)
-		{
-			start_time_ = begin_time;
-		}
-		auto bytes = screen_cap_->GetScreenBytes();
-		video_encoder_->PostImage(std::make_shared<BytesInfo>(bytes, begin_time - start_time_));
+		CaptureImage();
 		});
 	video_capture_thread_.RegTimeoutCallback(timeout_cb);
 	video_capture_thread_.InitMediaTimer();
-	video_capture_thread_.SetInterval(40);
+	if (video_param_.fps_ != 0) 
+	{
+		video_capture_thread_.SetInterval((1000 / video_param_.fps_));
+	}
+	else 
+	{
+		video_capture_thread_.SetInterval(40);
+	}
 	video_capture_thread_.Run();
 	qtbase::Post2Task(kThreadVideoEncoder, [=]() {
 		video_encoder_->RunEncoder();
@@ -88,6 +89,33 @@ void EncoderController::StopCapture()
 	recorder_.StopRecord();
 #endif // INCLUDE_AUDIO
 	encoder_info_->WriteTrailer();
+}
+
+void EncoderController::SetBitrate(int bitrate)
+{
+	video_param_.bitrate_ = bitrate;
+}
+
+void EncoderController::SetFramerate(int frame_rate)
+{
+	video_param_.fps_ = frame_rate;
+}
+
+void EncoderController::SetPixRate(int width, int height)
+{
+	video_param_.video_width_ = width;
+	video_param_.video_height_ = height;
+}
+
+bool EncoderController::SetFilePath(QString file_path)
+{
+	QFileInfo file_info(file_path);
+	if (file_info.exists()) 
+	{
+		file_path_ = file_path;
+		return true;
+	}
+	return false;
 }
 
 void EncoderController::InitEnocderInfo(const std::string& file_path)
@@ -137,6 +165,20 @@ void EncoderController::InitVideoEncoder()
 	if (!video_encoder_)
 	{
 		video_encoder_ = std::make_unique<VideoEncoder>();
-		video_encoder_->Init(encoder_info_);
+		video_encoder_->Init(encoder_info_, video_param_);
 	}
+}
+
+void EncoderController::CaptureImage()
+{
+	auto task = ToWeakCallback([=]() {
+		int64_t begin_time = time_util::GetCurrentTimeMst();
+		if (start_time_ == 0)
+		{
+			start_time_ = begin_time;
+		}
+		auto bytes = screen_cap_->GetScreenBytes();
+		video_encoder_->PostImage(std::make_shared<BytesInfo>(bytes, begin_time - start_time_));
+	});
+	qtbase::Post2Task(kThreadVideoCapture,task);
 }

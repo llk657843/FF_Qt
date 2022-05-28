@@ -30,6 +30,5 @@ private:
 	int channel_cnt_;
 	SwrContext* swr_context_;
 	int last_frame_timestamp_;
-	int64_t start_time_;
 	int64_t last_pts_;
 };

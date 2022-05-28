@@ -126,16 +126,19 @@
     <ClCompile Include="Thread\thread_pool_entrance.cpp" />
     <ClCompile Include="Thread\thread_safe_priority_task_queue.cpp" />
     <ClCompile Include="Thread\time_util.cpp" />
+    <ClCompile Include="view\record_setting_form.cpp" />
     <ClCompile Include="view_callback\view_callback.cpp" />
     <QtRcc Include="FF_Qt.qrc" />
     <QtUic Include="ffmpeg_qt.ui" />
     <ClCompile Include="base_util\weak_callback.cpp" />
     <ClCompile Include="main.cpp" />
+    <QtUic Include="view\record_setting_form.ui" />
   </ItemGroup>
   <ItemGroup>
     <QtMoc Include="ffmpeg_qt.h" />
   </ItemGroup>
   <ItemGroup>
+    <QtMoc Include="view\record_setting_form.h" />
     <QtMoc Include="player_controller\player_controller.h" />
     <QtMoc Include="base_util\closure.h" />
     <QtMoc Include="base_ui\uslider.h" />
@@ -159,6 +162,7 @@
     <ClInclude Include="FFmpeg\encoder\define\encoder_critical_sec.h" />
     <ClInclude Include="FFmpeg\encoder\define\encoder_type.h" />
     <ClInclude Include="FFmpeg\encoder\video_encoder.h" />
+    <ClInclude Include="player_controller\define\video_encoder_param.h" />
     <ClInclude Include="player_controller\encoder_controller.h" />
     <ClInclude Include="screen_capture\win_screen_cap.h" />
     <ClInclude Include="style\qss_manager.h" />

@@ -17,7 +17,6 @@ AudioEncoder::AudioEncoder()
 	swr_context_ = nullptr;
 	last_frame_timestamp_ = 0;
 	last_pts_ = 0;
-	start_time_ = 0;
 }
 
 AudioEncoder::~AudioEncoder()
@@ -32,6 +31,7 @@ void AudioEncoder::Init(const std::weak_ptr<EncoderCriticalSec>& encoder_infos)
 		return;
 	}
 	encoder_infos_ = encoder_infos;
+	last_pts_ = 0;
 	if (!AddAudioStream()) 
 	{
 		std::cout << "add audio stream failed" << std::endl;
@@ -57,10 +57,6 @@ void AudioEncoder::PushBytes(const QByteArray& bytes, int64_t timestamp_ms)
 	{
 		std::cout << "convert audio failed" << std::endl;
 		return;
-	}
-	if(start_time_ == 0)
-	{
-		start_time_ = timestamp_ms;
 	}
 	auto time_base = audio_stream_->time_base;
 	dst_frame->Frame()->pts = last_pts_;

@@ -3,6 +3,7 @@
 #include "../../Thread/thread_safe_deque.h"
 #include "memory"
 #include "define/bytes_info.h"
+#include "../../player_controller/define/video_encoder_param.h"
 extern "C" 
 {
 #include "libavutil/pixfmt.h"
@@ -20,7 +21,7 @@ class VideoEncoder
 public:
 	VideoEncoder();
 	~VideoEncoder();
-	void Init(const std::weak_ptr<EncoderCriticalSec>& info);
+	void Init(const std::weak_ptr<EncoderCriticalSec>& info, const VideoEncoderParam& encode_param);
 	void RunEncoder();
 	void PostImage(std::shared_ptr<BytesInfo>&&);
 	void Stop();
@@ -30,7 +31,7 @@ private:
 	void ParseBytesInfo(const std::shared_ptr<BytesInfo>& bytes_info);
 	std::shared_ptr<AVFrameWrapper> CreateFrame(const AVPixelFormat& pix_fmt, int width, int height,uint8_t* src);
 	bool NeedConvert();
-	void AddVideoStream();
+	void AddVideoStream(const VideoEncoderParam&);
 	bool OpenVideo();
 	bool SendFrame(std::shared_ptr<AVFrameWrapper> frame_wrapper);
 
@@ -43,6 +44,8 @@ private:
 	int video_width_;
 	thread_safe_deque<std::shared_ptr<BytesInfo>> msg_queue_;
 	int video_height_;
+	int src_width_;
+	int src_height_;
 	AVStream* v_stream_;
 	AVCodecContext* codec_context_;
 	int frame_cnt_;

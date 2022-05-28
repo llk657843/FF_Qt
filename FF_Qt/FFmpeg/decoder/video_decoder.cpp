@@ -125,6 +125,7 @@ bool VideoDecoder::Run()
 				int64_t timestamp = cached_frame->Frame()->best_effort_timestamp * av_q2d(time_base) * 1000.0;
 				return PostImageTask(std::move(cached_frame), width, height, timestamp, std::move(img_ptr));
             };
+            //std::cout << "frame pts" << frame_ptr->Frame()->pts << std::endl;
             image_funcs_.push_back(ImageFunc(std::make_shared<QImage>(width, height, QImage::Format_ARGB32),func, frame_ptr));
         }
         

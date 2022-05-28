@@ -5,10 +5,12 @@
 #include "../base_util/weak_callback.h"	
 #include "../audio_recorder/win_audio_recorder.h"
 #include "../AudioQt/audio_qt.h"
+#include "define/video_encoder_param.h"
 class VideoEncoder;
 class WinScreenCap;
 class AudioEncoder;
 class EncoderCriticalSec;
+
 class EncoderController : public SupportWeakCallback
 {
 public:
@@ -19,6 +21,10 @@ public:
 	void ReadyEncode();
 	void StartCatch();
 	void StopCapture();
+	void SetBitrate(int);
+	void SetFramerate(int);
+	void SetPixRate(int width,int height);
+	bool SetFilePath(QString);
 
 private:
 	void InitEnocderInfo(const std::string& file_path);
@@ -26,6 +32,7 @@ private:
 
 	void InitAudio();
 	void InitVideoEncoder();
+	void CaptureImage();
 
 private:
 	std::unique_ptr<VideoEncoder> video_encoder_;
@@ -36,4 +43,6 @@ private:
 	HighRatioTimeThread video_capture_thread_;
 	AudioPlayerCore audio_core_;
 	int64_t start_time_;
+	VideoEncoderParam video_param_;
+	QString file_path_;
 };

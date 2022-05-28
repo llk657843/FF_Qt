@@ -9,6 +9,7 @@
 #include "image_info/image_info.h"
 #include "qfiledialog.h"
 #include "player_controller/encoder_controller.h"
+#include "view/record_setting_form.h"
 const int TIME_BASE = 1000;	//¿Ì¶ÈÅÌ
 FFMpegQt::FFMpegQt(QWidget* wid) : BasePopupWindow(wid),ui(new Ui::FFMpegQtFormUI)
 {
@@ -193,8 +194,7 @@ void FFMpegQt::SlotOpenFile()
 
 void FFMpegQt::SlotScreenShot()
 {
-	EncoderController::GetInstance()->ReadyEncode();
-	EncoderController::GetInstance()->StartCatch();
+	ShowSettingForm();
 }
 
 void FFMpegQt::SlotStopScreenClicked()
@@ -244,4 +244,13 @@ void FFMpegQt::RefreshSize()
 		lb_height_ = ui->lb_movie->height();
 		PlayerController::GetInstance()->SetImageSize(lb_width_,lb_height_);
 	}
+}
+
+void FFMpegQt::ShowSettingForm()
+{
+	if(!record_form_)
+	{
+		record_form_ = new RecordSettingForm();
+	}
+	record_form_->show();
 }

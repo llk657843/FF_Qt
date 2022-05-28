@@ -17,14 +17,14 @@ extern "C"
 #include "av_packet_wrapper.h"
 #include <libavutil/opt.h>
 }
-constexpr int pix_size = 1920 * 1080;
-constexpr int packet_max_size = pix_size * 3 + 1;
 VideoEncoder::VideoEncoder()
 {
 	sws_context_ = nullptr;
 	b_stop_ = false;
 	video_width_ = 1920;
 	video_height_ = 1080;
+	src_width_ = GetSystemMetrics(SM_CXSCREEN);
+	src_height_ = GetSystemMetrics(SM_CYSCREEN);
 	v_stream_ = nullptr;
 	frame_cnt_ = 0;
 	codec_context_ = nullptr;
@@ -35,10 +35,12 @@ VideoEncoder::~VideoEncoder()
 {
 }
 
-void VideoEncoder::Init(const std::weak_ptr<EncoderCriticalSec>& info)
+void VideoEncoder::Init(const std::weak_ptr<EncoderCriticalSec>& info, const VideoEncoderParam& encode_param)
 {
 	encoder_info_ = info;
-	AddVideoStream();
+	video_width_ = encode_param.video_width_;
+	video_height_ = encode_param.video_height_;
+	AddVideoStream(encode_param);
 	if (!OpenVideo()) 
 	{
 		std::cout << "open video failed" << std::endl;
@@ -81,14 +83,14 @@ bool VideoEncoder::IsEnded()
 
 void VideoEncoder::ParseBytesInfo(const std::shared_ptr<BytesInfo>& bytes_info)
 {
-	std::shared_ptr<AVFrameWrapper> frame = CreateFrame(pic_src_format_,video_width_,video_height_,(uint8_t*)bytes_info->real_bytes_);
+	std::shared_ptr<AVFrameWrapper> frame = CreateFrame(pic_src_format_,src_width_,src_height_,(uint8_t*)bytes_info->real_bytes_);
 	auto dst_frame = CreateFrame(AVPixelFormat::AV_PIX_FMT_YUV420P, video_width_, video_height_,nullptr);
-
+	
 	if (NeedConvert()) 
 	{
 		if (!sws_context_) 
 		{
-			sws_context_ = sws_getContext(video_width_,video_height_, pic_src_format_,
+			sws_context_ = sws_getContext(src_width_,src_height_, pic_src_format_,
 				video_width_, video_height_,
 				AVPixelFormat::AV_PIX_FMT_YUV420P,
 				SWS_BICUBLIN, NULL, NULL, NULL);
@@ -96,9 +98,10 @@ void VideoEncoder::ParseBytesInfo(const std::shared_ptr<BytesInfo>& bytes_info)
 		sws_scale(sws_context_, frame->Frame()->data, frame->Frame()->linesize,
 			0,video_height_, dst_frame->Frame()->data,dst_frame->Frame()->linesize);
 	}
-	int old_frame_cnt = frame_cnt_++;
-	dst_frame->Frame()->pts = bytes_info->GetFrameTime(v_stream_->time_base);
+	int64_t old_frame_cnt = frame_cnt_;
+	frame_cnt_++;
 	
+	dst_frame->Frame()->pts = av_rescale(old_frame_cnt, v_stream_->time_base.den, codec_context_->time_base.den);
 	if (!SendFrame(dst_frame)) 
 	{
 		return;
@@ -162,7 +165,7 @@ bool VideoEncoder::NeedConvert()
 	return pic_src_format_ != AV_PIX_FMT_YUV420P;
 }
 
-void VideoEncoder::AddVideoStream()
+void VideoEncoder::AddVideoStream(const VideoEncoderParam& video_param)
 {
 	std::shared_ptr<EncoderCriticalSec> encoder_shared_ptr = encoder_info_.lock();
 	if (!encoder_shared_ptr)
@@ -180,10 +183,10 @@ void VideoEncoder::AddVideoStream()
 	codec_context_->codec_id = (AVCodecID)encoder_shared_ptr->GetVideoCodecId();
 	codec_context_->codec_type = AVMEDIA_TYPE_VIDEO;
 	codec_context_->frame_number = 0;
-	codec_context_->bit_rate = 4000000;
+	codec_context_->bit_rate = video_param.bitrate_;
 	codec_context_->width = video_width_;
 	codec_context_->height = video_height_;
-	codec_context_->time_base.den = 25;
+	codec_context_->time_base.den = video_param.fps_;
 	codec_context_->time_base.num = 1;
 	codec_context_->gop_size = 12;
 	codec_context_->qmin = 10;

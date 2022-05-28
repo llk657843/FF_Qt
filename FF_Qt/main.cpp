@@ -22,6 +22,5 @@ int main(int argc, char* argv[])
     wid->show();
 	a.exec();
     ThreadPool::GetInstance()->StopAll();
-
 	return 0;
 }
