@@ -125,14 +125,24 @@ bool VideoDecoder::Run()
 				int64_t timestamp = cached_frame->Frame()->best_effort_timestamp * av_q2d(time_base) * 1000.0;
 				return PostImageTask(std::move(cached_frame), width, height, timestamp, std::move(img_ptr));
             };
-            //std::cout << "frame pts" << frame_ptr->Frame()->pts << std::endl;
+          
             image_funcs_.push_back(ImageFunc(std::make_shared<QImage>(width, height, QImage::Format_ARGB32),func, frame_ptr));
         }
         
         av_packet_unref(packet_);
     }
-
-    ReleaseAll();
+    if (b_stop_flag_) 
+    {
+        ReleaseAll();
+    }
+    else
+    {
+		while(!image_funcs_.is_empty_lock())
+        {
+            std::this_thread::sleep_for(std::chrono::seconds(1));
+        }
+        ReleaseAll();
+    }
     return true;
 }
 

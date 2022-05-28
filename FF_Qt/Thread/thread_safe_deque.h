@@ -61,7 +61,11 @@ public:
 		}
 		return false;
 	}
-
+	bool is_empty_lock()
+	{
+		std::unique_lock<std::mutex> lock(mutex_);
+		return internal_queue_.empty();
+	}
 private:
 	void try_wake_up(bool b_force)
 	{

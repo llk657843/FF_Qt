@@ -2,7 +2,7 @@
 #include "functional"
 #include "qbytearray.h"
 #include "../base_util/singleton.h"
-using RecordBufferCallback = std::function<void(const QByteArray&,int64_t timestamp_ms)>;
+using RecordBufferCallback = std::function<void(const QByteArray&)>;
 class AudioDataCallback 
 {
 public:

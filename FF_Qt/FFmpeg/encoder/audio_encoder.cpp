@@ -17,6 +17,7 @@ AudioEncoder::AudioEncoder()
 	swr_context_ = nullptr;
 	last_frame_timestamp_ = 0;
 	last_pts_ = 0;
+	b_stop_ = false;
 }
 
 AudioEncoder::~AudioEncoder()
@@ -41,7 +42,12 @@ void AudioEncoder::Init(const std::weak_ptr<EncoderCriticalSec>& encoder_infos)
 	InitResample();
 }
 
-void AudioEncoder::PushBytes(const QByteArray& bytes, int64_t timestamp_ms)
+void AudioEncoder::Stop()
+{
+	b_stop_ = true;
+}
+
+void AudioEncoder::PushBytes(const QByteArray& bytes)
 {
 	if (!audio_stream_) 
 	{
@@ -59,9 +65,8 @@ void AudioEncoder::PushBytes(const QByteArray& bytes, int64_t timestamp_ms)
 		return;
 	}
 	auto time_base = audio_stream_->time_base;
-	dst_frame->Frame()->pts = last_pts_;
 	last_pts_ += dst_frame->Frame()->nb_samples;
-
+	dst_frame->Frame()->pts = last_pts_;
 	std::shared_ptr<EncoderCriticalSec> shared_info = encoder_infos_.lock();
 	if(!SendFrame(dst_frame))
 	{
@@ -70,16 +75,29 @@ void AudioEncoder::PushBytes(const QByteArray& bytes, int64_t timestamp_ms)
 
 	AVPacketWrapper av_packet;
 	av_packet.Init();
-	res = avcodec_receive_packet(ctx,av_packet.Get());
-	if(res != 0)
+	if (!b_stop_)
 	{
-		return;
+		if (avcodec_receive_packet(ctx, av_packet.Get()) != 0)
+		{
+			return;
+		}
+	}
+	else 
+	{
+		while (avcodec_receive_packet(ctx, av_packet.Get()) != 0)
+		{
+			std::this_thread::yield();
+		}
 	}
 	av_packet.Get()->flags |= AV_PKT_FLAG_KEY;
 	av_packet.Get()->stream_index = audio_stream_->index;
 	if(shared_info)
 	{
 		shared_info->WriteFrame(av_packet);
+	}
+	if(b_stop_)
+	{
+		shared_info->WriteTrailer();
 	}
 }
 

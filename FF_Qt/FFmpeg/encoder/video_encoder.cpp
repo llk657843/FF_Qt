@@ -49,13 +49,18 @@ void VideoEncoder::Init(const std::weak_ptr<EncoderCriticalSec>& info, const Vid
 
 void VideoEncoder::RunEncoder()
 {
-	while (!IsEnded()) 
+	while (true)
 	{
 		std::shared_ptr<BytesInfo> info;
 		bool b_get = msg_queue_.get_front_block(info);
 		if (b_get) 
 		{
 			ParseBytesInfo(info);
+		}
+
+		if(IsEnded() && msg_queue_.is_empty_lock())
+		{
+			break;
 		}
 	}
 	auto shared_ptr = encoder_info_.lock();
@@ -73,7 +78,6 @@ void VideoEncoder::PostImage(std::shared_ptr<BytesInfo>&& ptr)
 void VideoEncoder::Stop()
 {
 	b_stop_ = true;
-	msg_queue_.release();
 }
 
 bool VideoEncoder::IsEnded()
@@ -109,12 +113,20 @@ void VideoEncoder::ParseBytesInfo(const std::shared_ptr<BytesInfo>& bytes_info)
 
 	AVPacketWrapper av_packet;
 	av_packet.Init();
-	int res = avcodec_receive_packet(codec_context_, av_packet.Get());
-	if (res != 0) 
+	if (!IsEnded()) 
 	{
-		return;
+		if (avcodec_receive_packet(codec_context_, av_packet.Get()) != 0)
+		{
+			return;
+		}
 	}
-
+	else 
+	{
+		while (avcodec_receive_packet(codec_context_, av_packet.Get()) != 0)
+		{
+			std::this_thread::yield();
+		}
+	}
 	av_packet.Get()->pts = av_rescale(old_frame_cnt , v_stream_->time_base.den,codec_context_->time_base.den);
 	if (codec_context_->coded_frame->key_frame)
 	{

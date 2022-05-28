@@ -87,8 +87,8 @@ void EncoderController::StopCapture()
 	}
 #ifdef INCLUDE_AUDIO
 	recorder_.StopRecord();
+	audio_encoder_->Stop();
 #endif // INCLUDE_AUDIO
-	encoder_info_->WriteTrailer();
 }
 
 void EncoderController::SetBitrate(int bitrate)
@@ -153,8 +153,8 @@ void EncoderController::InitAudio()
 	audio_encoder_ = std::make_unique<AudioEncoder>();
 	audio_encoder_->Init(encoder_info_);
 
-	auto task = [=](const QByteArray& bytes, int64_t timestamp_ms) {
-		audio_encoder_->PushBytes(bytes, timestamp_ms);
+	auto task = [=](const QByteArray& bytes) {
+		audio_encoder_->PushBytes(bytes);
 	};
 
 	AudioDataCallback::GetInstance()->RegRecordBufferCallback(task);

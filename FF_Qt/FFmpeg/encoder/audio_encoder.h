@@ -15,7 +15,8 @@ public:
 	AudioEncoder();
 	~AudioEncoder();
 	void Init(const std::weak_ptr<EncoderCriticalSec>& encoder_infos_);
-	void PushBytes(const QByteArray& bytes,int64_t timestamp_ms);
+	void PushBytes(const QByteArray& bytes);
+	void Stop();
 
 private:
 	bool AddAudioStream();
@@ -31,4 +32,5 @@ private:
 	SwrContext* swr_context_;
 	int last_frame_timestamp_;
 	int64_t last_pts_;
+	std::atomic_bool b_stop_;
 };
