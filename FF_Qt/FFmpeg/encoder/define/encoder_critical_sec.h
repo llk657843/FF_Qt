@@ -22,6 +22,9 @@ public:
 	int GetVideoCodecId() const;
 	int GetAudioCodecId() const;
 	bool WriteFrame(AVPacketWrapper&);
+	
+private:
+	int GetStreamIndexBinary(int);
 
 private:
 	AVFormatContext* format_context_;
@@ -29,4 +32,5 @@ private:
 	std::string file_path_;
 	int end_vote_;
 	int64_t last_frame_timestamp_;
+	int write_packet_vote_;
 };

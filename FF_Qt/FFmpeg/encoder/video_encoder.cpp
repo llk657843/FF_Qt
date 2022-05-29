@@ -103,7 +103,7 @@ void VideoEncoder::ParseBytesInfo(const std::shared_ptr<BytesInfo>& bytes_info)
 			0,video_height_, dst_frame->Frame()->data,dst_frame->Frame()->linesize);
 	}
 	int64_t old_frame_cnt = frame_cnt_;
-	frame_cnt_++;
+	
 	
 	dst_frame->Frame()->pts = av_rescale(old_frame_cnt, v_stream_->time_base.den, codec_context_->time_base.den);
 	if (!SendFrame(dst_frame)) 
@@ -140,8 +140,9 @@ void VideoEncoder::ParseBytesInfo(const std::shared_ptr<BytesInfo>& bytes_info)
 		return;
 	}
 
-	if (!encoder_shared_ptr->WriteFrame(av_packet))
+	if (encoder_shared_ptr->WriteFrame(av_packet))
 	{
+		frame_cnt_++;
 		return;
 	}
 }

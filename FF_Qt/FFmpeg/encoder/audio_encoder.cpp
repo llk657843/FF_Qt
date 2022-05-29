@@ -16,7 +16,7 @@ AudioEncoder::AudioEncoder()
 	audio_stream_ = nullptr;
 	swr_context_ = nullptr;
 	last_frame_timestamp_ = 0;
-	last_pts_ = 0;
+	last_pts_ = -10240;
 	b_stop_ = false;
 }
 
@@ -65,7 +65,7 @@ void AudioEncoder::PushBytes(const QByteArray& bytes)
 		return;
 	}
 	auto time_base = audio_stream_->time_base;
-	last_pts_ += dst_frame->Frame()->nb_samples;
+	
 	dst_frame->Frame()->pts = last_pts_;
 	std::shared_ptr<EncoderCriticalSec> shared_info = encoder_infos_.lock();
 	if(!SendFrame(dst_frame))
@@ -93,7 +93,10 @@ void AudioEncoder::PushBytes(const QByteArray& bytes)
 	av_packet.Get()->stream_index = audio_stream_->index;
 	if(shared_info)
 	{
-		shared_info->WriteFrame(av_packet);
+		if(shared_info->WriteFrame(av_packet))
+		{
+			last_pts_ += dst_frame->Frame()->nb_samples;
+		}
 	}
 	if(b_stop_)
 	{

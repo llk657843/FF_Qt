@@ -13,6 +13,7 @@ EncoderCriticalSec::EncoderCriticalSec()
 {
 	format_context_ = nullptr;
 	end_vote_ = 0;
+	write_packet_vote_ = 0;
 }
 
 EncoderCriticalSec::~EncoderCriticalSec()
@@ -89,10 +90,37 @@ bool EncoderCriticalSec::WriteFrame(AVPacketWrapper& av_packet)
 	std::lock_guard<std::mutex> lock(format_ctx_mtx_);
 	if (end_vote_ > 0)
 	{
-		return av_interleaved_write_frame(format_context_, av_packet.Get()) == 0;
+		//vote to write, only all stream is ready to write,then write
+		if(write_packet_vote_ != GetStreamIndexBinary(end_vote_ - 1))
+		{
+			write_packet_vote_ = write_packet_vote_ | (GetStreamIndexBinary(av_packet.Get()->stream_index));
+		}
+		
+		if (write_packet_vote_ == GetStreamIndexBinary(end_vote_ - 1)) 
+		{
+			return av_interleaved_write_frame(format_context_, av_packet.Get()) == 0;
+		}
+		else 
+		{
+			return false;
+		}
 	}
 	else 
 	{
 		return false;
 	}
+}
+
+int EncoderCriticalSec::GetStreamIndexBinary(int index)
+{
+	if (index <= 31) 
+	{
+		return pow(2, index);
+	}
+	else 
+	{
+		std::cout << "warning,wrong stream index" << std::endl;
+		return 0;
+	}
+	
 }

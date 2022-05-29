@@ -192,7 +192,6 @@ void VideoDecoder::ReleaseAll()
         return;
     }
     std::lock_guard<std::mutex> lock(decode_mutex_);
-    image_funcs_.clear();
     b_running_flag_ = false;
     av_packet_free(&packet_);
     packet_ = nullptr;

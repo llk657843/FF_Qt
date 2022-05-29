@@ -188,6 +188,10 @@ void FFMpegQt::SlotClose()
 void FFMpegQt::SlotOpenFile()
 {
 	QString name = QFileDialog::getOpenFileName();
+	if (name.isEmpty() || name.trimmed().isEmpty()) 
+	{
+		return;
+	}
 	PlayerController::GetInstance()->SetPath(name.toStdString());
 	SlotStartClicked();
 }
