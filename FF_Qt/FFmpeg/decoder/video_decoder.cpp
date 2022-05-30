@@ -69,7 +69,7 @@ bool VideoDecoder::Init(const std::string& path)
     
     src_height_ = codec_context_->height;
     src_width_ = codec_context_->width;
-    frame_time_ = 1000.0 / decoder_->streams[video_stream_id_]->avg_frame_rate.num;
+    frame_time_ = 1000.0 / (decoder_->streams[video_stream_id_]->avg_frame_rate.num/ decoder_->streams[video_stream_id_]->avg_frame_rate.den);
     //´ò¿ª±àÂëÆ÷
     auto codec_p = avcodec_find_decoder(codec_context_->codec_id);
     ret = avcodec_open2(codec_context_, codec_p, nullptr);
@@ -123,10 +123,12 @@ bool VideoDecoder::Run()
                     time_base = decoder_->streams[video_stream_id_]->time_base;
                 }
 				int64_t timestamp = cached_frame->Frame()->best_effort_timestamp * av_q2d(time_base) * 1000.0;
+                //std::cout << "timestamp:" << timestamp << std::endl;
 				return PostImageTask(std::move(cached_frame), width, height, timestamp, std::move(img_ptr));
             };
           
             image_funcs_.push_back(ImageFunc(std::make_shared<QImage>(width, height, QImage::Format_ARGB32),func, frame_ptr));
+            //std::cout << "av packet pts : " << packet_->pts << std::endl;
         }
         
         av_packet_unref(packet_);

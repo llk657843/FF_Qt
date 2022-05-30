@@ -53,17 +53,27 @@ void RecordSettingForm::SlotStartClicked()
 		QMessageBox::warning(this, "warning", "file path is empty");
 		return;
 	}
+	QFile file(file_path);
+	bool b_open = file.open(QIODevice::ReadWrite);
+	file.close();
+	if (b_open) 
+	{
+		EncoderController::GetInstance()->SetFilePath(file_path);
+		EncoderController::GetInstance()->ReadyEncode();
+		EncoderController::GetInstance()->StartCatch();
+		close();
+	}
+	else
+	{
+		QMessageBox::warning(this, "warning", "file open failed");
+	}
 	
-	EncoderController::GetInstance()->SetFilePath(file_path);
-	EncoderController::GetInstance()->ReadyEncode();
-	EncoderController::GetInstance()->StartCatch();
-	close();
 }
 
 void RecordSettingForm::SlotFilePositionClicked()
 {
 	QString name = QFileDialog::getSaveFileName();
-	if (name.isEmpty()) 
+	if (name.isEmpty() || name.trimmed().isEmpty()) 
 	{
 		return;
 	}

@@ -127,7 +127,7 @@ bool AudioDecoder::Run()
 				byte_array.append((char*)out_buffer_, out_buffer_size);
 				auto timebase = decoder_->streams[audio_stream_id_]->codec->pkt_timebase;
 				duration_time = frame_wrapper->Frame()->best_effort_timestamp * 1000.0 * av_q2d(timebase);
-				std::cout << "duration_time:" << duration_time << std::endl;
+				//std::cout << "duration_time:" << duration_time << std::endl;
 			}
 			
 			NotifyDataCallback(byte_array,duration_time);

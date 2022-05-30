@@ -48,5 +48,7 @@ private:
 	int src_height_;
 	AVStream* v_stream_;
 	AVCodecContext* codec_context_;
-	int frame_cnt_;
+	int64_t frame_cnt_;
+	int64_t packet_cnt_;
+	bool b_write_success_;
 };

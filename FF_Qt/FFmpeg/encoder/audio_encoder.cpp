@@ -16,7 +16,7 @@ AudioEncoder::AudioEncoder()
 	audio_stream_ = nullptr;
 	swr_context_ = nullptr;
 	last_frame_timestamp_ = 0;
-	last_pts_ = -10240;
+	last_pts_ = 0;
 	b_stop_ = false;
 }
 
@@ -67,6 +67,7 @@ void AudioEncoder::PushBytes(const QByteArray& bytes)
 	auto time_base = audio_stream_->time_base;
 	
 	dst_frame->Frame()->pts = last_pts_;
+	last_pts_ += dst_frame->Frame()->nb_samples;
 	std::shared_ptr<EncoderCriticalSec> shared_info = encoder_infos_.lock();
 	if(!SendFrame(dst_frame))
 	{
@@ -82,21 +83,12 @@ void AudioEncoder::PushBytes(const QByteArray& bytes)
 			return;
 		}
 	}
-	else 
-	{
-		while (avcodec_receive_packet(ctx, av_packet.Get()) != 0)
-		{
-			std::this_thread::yield();
-		}
-	}
 	av_packet.Get()->flags |= AV_PKT_FLAG_KEY;
 	av_packet.Get()->stream_index = audio_stream_->index;
+	av_packet.Get()->pts = av_packet.Get()->dts;
 	if(shared_info)
 	{
-		if(shared_info->WriteFrame(av_packet))
-		{
-			last_pts_ += dst_frame->Frame()->nb_samples;
-		}
+		shared_info->WriteFrame(av_packet);
 	}
 	if(b_stop_)
 	{
@@ -133,6 +125,7 @@ bool AudioEncoder::AddAudioStream()
 	codec_ctx->sample_fmt = AV_SAMPLE_FMT_FLTP;
 	// Some formats want stream headers to be separate.
 	codec_ctx->flags |= AV_CODEC_FLAG_GLOBAL_HEADER;
+	codec_ctx->flags |= AVFMT_NOTIMESTAMPS;
 	return true;
 }
 
@@ -211,7 +204,6 @@ std::shared_ptr<AVFrameWrapper> AudioEncoder::CreateFrame(AVSampleFormat sample_
 	}
 	return frame_wrapper;
 }
-
 
 bool AudioEncoder::SendFrame(std::shared_ptr<AVFrameWrapper> frame_wrapper)
 {

@@ -96,8 +96,15 @@ bool EncoderCriticalSec::WriteFrame(AVPacketWrapper& av_packet)
 			write_packet_vote_ = write_packet_vote_ | (GetStreamIndexBinary(av_packet.Get()->stream_index));
 		}
 		
+		if (av_packet.Get()->pts == AV_NOPTS_VALUE) 
+		{
+			std::cout << "invalid pts value" << std::endl;
+			return false;
+		}
+
 		if (write_packet_vote_ == GetStreamIndexBinary(end_vote_ - 1)) 
 		{
+			//std::cout << "av packet pts :" << av_packet.Get()->pts << std::endl;
 			return av_interleaved_write_frame(format_context_, av_packet.Get()) == 0;
 		}
 		else 
