@@ -3,7 +3,6 @@
 #include "QDesktopWidget"
 WinScreenCap::WinScreenCap()
 {
-	m_hdib_ = NULL;
 }
 
 WinScreenCap::~WinScreenCap()
@@ -24,8 +23,6 @@ void WinScreenCap::Init()
 	bi.bmiHeader.biPlanes = 1;
 	bi.bmiHeader.biBitCount = 24;
 	hBmp = CreateDIBSection(MemDC, &bi, DIB_RGB_COLORS, (void**)&bit_data_, NULL, 0);
-	
-	m_hdib_ = (PRGBTRIPLE)malloc(bi.bmiHeader.biWidth * bi.bmiHeader.biHeight * 3);//24Î»Í¼Ïñ´óÐ¡
 }
 
 BYTE* WinScreenCap::GetScreenBytes()

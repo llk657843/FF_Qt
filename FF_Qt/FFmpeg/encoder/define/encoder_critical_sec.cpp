@@ -71,6 +71,7 @@ void EncoderCriticalSec::WriteTrailer()
 	std::lock_guard<std::mutex> lock(format_ctx_mtx_);
 	if (--end_vote_ == 0) 
 	{
+		std::cout<<"write trailer success"<<std::endl;
 		av_write_trailer(format_context_);
 	}
 }
@@ -95,13 +96,10 @@ bool EncoderCriticalSec::WriteFrame(AVPacketWrapper& av_packet)
 		{
 			write_packet_vote_ = write_packet_vote_ | (GetStreamIndexBinary(av_packet.Get()->stream_index));
 		}
-		
-		if (av_packet.Get()->pts == AV_NOPTS_VALUE) 
+		if(av_packet.Get()->pts  == AV_NOPTS_VALUE)
 		{
-			std::cout << "invalid pts value" << std::endl;
 			return false;
 		}
-
 		if (write_packet_vote_ == GetStreamIndexBinary(end_vote_ - 1)) 
 		{
 			//std::cout << "av packet pts :" << av_packet.Get()->pts << std::endl;

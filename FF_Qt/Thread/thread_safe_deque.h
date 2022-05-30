@@ -40,6 +40,13 @@ public:
 		try_wake_up(true);
 	}
 
+	void end_wakeup()
+	{
+		std::unique_lock<std::mutex> lock(mutex_);
+		b_end_ = true;
+		try_wake_up(true);
+	}
+
 	bool get_front_block(T& object)
 	{
 		std::unique_lock<std::mutex> lock(mutex_);

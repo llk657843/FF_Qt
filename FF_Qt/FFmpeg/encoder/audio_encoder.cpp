@@ -85,7 +85,6 @@ void AudioEncoder::PushBytes(const QByteArray& bytes)
 	}
 	av_packet.Get()->flags |= AV_PKT_FLAG_KEY;
 	av_packet.Get()->stream_index = audio_stream_->index;
-	av_packet.Get()->pts = av_packet.Get()->dts;
 	if(shared_info)
 	{
 		shared_info->WriteFrame(av_packet);

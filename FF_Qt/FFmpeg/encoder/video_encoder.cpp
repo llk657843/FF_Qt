@@ -82,6 +82,7 @@ void VideoEncoder::PostImage(std::shared_ptr<BytesInfo>&& ptr)
 void VideoEncoder::Stop()
 {
 	b_stop_ = true;
+	msg_queue_.end_wakeup();
 }
 
 bool VideoEncoder::IsEnded()
@@ -127,7 +128,7 @@ void VideoEncoder::ParseBytesInfo(const std::shared_ptr<BytesInfo>& bytes_info)
 	{
 		return;
 	}
-	av_packet.Get()->pts = av_rescale(packet_cnt_++, v_stream_->time_base.den, codec_context_->time_base.den);
+	av_packet.Get()->pts = av_rescale(packet_cnt_++, v_stream_->time_base.den / v_stream_->time_base.num, codec_context_->time_base.den / codec_context_->time_base.num);
 	if (codec_context_->coded_frame->key_frame)
 	{
 		av_packet.Get()->flags |= AV_PKT_FLAG_KEY;

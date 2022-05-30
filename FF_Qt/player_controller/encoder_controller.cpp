@@ -17,6 +17,7 @@
 #include <QtCore/qfileinfo.h>
 #define INCLUDE_VIDEO
 #define INCLUDE_AUDIO
+const int pix_size = 1920 * 1080 * 3;
 EncoderController::EncoderController()
 {
 	video_encoder_ = nullptr;
@@ -172,13 +173,17 @@ void EncoderController::InitVideoEncoder()
 void EncoderController::CaptureImage()
 {
 	auto task = ToWeakCallback([=]() {
+		auto bytes = screen_cap_->GetScreenBytes();
 		int64_t begin_time = time_util::GetCurrentTimeMst();
 		if (start_time_ == 0)
 		{
 			start_time_ = begin_time;
 		}
-		auto bytes = screen_cap_->GetScreenBytes();
-		video_encoder_->PostImage(std::make_shared<BytesInfo>(bytes, begin_time - start_time_));
+
+		uint8_t* bytes_cpy = new uint8_t[pix_size + 1];
+		memcpy(bytes_cpy, bytes, pix_size);
+		bytes_cpy[pix_size] = '\0';
+		video_encoder_->PostImage(std::make_shared<BytesInfo>(bytes_cpy, begin_time - start_time_));
 	});
 	qtbase::Post2Task(kThreadVideoCapture,task);
 }

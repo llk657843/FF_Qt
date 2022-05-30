@@ -123,12 +123,10 @@ bool VideoDecoder::Run()
                     time_base = decoder_->streams[video_stream_id_]->time_base;
                 }
 				int64_t timestamp = cached_frame->Frame()->best_effort_timestamp * av_q2d(time_base) * 1000.0;
-                //std::cout << "timestamp:" << timestamp << std::endl;
 				return PostImageTask(std::move(cached_frame), width, height, timestamp, std::move(img_ptr));
             };
           
             image_funcs_.push_back(ImageFunc(std::make_shared<QImage>(width, height, QImage::Format_ARGB32),func, frame_ptr));
-            //std::cout << "av packet pts : " << packet_->pts << std::endl;
         }
         
         av_packet_unref(packet_);

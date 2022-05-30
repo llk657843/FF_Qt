@@ -234,8 +234,8 @@ void AudioPlayerCore::AsyncStop()
 		if (output_) 
 		{
 			output_->stop();
-			io_->Clear();
 		}
+		Clear();
 	});
 	audio_decoder_.AsyncStop(stop_cb);
 }

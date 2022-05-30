@@ -19,5 +19,4 @@ private:
 	HBITMAP   hBmp;
 	BITMAPINFO   bi;
 	BYTE* bit_data_;
-	PRGBTRIPLE m_hdib_;
 };

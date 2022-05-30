@@ -29,6 +29,7 @@ void RecordSettingForm::OnModifyUI()
 	ui->pix_rate_combo->addItem(QString("1920*1080"));
 	ui->pix_rate_combo->addItem(QString("1280*720"));
 	ui->pix_rate_combo->addItem(QString("640*480"));
+	ui->line_file_pos->setText(QString("D:/record.mp4"));
 }
 
 void RecordSettingForm::SlotStartClicked()

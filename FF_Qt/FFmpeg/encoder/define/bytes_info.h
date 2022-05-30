@@ -4,6 +4,7 @@
 #include <cstdint>
 #include <type_traits>
 #include "iostream"
+#include "memory"
 extern "C" 
 {
 #include "libavutil/rational.h"
@@ -19,7 +20,7 @@ public:
 	}
 	~BytesInfo()
 	{
-
+		delete[] real_bytes_;
 	}
 	int64_t GetFrameTime(AVRational time_base)
 	{
