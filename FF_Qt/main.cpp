@@ -22,8 +22,6 @@ int main(int argc, char* argv[])
     QssManager qss_manager;
     QString qss_path = a.applicationDirPath() + "/style/";
     qss_manager.SetGlobalStyle(qss_path);
-    auto str = avutil_configuration();
-    std::cout << str << std::endl;
     FFMpegQt* wid = new FFMpegQt;
     wid->show();
 	a.exec();
