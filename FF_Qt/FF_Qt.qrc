@@ -10,5 +10,7 @@
         <file>style/res/min.png</file>
         <file>style/res/main_shadow.png</file>
         <file>style/res/pet.png</file>
+        <file>style/res/record.png</file>
+        <file>style/res/record_check.png</file>
     </qresource>
 </RCC>

@@ -7,6 +7,7 @@
 RecordSettingForm::RecordSettingForm(QWidget* parent) :QWidget(parent),ui(new Ui::RecordSettingFormUI)
 {
 	setAttribute(Qt::WA_DeleteOnClose);
+	setWindowTitle(QString::fromLocal8Bit("Â¼ÖÆÉèÖÃ"));
 	ui->setupUi(this);
 	OnModifyUI();
 }

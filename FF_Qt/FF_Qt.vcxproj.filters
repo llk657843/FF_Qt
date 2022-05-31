@@ -73,9 +73,6 @@
     <ClCompile Include="style\qss_manager.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="ffmpeg_qt.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="base_ui\base_popup_window.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -127,6 +124,9 @@
     <ClCompile Include="FFmpeg\nvidia_encoder\nvenc.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="ffmpeg_qt.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="ffmpeg_qt.ui">
@@ -149,9 +149,6 @@
     <QtMoc Include="view_callback\view_callback.h">
       <Filter>Header Files</Filter>
     </QtMoc>
-    <QtMoc Include="ffmpeg_qt.h">
-      <Filter>Header Files</Filter>
-    </QtMoc>
     <QtMoc Include="base_ui\uslider.h">
       <Filter>Header Files</Filter>
     </QtMoc>
@@ -159,6 +156,9 @@
       <Filter>Header Files</Filter>
     </QtMoc>
     <QtMoc Include="view\record_setting_form.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="ffmpeg_qt.h">
       <Filter>Header Files</Filter>
     </QtMoc>
   </ItemGroup>

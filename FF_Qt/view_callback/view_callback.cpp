@@ -6,8 +6,10 @@ ViewCallback::ViewCallback()
 	image_info_callback_ = nullptr;
 	time_cb_ = nullptr;
 	parse_done_callback_ = nullptr;
+	record_state_update_callback_ = nullptr;
 	connect(this,SIGNAL(SignalImageInfo(ImageInfo*)),this,SLOT(SlotImageInfo(ImageInfo*)));
 	connect(this,SIGNAL(SignalTimeUpdate(int64_t)),this,SLOT(SlotTimeUpdate(int64_t)));
+	connect(this, SIGNAL(SignalRecordStateUpdate(bool)), this, SLOT(SlotRecordStateUpdate(bool)));
 }
 
 ViewCallback::~ViewCallback()
@@ -78,6 +80,16 @@ void ViewCallback::NotifyParseDone(int64_t duration)
 	}
 }
 
+void ViewCallback::RegRecordStateUpdateCallback(RecordStateUpdateCallback cb)
+{
+	record_state_update_callback_ = cb;
+}
+
+void ViewCallback::NotifyRecordStateUpdate(bool b_run)
+{
+	emit SignalRecordStateUpdate(b_run);
+}
+
 void ViewCallback::Clear()
 {
 	parse_done_callback_ = nullptr;
@@ -98,5 +110,13 @@ void ViewCallback::SlotTimeUpdate(int64_t timestamp)
 	if (time_cb_)
 	{
 		time_cb_(timestamp);
+	}
+}
+
+void ViewCallback::SlotRecordStateUpdate(bool b_run)
+{
+	if (record_state_update_callback_)
+	{
+		record_state_update_callback_(b_run);
 	}
 }

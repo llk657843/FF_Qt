@@ -1,5 +1,6 @@
 #pragma once
 #include "QWidget"
+#include "functional"
 namespace Ui 
 { 
 	class RecordSettingFormUI;
@@ -20,5 +21,4 @@ private:
 
 private:
 	Ui::RecordSettingFormUI* ui;
-
 };

@@ -136,9 +136,6 @@
     <QtUic Include="view\record_setting_form.ui" />
   </ItemGroup>
   <ItemGroup>
-    <QtMoc Include="ffmpeg_qt.h" />
-  </ItemGroup>
-  <ItemGroup>
     <QtMoc Include="view\record_setting_form.h" />
     <QtMoc Include="player_controller\player_controller.h" />
     <QtMoc Include="base_util\closure.h" />
@@ -164,6 +161,7 @@
     <ClInclude Include="FFmpeg\encoder\define\encoder_type.h" />
     <ClInclude Include="FFmpeg\encoder\video_encoder.h" />
     <ClInclude Include="FFmpeg\nvidia_encoder\nv_enc.h" />
+    <QtMoc Include="ffmpeg_qt.h" />
     <ClInclude Include="player_controller\define\video_encoder_param.h" />
     <ClInclude Include="player_controller\encoder_controller.h" />
     <ClInclude Include="screen_capture\win_screen_cap.h" />

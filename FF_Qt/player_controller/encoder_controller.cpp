@@ -15,6 +15,7 @@
 #include "../FFmpeg/encoder/define/encoder_critical_sec.h"
 #include "../audio_recorder/audio_data_cb.h"
 #include <QtCore/qfileinfo.h>
+#include "../view_callback/view_callback.h"
 #define INCLUDE_VIDEO
 #define INCLUDE_AUDIO
 const int pix_size = 1920 * 1080 * 3;
@@ -22,6 +23,7 @@ EncoderController::EncoderController()
 {
 	video_encoder_ = nullptr;
 	audio_encoder_ = nullptr;
+	record_state_ = RECORD_STATE_NONE;
 	start_time_ = 0;
 	audio_core_.InitLoop();
 }
@@ -48,6 +50,8 @@ void EncoderController::ReadyEncode()
 
 void EncoderController::StartCatch()
 {
+	record_state_ = RecordState::RECORD_STATE_RUNNING;
+	ViewCallback::GetInstance()->NotifyRecordStateUpdate(true);
 #ifdef INCLUDE_VIDEO
 	auto timeout_cb = ToWeakCallback([=]() {
 		CaptureImage();
@@ -82,6 +86,7 @@ void EncoderController::StartCatch()
 
 void EncoderController::StopCapture()
 {
+	record_state_ = RecordState::RECORD_STATE_NONE;
 	video_capture_thread_.Stop();
 	if (video_encoder_) 
 	{
@@ -89,8 +94,12 @@ void EncoderController::StopCapture()
 	}
 #ifdef INCLUDE_AUDIO
 	recorder_.StopRecord();
-	audio_encoder_->Stop();
+	if (audio_encoder_) 
+	{
+		audio_encoder_->Stop();
+	}
 #endif // INCLUDE_AUDIO
+	ViewCallback::GetInstance()->NotifyRecordStateUpdate(false);
 }
 
 void EncoderController::SetBitrate(int bitrate)
@@ -118,6 +127,16 @@ bool EncoderController::SetFilePath(QString file_path)
 		return true;
 	}
 	return false;
+}
+
+RecordState EncoderController::GetRecordState()
+{
+	return record_state_;
+}
+
+QString EncoderController::GetCapturePath()
+{
+	return file_path_;
 }
 
 void EncoderController::InitEnocderInfo(const std::string& file_path)

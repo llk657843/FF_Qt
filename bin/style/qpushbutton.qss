@@ -48,3 +48,15 @@ QPushButton#btn_close_1
 	border-image:url(:/FF_Qt/style/res/close.png);
 	border:none;
 }
+
+QPushButton#btn_record_state_normal
+{
+	border-image:url(:/FF_Qt/style/res/record.png);
+	border:none;
+}
+
+QPushButton#btn_record_state_run
+{
+	border-image:url(:/FF_Qt/style/res/record_check.png);
+	border:none;
+}

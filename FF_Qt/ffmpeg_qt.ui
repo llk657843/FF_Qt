@@ -174,14 +174,7 @@
          <item>
           <widget class="QPushButton" name="btn_screen_shot">
            <property name="text">
-            <string>录屏</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QPushButton" name="btn_stop_capture">
-           <property name="text">
-            <string>停止录屏</string>
+            <string/>
            </property>
           </widget>
          </item>

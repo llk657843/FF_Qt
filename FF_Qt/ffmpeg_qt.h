@@ -51,6 +51,8 @@ private:
 
 	void ShowSettingForm();
 
+	void UpdateRecordButton(bool b_run);
+
 private:
 	Ui::FFMpegQtFormUI* ui;
 	int lb_width_;

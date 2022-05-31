@@ -10,7 +10,11 @@ class VideoEncoder;
 class WinScreenCap;
 class AudioEncoder;
 class EncoderCriticalSec;
-
+enum RecordState 
+{
+	RECORD_STATE_NONE = 0,
+	RECORD_STATE_RUNNING = 1,
+};
 class EncoderController : public SupportWeakCallback
 {
 public:
@@ -25,7 +29,9 @@ public:
 	void SetFramerate(int);
 	void SetPixRate(int width,int height);
 	bool SetFilePath(QString);
-
+	RecordState GetRecordState();
+	QString GetCapturePath();
+	
 private:
 	void InitEnocderInfo(const std::string& file_path);
 	void InitScreenCap();
@@ -45,4 +51,5 @@ private:
 	int64_t start_time_;
 	VideoEncoderParam video_param_;
 	QString file_path_;
+	RecordState record_state_;
 };

@@ -10,6 +10,7 @@
 #include "qfiledialog.h"
 #include "player_controller/encoder_controller.h"
 #include "view/record_setting_form.h"
+#include <QtWidgets/qmessagebox.h>
 const int TIME_BASE = 1000;	//刻度盘
 FFMpegQt::FFMpegQt(QWidget* wid) : BasePopupWindow(wid),ui(new Ui::FFMpegQtFormUI)
 {
@@ -68,6 +69,7 @@ void FFMpegQt::OnModifyUI()
 	ui->btn_pause_resume->setCheckable(true);
 	ui->btn_pause_resume->setChecked(false);
 	ui->btn_pause_resume->setStyle(ui->btn_pause_resume->style());
+
 	ui->btn_open_file->setObjectName("btn_folder");
 	ui->btn_open_file->setFixedSize(30, 30);
 	ui->lb_time->setObjectName("lb_text_1");
@@ -92,6 +94,10 @@ void FFMpegQt::OnModifyUI()
 	ui->btn_pause_resume->setCursor(Qt::PointingHandCursor);
 	ui->btn_stop->setCursor(Qt::PointingHandCursor);
 	this->CheckoutShadowType(SHADOW_TYPE::SHADOW_TYPE_MAIN_FORM);
+
+	ui->btn_screen_shot->setCursor(Qt::PointingHandCursor);
+	ui->btn_screen_shot->setObjectName("btn_record_state_normal");
+	ui->btn_screen_shot->setFixedSize(30,30);
 	ui->lb_movie->setObjectName("lb_img");
 }
 
@@ -104,7 +110,7 @@ void FFMpegQt::RegisterSignals()
 	connect(ui->btn_open_file,&QPushButton::clicked,this,&FFMpegQt::SlotOpenFile);
 	connect(ui->btn_screen_shot, &QPushButton::clicked, this, &FFMpegQt::SlotScreenShot);
 	connect(this,&FFMpegQt::SignalClose,this,&FFMpegQt::close);
-	connect(ui->btn_stop_capture,&QPushButton::clicked,this,&FFMpegQt::SlotStopScreenClicked);
+	//connect(ui->btn_stop_capture,&QPushButton::clicked,this,&FFMpegQt::SlotStopScreenClicked);
 	ui->lb_movie->installEventFilter(this);
 	auto image_cb = ToWeakCallback([=](ImageInfo* image_info)
 		{
@@ -127,6 +133,13 @@ void FFMpegQt::RegisterSignals()
 			total_time_s_ = (timestamp/1000)/1000;
 	});
 	ViewCallback::GetInstance()->RegParseDoneCallback(parse_dur_cb);
+
+
+	auto record_state_cb = ToWeakCallback([=](bool b_run) {
+		UpdateRecordButton(b_run);
+		});
+
+	ViewCallback::GetInstance()->RegRecordStateUpdateCallback(record_state_cb);
 }
 
 
@@ -198,12 +211,22 @@ void FFMpegQt::SlotOpenFile()
 
 void FFMpegQt::SlotScreenShot()
 {
-	ShowSettingForm();
+	if (EncoderController::GetInstance()->GetRecordState() == RecordState::RECORD_STATE_NONE)
+	{
+		ShowSettingForm();
+	}
+	else 
+	{
+		SlotStopScreenClicked();
+	}
 }
 
 void FFMpegQt::SlotStopScreenClicked()
 {
 	EncoderController::GetInstance()->StopCapture();
+	//弹窗
+	QMessageBox::information(this, QString::fromLocal8Bit("提示"), QString::fromLocal8Bit("录制已保存到目录") + EncoderController::GetInstance()->GetCapturePath());
+	
 }
 
 void FFMpegQt::ShowTime(int64_t time)
@@ -257,4 +280,17 @@ void FFMpegQt::ShowSettingForm()
 		record_form_ = new RecordSettingForm();
 	}
 	record_form_->show();
+}
+
+void FFMpegQt::UpdateRecordButton(bool b_run)
+{
+	if(b_run)
+	{
+		ui->btn_screen_shot->setObjectName("btn_record_state_run");
+	}
+	else
+	{
+		ui->btn_screen_shot->setObjectName("btn_record_state_normal");
+	}
+	ui->btn_screen_shot->setStyle(ui->btn_screen_shot->style());
 }
