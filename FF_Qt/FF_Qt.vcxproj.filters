@@ -124,6 +124,9 @@
     <ClCompile Include="view\record_setting_form.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="FFmpeg\nvidia_encoder\nvenc.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="ffmpeg_qt.ui">
@@ -269,6 +272,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="player_controller\define\video_encoder_param.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="FFmpeg\nvidia_encoder\nv_enc.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

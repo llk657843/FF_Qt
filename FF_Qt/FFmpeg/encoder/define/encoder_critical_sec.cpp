@@ -1,6 +1,7 @@
 #include "encoder_critical_sec.h"
 #include "../../decoder/AVFrameWrapper.h"
 #include "iostream"
+#include "../../Thread/time_util.h"
 extern "C"
 {
 #include <libavutil/opt.h>
@@ -29,11 +30,13 @@ bool EncoderCriticalSec::InitFormatContext(const std::string& file_path)
 	{
 		return false;
 	}
+	
 	format_context_ = avformat_alloc_context();
 	if (!format_context_)
 	{
 		return false;
 	}
+
 	format_context_->oformat = output_format;
 	memcpy(format_context_->filename, file_path.c_str(), file_path.size());
 	av_dump_format(format_context_, 0, file_path.c_str(), 1);
@@ -102,8 +105,8 @@ bool EncoderCriticalSec::WriteFrame(AVPacketWrapper& av_packet)
 		}
 		if (write_packet_vote_ == GetStreamIndexBinary(end_vote_ - 1)) 
 		{
-			//std::cout << "av packet pts :" << av_packet.Get()->pts << std::endl;
-			return av_interleaved_write_frame(format_context_, av_packet.Get()) == 0;
+			int res = av_interleaved_write_frame(format_context_, av_packet.Get()) == 0;
+			return res;
 		}
 		else 
 		{

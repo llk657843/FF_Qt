@@ -66,6 +66,7 @@ void EncoderController::StartCatch()
 	qtbase::Post2Task(kThreadVideoEncoder, [=]() {
 		video_encoder_->RunEncoder();
 		});
+
 #endif // INCLUDE_VIDEO
 
 	

@@ -7,6 +7,9 @@
 #include "define/encoder_critical_sec.h"
 #include "iostream"
 #include "algorithm"
+#include <QtWidgets/qmessagebox.h>
+#include "av_packet_wrapper.h"
+#include "../decoder/AVFrameWrapper.h"
 extern "C" 
 {
 #include "libavcodec/avcodec.h"
@@ -14,8 +17,6 @@ extern "C"
 #include <libavutil/imgutils.h>
 #include "libavutil/fifo.h"
 #include "libavformat/avformat.h"
-#include "../decoder/AVFrameWrapper.h"
-#include "av_packet_wrapper.h"
 #include <libavutil/opt.h>
 }
 #define max(a,b)            (((a) > (b)) ? (a) : (b))
@@ -49,6 +50,16 @@ void VideoEncoder::Init(const std::weak_ptr<EncoderCriticalSec>& info, const Vid
 	{
 		std::cout << "open video failed" << std::endl;
 	}
+	else 
+	{
+		if (!sws_context_)
+		{
+			sws_context_ = sws_getContext(src_width_, src_height_, pic_src_format_,
+				video_width_, video_height_,
+				AVPixelFormat::AV_PIX_FMT_YUV420P,
+				SWS_BICUBLIN, NULL, NULL, NULL);
+		}
+	}
 }
 
 void VideoEncoder::RunEncoder()
@@ -56,19 +67,19 @@ void VideoEncoder::RunEncoder()
 	while (true)
 	{
 		std::shared_ptr<BytesInfo> info;
-		bool b_get = msg_queue_.get_front_block(info);
-		if (b_get) 
+		bool b_get = false;
+		b_get = msg_queue_.get_front(info, true);
+		if (b_get)
 		{
 			ParseBytesInfo(info);
 		}
-
-		if(IsEnded() && msg_queue_.is_empty_lock())
+		if (IsEnded() && msg_queue_.is_empty_lock())
 		{
 			break;
 		}
 	}
 	auto shared_ptr = encoder_info_.lock();
-	if(shared_ptr) 
+	if (shared_ptr)
 	{
 		shared_ptr->WriteTrailer();
 	}
@@ -94,29 +105,12 @@ void VideoEncoder::ParseBytesInfo(const std::shared_ptr<BytesInfo>& bytes_info)
 {
 	std::shared_ptr<AVFrameWrapper> frame = CreateFrame(pic_src_format_, src_width_, src_height_, (uint8_t*)bytes_info->real_bytes_);
 	auto dst_frame = CreateFrame(AVPixelFormat::AV_PIX_FMT_YUV420P, video_width_, video_height_, nullptr);
-
 	if (NeedConvert())
 	{
-		if (!sws_context_)
-		{
-			sws_context_ = sws_getContext(src_width_, src_height_, pic_src_format_,
-				video_width_, video_height_,
-				AVPixelFormat::AV_PIX_FMT_YUV420P,
-				SWS_BICUBLIN, NULL, NULL, NULL);
-		}
 		sws_scale(sws_context_, frame->Frame()->data, frame->Frame()->linesize,
 			0, video_height_, dst_frame->Frame()->data, dst_frame->Frame()->linesize);
 	}
-	if (!b_write_success_) 
-	{
-		dst_frame->Frame()->pts = frame_cnt_++;
-		dst_frame->Frame()->best_effort_timestamp = 0;
-	}
-	else 
-	{
-		dst_frame->Frame()->pts = av_rescale(packet_cnt_, v_stream_->time_base.den, codec_context_->time_base.den);
-		dst_frame->Frame()->best_effort_timestamp = dst_frame->Frame()->pts;
-	}
+
 	if (!SendFrame(dst_frame))
 	{
 		return;
@@ -128,7 +122,8 @@ void VideoEncoder::ParseBytesInfo(const std::shared_ptr<BytesInfo>& bytes_info)
 	{
 		return;
 	}
-	av_packet.Get()->pts = av_rescale(packet_cnt_++, v_stream_->time_base.den / v_stream_->time_base.num, codec_context_->time_base.den / codec_context_->time_base.num);
+	av_packet.Get()->pts = GetPts();
+	packet_cnt_++;
 	if (codec_context_->coded_frame->key_frame)
 	{
 		av_packet.Get()->flags |= AV_PKT_FLAG_KEY;
@@ -152,9 +147,7 @@ std::shared_ptr<AVFrameWrapper> VideoEncoder::CreateFrame(const AVPixelFormat& p
 {
 	auto picture = std::make_shared<AVFrameWrapper>();
 	
-	int size = 0;
-
-	size = avpicture_get_size(pix_fmt, width, height);
+	int	size = avpicture_get_size(pix_fmt, width, height);
 	
 	if(!src_ptr)
 	{
@@ -231,7 +224,8 @@ void VideoEncoder::AddVideoStream(const VideoEncoderParam& video_param)
 
 bool VideoEncoder::OpenVideo()
 {
-	AVCodec* codec = avcodec_find_encoder(codec_context_->codec_id);
+	auto codec = avcodec_find_encoder_by_name("h264_nvenc");
+	//AVCodec* codec = avcodec_find_encoder(codec_context_->codec_id);
 	if (!codec)
 	{
 		printf("Cannot found video codec\n");
@@ -248,6 +242,16 @@ bool VideoEncoder::OpenVideo()
 
 bool VideoEncoder::SendFrame(std::shared_ptr<AVFrameWrapper> frame_wrapper)
 {
+	if (!b_write_success_)
+	{
+		frame_wrapper->Frame()->pts = frame_cnt_++;
+		frame_wrapper->Frame()->best_effort_timestamp = 0;
+	}
+	else
+	{
+		frame_wrapper->Frame()->pts = GetPts();
+		frame_wrapper->Frame()->best_effort_timestamp = frame_wrapper->Frame()->pts;
+	}
 	AVCodecContext* ctx = v_stream_->codec;
 	if (ctx)
 	{
@@ -262,4 +266,9 @@ bool VideoEncoder::SendFrame(std::shared_ptr<AVFrameWrapper> frame_wrapper)
 		return true;
 	}
 	return false;
+}
+
+int64_t VideoEncoder::GetPts()
+{
+	return  av_rescale(packet_cnt_, v_stream_->time_base.den / v_stream_->time_base.num, codec_context_->time_base.den / codec_context_->time_base.num);
 }

@@ -8,6 +8,10 @@
 #include "player_controller/encoder_controller.h"
 #include "windows.h"
 #include "audio_recorder/win_audio_recorder.h"
+extern "C" 
+{
+#include <libavutil/avutil.h>
+}
 int main(int argc, char* argv[])
 {
     QApplication a(argc, argv);
@@ -18,6 +22,8 @@ int main(int argc, char* argv[])
     QssManager qss_manager;
     QString qss_path = a.applicationDirPath() + "/style/";
     qss_manager.SetGlobalStyle(qss_path);
+    auto str = avutil_configuration();
+    std::cout << str << std::endl;
     FFMpegQt* wid = new FFMpegQt;
     wid->show();
 	a.exec();

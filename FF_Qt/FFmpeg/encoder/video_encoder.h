@@ -3,7 +3,9 @@
 #include "../../Thread/thread_safe_deque.h"
 #include "memory"
 #include "define/bytes_info.h"
+#include "shared_mutex"
 #include "../../player_controller/define/video_encoder_param.h"
+
 extern "C" 
 {
 #include "libavutil/pixfmt.h"
@@ -34,6 +36,7 @@ private:
 	void AddVideoStream(const VideoEncoderParam&);
 	bool OpenVideo();
 	bool SendFrame(std::shared_ptr<AVFrameWrapper> frame_wrapper);
+	int64_t GetPts();
 
 private:
 	int frame_size_;
@@ -48,7 +51,7 @@ private:
 	int src_height_;
 	AVStream* v_stream_;
 	AVCodecContext* codec_context_;
-	int64_t frame_cnt_;
-	int64_t packet_cnt_;
+	std::atomic_llong frame_cnt_;
+	std::atomic_llong packet_cnt_;
 	bool b_write_success_;
 };

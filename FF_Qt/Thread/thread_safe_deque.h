@@ -14,7 +14,6 @@ public:
 	thread_safe_deque() 
 	{
 		b_end_ = false;
-		b_sleep_ = false;
 	};
 	~thread_safe_deque() 
 	{
@@ -26,7 +25,6 @@ public:
 		std::unique_lock<std::mutex> lock(mutex_);
 		internal_queue_.push(single);
 		try_wake_up(false);
-
 	}
 
 	void release() 
@@ -44,22 +42,16 @@ public:
 	{
 		std::unique_lock<std::mutex> lock(mutex_);
 		b_end_ = true;
-		try_wake_up(true);
+		condition_variable_.notify_one();
 	}
 
-	bool get_front_block(T& object)
+	bool get_front(T& object)
 	{
-		std::unique_lock<std::mutex> lock(mutex_);
-		while (is_empty_no_lock() && !b_end_)
-		{
-			b_sleep_ = true;
-			condition_variable_.wait(lock);
-			b_sleep_ = false;
-		}
-		if (b_end_)
+		if(b_end_)
 		{
 			return false;
 		}
+		std::unique_lock<std::mutex> lock(mutex_);
 		if (!internal_queue_.empty())
 		{
 			object = internal_queue_.front();
@@ -67,6 +59,40 @@ public:
 			return true;
 		}
 		return false;
+	}
+
+	bool get_front(T& object,bool b_wait)
+	{
+		if (b_wait)
+		{
+			std::unique_lock<std::mutex> lock(mutex_);
+			while (is_empty_no_lock() && !b_end_)
+			{	
+				condition_variable_.wait(lock);
+			}
+			if (b_end_)
+			{
+				return false;
+			}
+			if (!internal_queue_.empty())
+			{
+				object = internal_queue_.front();
+				internal_queue_.pop();
+				return true;
+			}
+			return false;
+		}
+		else
+		{
+			std::unique_lock<std::mutex> lock(mutex_);
+			if (!is_empty_no_lock())
+			{
+				object = internal_queue_.front();
+				internal_queue_.pop();
+				return true;
+			}
+			return false;
+		}
 	}
 	bool is_empty_lock()
 	{
@@ -76,10 +102,7 @@ public:
 private:
 	void try_wake_up(bool b_force)
 	{
-		if (b_sleep_ || b_force)
-		{
-			condition_variable_.notify_one();
-		}
+		condition_variable_.notify_all();
 	}
 
 	bool is_empty_no_lock()
@@ -92,6 +115,5 @@ private:
 	mutable std::mutex mutex_;
 	std::queue<T> internal_queue_;
 	std::condition_variable_any condition_variable_;
-	std::atomic_bool b_sleep_;
 	std::atomic_bool b_end_;
 };

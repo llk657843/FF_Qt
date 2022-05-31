@@ -115,6 +115,7 @@
     <ClCompile Include="FFmpeg\encoder\av_packet_wrapper.cpp" />
     <ClCompile Include="FFmpeg\encoder\define\encoder_critical_sec.cpp" />
     <ClCompile Include="FFmpeg\encoder\video_encoder.cpp" />
+    <ClCompile Include="FFmpeg\nvidia_encoder\nvenc.cpp" />
     <ClCompile Include="ffmpeg_qt.cpp" />
     <ClCompile Include="player_controller\encoder_controller.cpp" />
     <ClCompile Include="player_controller\player_controller.cpp" />
@@ -162,6 +163,7 @@
     <ClInclude Include="FFmpeg\encoder\define\encoder_critical_sec.h" />
     <ClInclude Include="FFmpeg\encoder\define\encoder_type.h" />
     <ClInclude Include="FFmpeg\encoder\video_encoder.h" />
+    <ClInclude Include="FFmpeg\nvidia_encoder\nv_enc.h" />
     <ClInclude Include="player_controller\define\video_encoder_param.h" />
     <ClInclude Include="player_controller\encoder_controller.h" />
     <ClInclude Include="screen_capture\win_screen_cap.h" />
