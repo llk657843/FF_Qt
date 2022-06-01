@@ -6,15 +6,12 @@
 #include "../audio_recorder/win_audio_recorder.h"
 #include "../AudioQt/audio_qt.h"
 #include "define/video_encoder_param.h"
+#include "../FFmpeg/encoder/define/record_state.h"
 class VideoEncoder;
 class WinScreenCap;
 class AudioEncoder;
 class EncoderCriticalSec;
-enum RecordState 
-{
-	RECORD_STATE_NONE = 0,
-	RECORD_STATE_RUNNING = 1,
-};
+
 class EncoderController : public SupportWeakCallback
 {
 public:

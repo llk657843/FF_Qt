@@ -2,19 +2,20 @@
 #include "../../decoder/AVFrameWrapper.h"
 #include "iostream"
 #include "../../Thread/time_util.h"
+#include "../../../view_callback/view_callback.h"
 extern "C"
 {
 #include <libavutil/opt.h>
 #include <libavformat/avformat.h>
 #include <libswscale/swscale.h>
 #include "libavcodec/avcodec.h"
-
 }
 EncoderCriticalSec::EncoderCriticalSec()
 {
 	format_context_ = nullptr;
 	end_vote_ = 0;
 	write_packet_vote_ = 0;
+	stop_success_cb_ = nullptr;
 }
 
 EncoderCriticalSec::~EncoderCriticalSec()
@@ -74,8 +75,11 @@ void EncoderCriticalSec::WriteTrailer()
 	std::lock_guard<std::mutex> lock(format_ctx_mtx_);
 	if (--end_vote_ == 0) 
 	{
-		std::cout<<"write trailer success"<<std::endl;
 		av_write_trailer(format_context_);
+		if (stop_success_cb_)
+		{
+			stop_success_cb_();
+		}
 	}
 }
 
@@ -117,6 +121,11 @@ bool EncoderCriticalSec::WriteFrame(AVPacketWrapper& av_packet)
 	{
 		return false;
 	}
+}
+
+void EncoderCriticalSec::RegStopSuccessCallback(StopSuccessCallback cb)
+{
+	stop_success_cb_ = cb;
 }
 
 int EncoderCriticalSec::GetStreamIndexBinary(int index)

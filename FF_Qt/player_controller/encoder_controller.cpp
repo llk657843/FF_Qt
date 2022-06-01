@@ -152,7 +152,13 @@ void EncoderController::InitEnocderInfo(const std::string& file_path)
 	{
 		std::cout << "Encoder init failed" << std::endl;
 	}
+	auto stop_success_cb = [=]() {
+		record_state_ = RecordState::RECORD_STATE_NONE;
+		std::cout << "stop success" << std::endl;
+		ViewCallback::GetInstance()->NotifyRecordStateUpdate(RecordState::RECORD_STATE_NONE);
+	};
 
+	encoder_info_->RegStopSuccessCallback(stop_success_cb);
 }
 
 void EncoderController::InitScreenCap()

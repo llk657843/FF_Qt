@@ -9,7 +9,7 @@ ViewCallback::ViewCallback()
 	record_state_update_callback_ = nullptr;
 	connect(this,SIGNAL(SignalImageInfo(ImageInfo*)),this,SLOT(SlotImageInfo(ImageInfo*)));
 	connect(this,SIGNAL(SignalTimeUpdate(int64_t)),this,SLOT(SlotTimeUpdate(int64_t)));
-	connect(this, SIGNAL(SignalRecordStateUpdate(bool)), this, SLOT(SlotRecordStateUpdate(bool)));
+	connect(this, SIGNAL(SignalRecordStateUpdate(int)), this, SLOT(SlotRecordStateUpdate(int)));
 }
 
 ViewCallback::~ViewCallback()
@@ -85,9 +85,9 @@ void ViewCallback::RegRecordStateUpdateCallback(RecordStateUpdateCallback cb)
 	record_state_update_callback_ = cb;
 }
 
-void ViewCallback::NotifyRecordStateUpdate(bool b_run)
+void ViewCallback::NotifyRecordStateUpdate(int run_state)
 {
-	emit SignalRecordStateUpdate(b_run);
+	emit SignalRecordStateUpdate(run_state);
 }
 
 void ViewCallback::Clear()
@@ -113,7 +113,7 @@ void ViewCallback::SlotTimeUpdate(int64_t timestamp)
 	}
 }
 
-void ViewCallback::SlotRecordStateUpdate(bool b_run)
+void ViewCallback::SlotRecordStateUpdate(int b_run)
 {
 	if (record_state_update_callback_)
 	{

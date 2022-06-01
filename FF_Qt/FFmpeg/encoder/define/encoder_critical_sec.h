@@ -3,10 +3,11 @@
 #include "memory"
 #include "mutex"
 #include "../av_packet_wrapper.h"
+#include "functional"
 class AVFormatContext;
 class AVStream;
 class AVFrameWrapper;
-
+using StopSuccessCallback = std::function<void()>;
 class EncoderCriticalSec 
 {
 public:
@@ -23,6 +24,8 @@ public:
 	int GetAudioCodecId() const;
 	bool WriteFrame(AVPacketWrapper&);
 	
+	void RegStopSuccessCallback(StopSuccessCallback);
+
 private:
 	int GetStreamIndexBinary(int);
 
@@ -33,4 +36,5 @@ private:
 	int end_vote_;
 	int64_t last_frame_timestamp_;
 	int write_packet_vote_;
+	StopSuccessCallback stop_success_cb_;
 };

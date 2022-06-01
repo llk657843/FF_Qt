@@ -135,8 +135,8 @@ void FFMpegQt::RegisterSignals()
 	ViewCallback::GetInstance()->RegParseDoneCallback(parse_dur_cb);
 
 
-	auto record_state_cb = ToWeakCallback([=](bool b_run) {
-		UpdateRecordButton(b_run);
+	auto record_state_cb = ToWeakCallback([=](int run_state) {
+		UpdateRecordButton(run_state == RecordState::RECORD_STATE_RUNNING);
 		});
 
 	ViewCallback::GetInstance()->RegRecordStateUpdateCallback(record_state_cb);
@@ -211,9 +211,14 @@ void FFMpegQt::SlotOpenFile()
 
 void FFMpegQt::SlotScreenShot()
 {
-	if (EncoderController::GetInstance()->GetRecordState() == RecordState::RECORD_STATE_NONE)
+	auto record_state = EncoderController::GetInstance()->GetRecordState();
+	if (record_state == RecordState::RECORD_STATE_NONE)
 	{
 		ShowSettingForm();
+	}
+	else if(record_state ==  RecordState::RECORD_STATE_STOPPING)
+	{
+		QMessageBox::information(NULL, QString::fromLocal8Bit("提示"), QString::fromLocal8Bit("视频合成中,请稍后再试"));
 	}
 	else 
 	{
@@ -226,7 +231,6 @@ void FFMpegQt::SlotStopScreenClicked()
 	EncoderController::GetInstance()->StopCapture();
 	//弹窗
 	QMessageBox::information(this, QString::fromLocal8Bit("提示"), QString::fromLocal8Bit("录制已保存到目录") + EncoderController::GetInstance()->GetCapturePath());
-	
 }
 
 void FFMpegQt::ShowTime(int64_t time)

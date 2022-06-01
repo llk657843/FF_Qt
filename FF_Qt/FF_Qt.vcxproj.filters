@@ -277,5 +277,8 @@
     <ClInclude Include="FFmpeg\nvidia_encoder\nv_enc.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="FFmpeg\encoder\define\record_state.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

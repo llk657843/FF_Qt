@@ -11,7 +11,7 @@ using OpenDoneCallback = std::function<void()>;
 using ImageInfoCallback = std::function<void(ImageInfo*)>;
 using TimeCallback = std::function<void(int64_t timestamp)>;
 using ParseDoneCallback = std::function<void(int64_t duration)>;
-using RecordStateUpdateCallback = std::function<void(bool b_run)>;
+using RecordStateUpdateCallback = std::function<void(int state)>;
 
 class ViewCallback : public QObject
 {
@@ -38,19 +38,19 @@ public:
 	void NotifyParseDone(int64_t duration);
 
 	void RegRecordStateUpdateCallback(RecordStateUpdateCallback);
-	void NotifyRecordStateUpdate(bool b_run);
+	void NotifyRecordStateUpdate(int b_run);
 
 	void Clear();
 
 signals:
 	void SignalImageInfo(ImageInfo*);
 	void SignalTimeUpdate(int64_t);
-	void SignalRecordStateUpdate(bool);
+	void SignalRecordStateUpdate(int);
 
 private slots:
 	void SlotImageInfo(ImageInfo*);
 	void SlotTimeUpdate(int64_t);
-	void SlotRecordStateUpdate(bool);
+	void SlotRecordStateUpdate(int);
 
 private:
 	std::list<std::weak_ptr<AudioStateCallback>> audio_start_callbacks_;

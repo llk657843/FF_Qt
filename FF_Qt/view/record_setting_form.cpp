@@ -30,11 +30,18 @@ void RecordSettingForm::OnModifyUI()
 	ui->pix_rate_combo->addItem(QString("1920*1080"));
 	ui->pix_rate_combo->addItem(QString("1280*720"));
 	ui->pix_rate_combo->addItem(QString("640*480"));
-	ui->line_file_pos->setText(QString("D:/record.mp4"));
+	ui->line_file_pos->setText(QString::fromLocal8Bit("D:/record.mp4"));
 }
 
 void RecordSettingForm::SlotStartClicked()
 {
+	auto record_state = EncoderController::GetInstance()->GetRecordState();
+	if (record_state != RecordState::RECORD_STATE_NONE) 
+	{
+		QMessageBox::information(NULL,QString::fromLocal8Bit("提示"),QString::fromLocal8Bit("请先停止录制"));
+		return;
+	}
+
 	EncoderController::GetInstance()->SetBitrate(ui->bitrate_combo->currentText().toInt());
 	EncoderController::GetInstance()->SetFramerate(ui->framerate_combo->currentText().toInt());
 	if (ui->pix_rate_combo->currentText() == "1920*1080") 
@@ -49,7 +56,7 @@ void RecordSettingForm::SlotStartClicked()
 	{
 		EncoderController::GetInstance()->SetPixRate(640, 480);
 	}
-	QString file_path = ui->line_file_pos->text();
+	QString file_path = ui->line_file_pos->text().toLocal8Bit();
 	if(file_path.isEmpty() || file_path.trimmed().isEmpty())
 	{
 		QMessageBox::warning(this, "warning", "file path is empty");
