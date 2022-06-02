@@ -12,6 +12,10 @@ WinAudioRecorder::WinAudioRecorder()
 
 WinAudioRecorder::~WinAudioRecorder()
 {
+	for (int i = 0; i < FRAGMENT_NUM; i++) 
+	{
+		delete[] wave_hdr_[i].lpData;
+	}
 }
 
 DWORD CALLBACK MicCallback(HWAVEIN hwavein, UINT uMsg, DWORD dwInstance, DWORD dwParam1, DWORD dwParam2)

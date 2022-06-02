@@ -14,7 +14,6 @@ public:
 	WAVEFORMATEX WaveInitFormat(WORD nCh, DWORD nSampleRate, WORD BitsPerSample);
 
 private:
-
 	HWAVEIN phwi_;
 	WAVEHDR wave_hdr_[FRAGMENT_NUM];
 };

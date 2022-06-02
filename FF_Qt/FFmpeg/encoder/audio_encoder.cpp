@@ -22,6 +22,21 @@ AudioEncoder::AudioEncoder()
 
 AudioEncoder::~AudioEncoder()
 {
+	if(swr_context_)
+	{
+		swr_free(&swr_context_);
+		swr_context_ = nullptr;
+	}
+	if (audio_stream_) 
+	{
+		if (audio_stream_->codec) 
+		{
+			avcodec_close(audio_stream_->codec);
+			avcodec_free_context(&audio_stream_->codec);
+			audio_stream_->codec = nullptr;
+		}
+		audio_stream_ = nullptr;
+	}
 }
 
 void AudioEncoder::Init(const std::weak_ptr<EncoderCriticalSec>& encoder_infos)

@@ -31,13 +31,28 @@ VideoEncoder::VideoEncoder()
 	v_stream_ = nullptr;
 	frame_cnt_ = 0;
 	packet_cnt_ = 0;
-	codec_context_ = nullptr;
 	b_write_success_ = false;
 	pic_src_format_ = AVPixelFormat::AV_PIX_FMT_BGR24;
 }
 
 VideoEncoder::~VideoEncoder()
 {
+	if (sws_context_) 
+	{
+		sws_freeContext(sws_context_);
+		sws_context_ = nullptr;
+	}
+	
+	if(v_stream_)
+	{
+		if (v_stream_->codec)
+		{
+			avcodec_close(v_stream_->codec);
+			avcodec_free_context(&v_stream_->codec);
+			v_stream_->codec = nullptr;
+		}
+		v_stream_ = nullptr;
+	}
 }
 
 void VideoEncoder::Init(const std::weak_ptr<EncoderCriticalSec>& info, const VideoEncoderParam& encode_param)
@@ -118,13 +133,14 @@ void VideoEncoder::ParseBytesInfo(const std::shared_ptr<BytesInfo>& bytes_info)
 
 	AVPacketWrapper av_packet;
 	av_packet.Init();
-	if (avcodec_receive_packet(codec_context_, av_packet.Get()) != 0)
+	auto codec_context = v_stream_->codec;
+	if (avcodec_receive_packet(codec_context, av_packet.Get()) != 0)
 	{
 		return;
 	}
 	av_packet.Get()->pts = GetPts();
 	packet_cnt_++;
-	if (codec_context_->coded_frame->key_frame)
+	if (codec_context->coded_frame->key_frame)
 	{
 		av_packet.Get()->flags |= AV_PKT_FLAG_KEY;
 	}
@@ -186,40 +202,40 @@ void VideoEncoder::AddVideoStream(const VideoEncoderParam& video_param)
 		printf("Cannot add new vidoe stream\n");
 		return ;
 	}
-	codec_context_ = v_stream_->codec;
-	codec_context_->codec_id = (AVCodecID)encoder_shared_ptr->GetVideoCodecId();
-	codec_context_->codec_type = AVMEDIA_TYPE_VIDEO;
-	codec_context_->frame_number = 0;
-	codec_context_->bit_rate = video_param.bitrate_;
-	codec_context_->width = video_width_;
-	codec_context_->height = video_height_;
-	codec_context_->time_base.den = video_param.fps_;
-	codec_context_->time_base.num = 1;
-	codec_context_->gop_size = 12;
-	codec_context_->qmin = 10;
-	codec_context_->qmax = 51;
-	codec_context_->max_qdiff = 4;
-	codec_context_->me_range = 16;
-	codec_context_->compression_level = 0.6;
-	av_opt_set(codec_context_->priv_data, "tune", "zerolatency", 0);
+	auto codec_context = v_stream_->codec;
+	codec_context->codec_id = (AVCodecID)encoder_shared_ptr->GetVideoCodecId();
+	codec_context->codec_type = AVMEDIA_TYPE_VIDEO;
+	codec_context->frame_number = 0;
+	codec_context->bit_rate = video_param.bitrate_;
+	codec_context->width = video_width_;
+	codec_context->height = video_height_;
+	codec_context->time_base.den = video_param.fps_;
+	codec_context->time_base.num = 1;
+	codec_context->gop_size = 12;
+	codec_context->qmin = 10;
+	codec_context->qmax = 51;
+	codec_context->max_qdiff = 4;
+	codec_context->me_range = 16;
+	codec_context->compression_level = 0.6;
+	av_opt_set(codec_context->priv_data, "tune", "zerolatency", 0);
 
 
-	codec_context_->pix_fmt = AV_PIX_FMT_YUV420P;
-	if (codec_context_->codec_id == AV_CODEC_ID_MPEG2VIDEO)
+	codec_context->pix_fmt = AV_PIX_FMT_YUV420P;
+	if (codec_context->codec_id == AV_CODEC_ID_MPEG2VIDEO)
 	{
 		// Just for testing, we also add B frames 
-		codec_context_->max_b_frames = 2;
+		codec_context->max_b_frames = 2;
 	}
-	if (codec_context_->codec_id == AV_CODEC_ID_MPEG1VIDEO)
+	if (codec_context->codec_id == AV_CODEC_ID_MPEG1VIDEO)
 	{
 		/* Needed to avoid using macroblocks in which some coeffs overflow.
 		This does not happen with normal video, it just happens here as
 		the motion of the chroma plane does not match the luma plane. */
-		codec_context_->mb_decision = 2;
+		codec_context->mb_decision = 2;
 	}
 
 	// Some formats want stream headers to be separate.
-	codec_context_->flags |= AV_CODEC_FLAG_GLOBAL_HEADER;
+	codec_context->flags |= AV_CODEC_FLAG_GLOBAL_HEADER;
 }
 
 bool VideoEncoder::OpenVideo()
@@ -231,7 +247,8 @@ bool VideoEncoder::OpenVideo()
 		printf("Cannot found video codec\n");
 		return false;
 	}
-	int res = avcodec_open2(codec_context_, codec, NULL);
+
+	int res = avcodec_open2(v_stream_->codec, codec, NULL);
 	if (res < 0)
 	{
 		printf("Cannot open video codec\n");
@@ -270,5 +287,5 @@ bool VideoEncoder::SendFrame(std::shared_ptr<AVFrameWrapper> frame_wrapper)
 
 int64_t VideoEncoder::GetPts()
 {
-	return  av_rescale(packet_cnt_, v_stream_->time_base.den / v_stream_->time_base.num, codec_context_->time_base.den / codec_context_->time_base.num);
+	return  av_rescale(packet_cnt_, v_stream_->time_base.den / v_stream_->time_base.num, v_stream_->codec->time_base.den / v_stream_->codec->time_base.num);
 }

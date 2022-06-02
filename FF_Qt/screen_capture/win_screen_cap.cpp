@@ -3,12 +3,30 @@
 #include "QDesktopWidget"
 WinScreenCap::WinScreenCap()
 {
+	hBmp = NULL;
+	hDC = NULL;
+	MemDC = NULL;
+	bit_data_ = nullptr;
 }
 
 WinScreenCap::~WinScreenCap()
 {
-	ReleaseDC(NULL, hDC);
-	DeleteDC(MemDC);
+	if (hDC) 
+	{
+		ReleaseDC(NULL, hDC);
+		hDC = NULL;
+	}
+	if (MemDC) 
+	{
+		DeleteDC(MemDC);
+		MemDC = NULL;
+	}
+	
+	if (hBmp) 
+	{
+		DeleteObject(hBmp);
+		hBmp = NULL;
+	}
 }
 
 void WinScreenCap::Init()

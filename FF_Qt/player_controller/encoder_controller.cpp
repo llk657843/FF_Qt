@@ -24,8 +24,7 @@ EncoderController::EncoderController()
 	video_encoder_ = nullptr;
 	audio_encoder_ = nullptr;
 	record_state_ = RECORD_STATE_NONE;
-	start_time_ = 0;
-	audio_core_.InitLoop();
+	connect(this,&EncoderController::SignalStopSuccess,this,&EncoderController::SlotStopSuccess);
 }
 
 EncoderController::~EncoderController()
@@ -56,28 +55,31 @@ void EncoderController::StartCatch()
 	auto timeout_cb = ToWeakCallback([=]() {
 		CaptureImage();
 		});
-	video_capture_thread_.RegTimeoutCallback(timeout_cb);
-	video_capture_thread_.InitMediaTimer();
-	if (video_param_.fps_ != 0) 
+	video_capture_thread_ = std::make_unique<HighRatioTimeThread>();
+	video_capture_thread_->RegTimeoutCallback(timeout_cb);
+	video_capture_thread_->InitMediaTimer();
+	if (video_param_.fps_ != 0)
 	{
-		video_capture_thread_.SetInterval((1000 / video_param_.fps_));
+		video_capture_thread_->SetInterval((1000 / video_param_.fps_));
 	}
-	else 
+	else
 	{
-		video_capture_thread_.SetInterval(40);
+		video_capture_thread_->SetInterval(40);
 	}
-	video_capture_thread_.Run();
+	video_capture_thread_->Run();
 	qtbase::Post2Task(kThreadVideoEncoder, [=]() {
 		video_encoder_->RunEncoder();
 		});
 
 #endif // INCLUDE_VIDEO
 
-	
-	
+
+
 #ifdef INCLUDE_AUDIO
 	qtbase::Post2Task(kThreadAudioCapture, [=]() {
-	recorder_.RecordWave();
+		if (recorder_) {
+			recorder_->RecordWave();
+		}
 	});
 #endif // INCLUDE_AUDIO
 
@@ -87,13 +89,19 @@ void EncoderController::StartCatch()
 void EncoderController::StopCapture()
 {
 	record_state_ = RecordState::RECORD_STATE_NONE;
-	video_capture_thread_.Stop();
+	if (video_capture_thread_) 
+	{
+		video_capture_thread_->Stop();
+	}
 	if (video_encoder_) 
 	{
 		video_encoder_->Stop();
 	}
 #ifdef INCLUDE_AUDIO
-	recorder_.StopRecord();
+	if (recorder_)
+	{
+		recorder_->StopRecord();
+	}
 	if (audio_encoder_) 
 	{
 		audio_encoder_->Stop();
@@ -139,6 +147,18 @@ QString EncoderController::GetCapturePath()
 	return file_path_;
 }
 
+void EncoderController::StartTestMemoryLeak()
+{
+	InitEnocderInfo("D:\\record.mp4");
+	InitVideoEncoder();
+}
+
+void EncoderController::EndTestMemoryLeak()
+{
+	video_encoder_.reset();
+	encoder_info_.reset();
+}
+
 void EncoderController::InitEnocderInfo(const std::string& file_path)
 {
 	if (encoder_info_)
@@ -153,9 +173,7 @@ void EncoderController::InitEnocderInfo(const std::string& file_path)
 		std::cout << "Encoder init failed" << std::endl;
 	}
 	auto stop_success_cb = [=]() {
-		record_state_ = RecordState::RECORD_STATE_NONE;
-		std::cout << "stop success" << std::endl;
-		ViewCallback::GetInstance()->NotifyRecordStateUpdate(RecordState::RECORD_STATE_NONE);
+		emit SignalStopSuccess();
 	};
 
 	encoder_info_->RegStopSuccessCallback(stop_success_cb);
@@ -177,6 +195,7 @@ void EncoderController::InitAudio()
 		std::cout << "audio encoder already init." << std::endl;
 		return;
 	}
+	recorder_ = std::make_unique<WinAudioRecorder>();
 	audio_encoder_ = std::make_unique<AudioEncoder>();
 	audio_encoder_->Init(encoder_info_);
 
@@ -199,17 +218,60 @@ void EncoderController::InitVideoEncoder()
 void EncoderController::CaptureImage()
 {
 	auto task = ToWeakCallback([=]() {
-		auto bytes = screen_cap_->GetScreenBytes();
-		int64_t begin_time = time_util::GetCurrentTimeMst();
-		if (start_time_ == 0)
+		if(!video_encoder_)
 		{
-			start_time_ = begin_time;
+			return;
 		}
-
-		uint8_t* bytes_cpy = new uint8_t[pix_size + 1];
-		memcpy(bytes_cpy, bytes, pix_size);
-		bytes_cpy[pix_size] = '\0';
-		video_encoder_->PostImage(std::make_shared<BytesInfo>(bytes_cpy, begin_time - start_time_));
+		auto bytes = screen_cap_->GetScreenBytes();
+		if (video_encoder_) 
+		{
+			uint8_t* bytes_cpy = new uint8_t[pix_size + 1];
+			memcpy(bytes_cpy, bytes, pix_size);
+			bytes_cpy[pix_size] = '\0';
+			video_encoder_->PostImage(std::make_shared<BytesInfo>(bytes_cpy));
+		}
 	});
 	qtbase::Post2Task(kThreadVideoCapture,task);
+}
+
+void EncoderController::CleanAll()
+{
+	record_state_ = RecordState::RECORD_STATE_NONE;
+	
+	ViewCallback::GetInstance()->NotifyRecordStateUpdate(RecordState::RECORD_STATE_NONE);
+	if (video_encoder_)
+	{
+		std::cout << "stop video" << std::endl;
+		video_encoder_.reset();
+	}
+	if (audio_encoder_)
+	{
+		std::cout << "stop audio" << std::endl;
+		audio_encoder_.reset();
+	}
+	if (encoder_info_)
+	{
+		std::cout << "stop encoder" << std::endl;
+		encoder_info_.reset();
+	}
+	if (recorder_) 
+	{
+		std::cout << "stop recorder" << std::endl;
+		recorder_.reset();
+	}
+	if (screen_cap_) 
+	{
+		std::cout << "stop screen_cap" << std::endl;
+		screen_cap_.reset();
+	}
+	if (video_capture_thread_) 
+	{
+		video_capture_thread_.reset();
+	}
+	std::cout << "stop success" << std::endl;
+}
+
+void EncoderController::SlotStopSuccess()
+{
+	CleanAll();
 }

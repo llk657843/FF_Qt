@@ -161,6 +161,9 @@
     <QtMoc Include="ffmpeg_qt.h">
       <Filter>Header Files</Filter>
     </QtMoc>
+    <QtMoc Include="player_controller\encoder_controller.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="base_util\singleton.h">
@@ -218,9 +221,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="base_ui\base_shadow_form.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="player_controller\encoder_controller.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="screen_capture\win_screen_cap.h">

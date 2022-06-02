@@ -159,14 +159,16 @@ void FFMpegQt::SlotResume()
 
 void FFMpegQt::SlotPause()
 {
-	PlayerController::GetInstance()->Pause();
+	EncoderController::GetInstance()->StartTestMemoryLeak();
+	//PlayerController::GetInstance()->Pause();
 }
 
 void FFMpegQt::SlotStop()
 {
-	PlayerController::GetInstance()->Stop();
-	ViewCallback::GetInstance()->Clear();
-	ui->lb_movie->setPixmap(QPixmap());
+	EncoderController::GetInstance()->EndTestMemoryLeak();
+	//PlayerController::GetInstance()->Stop();
+	//ViewCallback::GetInstance()->Clear();
+	//ui->lb_movie->setPixmap(QPixmap());
 }
 
 void FFMpegQt::SlotSliderMove(int value)

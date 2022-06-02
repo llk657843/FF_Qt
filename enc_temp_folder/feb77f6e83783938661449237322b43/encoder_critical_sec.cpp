@@ -85,6 +85,7 @@ void EncoderCriticalSec::WriteTrailer()
 		{
 			stop_success_cb_();
 		}
+
 	}
 }
 

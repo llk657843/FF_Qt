@@ -12,8 +12,9 @@ class WinScreenCap;
 class AudioEncoder;
 class EncoderCriticalSec;
 
-class EncoderController : public SupportWeakCallback
+class EncoderController :public QObject, public SupportWeakCallback
 {
+	Q_OBJECT
 public:
 	SINGLETON_DEFINE(EncoderController);
 	EncoderController();
@@ -28,6 +29,12 @@ public:
 	bool SetFilePath(QString);
 	RecordState GetRecordState();
 	QString GetCapturePath();
+
+	void StartTestMemoryLeak();
+	void EndTestMemoryLeak();
+
+signals:
+	void SignalStopSuccess();
 	
 private:
 	void InitEnocderInfo(const std::string& file_path);
@@ -36,16 +43,16 @@ private:
 	void InitAudio();
 	void InitVideoEncoder();
 	void CaptureImage();
+	void CleanAll();
+	void SlotStopSuccess();
 
 private:
 	std::unique_ptr<VideoEncoder> video_encoder_;
 	std::unique_ptr<AudioEncoder> audio_encoder_;
 	std::shared_ptr<EncoderCriticalSec> encoder_info_;
 	std::unique_ptr<WinScreenCap> screen_cap_;
-	WinAudioRecorder recorder_;
-	HighRatioTimeThread video_capture_thread_;
-	AudioPlayerCore audio_core_;
-	int64_t start_time_;
+	std::unique_ptr<WinAudioRecorder> recorder_;
+	std::unique_ptr<HighRatioTimeThread> video_capture_thread_;
 	VideoEncoderParam video_param_;
 	QString file_path_;
 	RecordState record_state_;

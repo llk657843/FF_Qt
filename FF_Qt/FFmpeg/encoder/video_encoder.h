@@ -50,8 +50,7 @@ private:
 	int src_width_;
 	int src_height_;
 	AVStream* v_stream_;
-	AVCodecContext* codec_context_;
-	std::atomic_llong frame_cnt_;
-	std::atomic_llong packet_cnt_;
+	int64_t frame_cnt_;
+	int64_t packet_cnt_;
 	bool b_write_success_;
 };

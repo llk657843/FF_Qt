@@ -45,12 +45,10 @@ public:
 signals:
 	void SignalImageInfo(ImageInfo*);
 	void SignalTimeUpdate(int64_t);
-	void SignalRecordStateUpdate(int);
 
 private slots:
 	void SlotImageInfo(ImageInfo*);
 	void SlotTimeUpdate(int64_t);
-	void SlotRecordStateUpdate(int);
 
 private:
 	std::list<std::weak_ptr<AudioStateCallback>> audio_start_callbacks_;
