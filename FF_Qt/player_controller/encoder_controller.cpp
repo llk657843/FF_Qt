@@ -25,6 +25,7 @@ EncoderController::EncoderController()
 	audio_encoder_ = nullptr;
 	record_state_ = RECORD_STATE_NONE;
 	connect(this,&EncoderController::SignalStopSuccess,this,&EncoderController::SlotStopSuccess);
+	RegCallback();
 }
 
 EncoderController::~EncoderController()
@@ -76,38 +77,33 @@ void EncoderController::StartCatch()
 
 
 #ifdef INCLUDE_AUDIO
-	qtbase::Post2Task(kThreadAudioCapture, [=]() {
-		if (recorder_) {
-			recorder_->RecordWave();
-		}
-	});
+	if (recorder_)
+	{
+		recorder_->RecordWave("default");
+	}
 #endif // INCLUDE_AUDIO
-
-
 }
 
 void EncoderController::StopCapture()
 {
 	record_state_ = RecordState::RECORD_STATE_NONE;
-	if (video_capture_thread_) 
+	if (video_capture_thread_)
 	{
 		video_capture_thread_->Stop();
 	}
-	if (video_encoder_) 
+	if (video_encoder_)
 	{
 		video_encoder_->Stop();
 	}
 #ifdef INCLUDE_AUDIO
 	if (recorder_)
 	{
-		recorder_->StopRecord();
-	}
-	if (audio_encoder_) 
-	{
-		audio_encoder_->Stop();
+		if (recorder_)
+		{
+			recorder_->StopRecord();
+		}
 	}
 #endif // INCLUDE_AUDIO
-	ViewCallback::GetInstance()->NotifyRecordStateUpdate(false);
 }
 
 void EncoderController::SetBitrate(int bitrate)
@@ -145,18 +141,6 @@ RecordState EncoderController::GetRecordState()
 QString EncoderController::GetCapturePath()
 {
 	return file_path_;
-}
-
-void EncoderController::StartTestMemoryLeak()
-{
-	InitEnocderInfo("D:\\record.mp4");
-	InitVideoEncoder();
-}
-
-void EncoderController::EndTestMemoryLeak()
-{
-	video_encoder_.reset();
-	encoder_info_.reset();
 }
 
 void EncoderController::InitEnocderInfo(const std::string& file_path)
@@ -200,7 +184,10 @@ void EncoderController::InitAudio()
 	audio_encoder_->Init(encoder_info_);
 
 	auto task = [=](const QByteArray& bytes) {
-		audio_encoder_->PushBytes(bytes);
+		if (audio_encoder_) 
+		{
+			audio_encoder_->PushBytes(bytes);
+		}
 	};
 
 	AudioDataCallback::GetInstance()->RegRecordBufferCallback(task);
@@ -237,41 +224,45 @@ void EncoderController::CaptureImage()
 void EncoderController::CleanAll()
 {
 	record_state_ = RecordState::RECORD_STATE_NONE;
-	
-	ViewCallback::GetInstance()->NotifyRecordStateUpdate(RecordState::RECORD_STATE_NONE);
 	if (video_encoder_)
 	{
-		std::cout << "stop video" << std::endl;
 		video_encoder_.reset();
 	}
 	if (audio_encoder_)
 	{
-		std::cout << "stop audio" << std::endl;
 		audio_encoder_.reset();
 	}
 	if (encoder_info_)
 	{
-		std::cout << "stop encoder" << std::endl;
 		encoder_info_.reset();
 	}
 	if (recorder_) 
 	{
-		std::cout << "stop recorder" << std::endl;
 		recorder_.reset();
 	}
 	if (screen_cap_) 
 	{
-		std::cout << "stop screen_cap" << std::endl;
 		screen_cap_.reset();
 	}
 	if (video_capture_thread_) 
 	{
 		video_capture_thread_.reset();
 	}
-	std::cout << "stop success" << std::endl;
+	ViewCallback::GetInstance()->NotifyRecordStateUpdate(RecordState::RECORD_STATE_NONE);
 }
 
 void EncoderController::SlotStopSuccess()
 {
 	CleanAll();
+}
+
+void EncoderController::RegCallback()
+{
+	auto close_cb = ToWeakCallback([=]() {
+		if (audio_encoder_)
+		{
+			audio_encoder_->Stop();
+		}
+	});
+	ViewCallback::GetInstance()->RegRecorderCloseCallback(close_cb);
 }

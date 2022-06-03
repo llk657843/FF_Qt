@@ -30,9 +30,6 @@ public:
 	RecordState GetRecordState();
 	QString GetCapturePath();
 
-	void StartTestMemoryLeak();
-	void EndTestMemoryLeak();
-
 signals:
 	void SignalStopSuccess();
 	
@@ -45,6 +42,7 @@ private:
 	void CaptureImage();
 	void CleanAll();
 	void SlotStopSuccess();
+	void RegCallback();
 
 private:
 	std::unique_ptr<VideoEncoder> video_encoder_;

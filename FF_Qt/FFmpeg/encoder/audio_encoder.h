@@ -2,6 +2,7 @@
 #include "memory"
 #include "qbytearray.h"
 #include "../decoder/AVFrameWrapper.h"
+#include "mutex"
 extern "C" 
 {
 #include "libavutil\samplefmt.h"
@@ -33,4 +34,5 @@ private:
 	int last_frame_timestamp_;
 	int64_t last_pts_;
 	std::atomic_bool b_stop_;
+	std::atomic_flag flag_;
 };

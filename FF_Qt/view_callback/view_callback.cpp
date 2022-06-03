@@ -6,9 +6,11 @@ ViewCallback::ViewCallback()
 	image_info_callback_ = nullptr;
 	time_cb_ = nullptr;
 	parse_done_callback_ = nullptr;
+	recorder_close_callback_ = nullptr;
 	record_state_update_callback_ = nullptr;
 	connect(this,SIGNAL(SignalImageInfo(ImageInfo*)),this,SLOT(SlotImageInfo(ImageInfo*)));
 	connect(this,SIGNAL(SignalTimeUpdate(int64_t)),this,SLOT(SlotTimeUpdate(int64_t)));
+	connect(this,SIGNAL(SignalRecorderClose()),this,SLOT(SlotRecorderClose()));
 }
 
 ViewCallback::~ViewCallback()
@@ -99,6 +101,16 @@ void ViewCallback::Clear()
 	time_cb_ = nullptr;
 }
 
+void ViewCallback::RegRecorderCloseCallback(RecorderCloseCallback cb)
+{
+	recorder_close_callback_ = cb;
+}
+
+void ViewCallback::NotifyRecorderCloseCallback()
+{
+	emit SignalRecorderClose();
+}
+
 void ViewCallback::SlotImageInfo(ImageInfo* image_info)
 {
 	if (image_info_callback_)
@@ -112,5 +124,13 @@ void ViewCallback::SlotTimeUpdate(int64_t timestamp)
 	if (time_cb_)
 	{
 		time_cb_(timestamp);
+	}
+}
+
+void ViewCallback::SlotRecorderClose()
+{
+	if (recorder_close_callback_)
+	{
+		recorder_close_callback_();
 	}
 }

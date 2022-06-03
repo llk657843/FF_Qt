@@ -18,6 +18,7 @@ AudioEncoder::AudioEncoder()
 	last_frame_timestamp_ = 0;
 	last_pts_ = 0;
 	b_stop_ = false;
+	flag_.clear();
 }
 
 AudioEncoder::~AudioEncoder()
@@ -60,53 +61,78 @@ void AudioEncoder::Init(const std::weak_ptr<EncoderCriticalSec>& encoder_infos)
 void AudioEncoder::Stop()
 {
 	b_stop_ = true;
+	while (!flag_.test_and_set()) 
+	{
+		auto shared_info = encoder_infos_.lock();
+		if (shared_info)
+		{
+			shared_info->WriteTrailer();
+		}
+	}
+	
 }
 
 void AudioEncoder::PushBytes(const QByteArray& bytes)
 {
-	if (!audio_stream_) 
+	if (!audio_stream_)
 	{
 		return;
 	}
 	AVCodecContext* ctx = audio_stream_->codec;
-	std::shared_ptr<AVFrameWrapper> dst_frame = CreateFrame(AV_SAMPLE_FMT_FLTP,bytes,false);
-	std::shared_ptr<AVFrameWrapper> src_frame = CreateFrame(AV_SAMPLE_FMT_S16, bytes,true);
-	
+	std::shared_ptr<AVFrameWrapper> dst_frame = CreateFrame(AV_SAMPLE_FMT_FLTP, bytes, false);
+	std::shared_ptr<AVFrameWrapper> src_frame = CreateFrame(AV_SAMPLE_FMT_S16, bytes, true);
+
 	int res = swr_convert(swr_context_, dst_frame->Frame()->data, MAX_AUDIO_FRAME_SIZE,
-		(const uint8_t **)src_frame->Frame()->data, src_frame->Frame()->nb_samples);
-	if (res < 0) 
+		(const uint8_t**)src_frame->Frame()->data, src_frame->Frame()->nb_samples);
+	if (res < 0)
 	{
 		std::cout << "convert audio failed" << std::endl;
 		return;
 	}
 	auto time_base = audio_stream_->time_base;
-	
+
 	dst_frame->Frame()->pts = last_pts_;
 	last_pts_ += dst_frame->Frame()->nb_samples;
 	std::shared_ptr<EncoderCriticalSec> shared_info = encoder_infos_.lock();
-	if(!SendFrame(dst_frame))
+	if (!SendFrame(dst_frame))
 	{
-		return ;
+		return;
 	}
 
 	AVPacketWrapper av_packet;
 	av_packet.Init();
-	if (!b_stop_)
+	if (b_stop_) 
 	{
-		if (avcodec_receive_packet(ctx, av_packet.Get()) != 0)
+		avcodec_flush_buffers(ctx);
+	}
+	if (avcodec_receive_packet(ctx, av_packet.Get()) != 0)
+	{
+		if (!b_stop_) 
 		{
 			return;
+		}
+		else
+		{
+			avcodec_flush_buffers(ctx);
+			avcodec_receive_packet(ctx, av_packet.Get());
 		}
 	}
 	av_packet.Get()->flags |= AV_PKT_FLAG_KEY;
 	av_packet.Get()->stream_index = audio_stream_->index;
-	if(shared_info)
+	if (shared_info)
 	{
 		shared_info->WriteFrame(av_packet);
 	}
-	if(b_stop_)
+	if (b_stop_)
 	{
-		shared_info->WriteTrailer();
+		while (!flag_.test_and_set()) 
+		{
+			auto info = encoder_infos_.lock();
+			if (info)
+			{
+				info->WriteTrailer();
+			}
+		}
 	}
 }
 

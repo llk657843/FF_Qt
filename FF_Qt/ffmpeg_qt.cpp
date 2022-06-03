@@ -159,16 +159,14 @@ void FFMpegQt::SlotResume()
 
 void FFMpegQt::SlotPause()
 {
-	EncoderController::GetInstance()->StartTestMemoryLeak();
-	//PlayerController::GetInstance()->Pause();
+	PlayerController::GetInstance()->Pause();
 }
 
 void FFMpegQt::SlotStop()
 {
-	EncoderController::GetInstance()->EndTestMemoryLeak();
-	//PlayerController::GetInstance()->Stop();
-	//ViewCallback::GetInstance()->Clear();
-	//ui->lb_movie->setPixmap(QPixmap());
+	PlayerController::GetInstance()->Stop();
+	ViewCallback::GetInstance()->Clear();
+	ui->lb_movie->setPixmap(QPixmap());
 }
 
 void FFMpegQt::SlotSliderMove(int value)
@@ -232,7 +230,7 @@ void FFMpegQt::SlotStopScreenClicked()
 {
 	EncoderController::GetInstance()->StopCapture();
 	//弹窗
-	QMessageBox::information(this, QString::fromLocal8Bit("提示"), QString::fromLocal8Bit("录制已保存到目录") + EncoderController::GetInstance()->GetCapturePath());
+	//QMessageBox::information(this, QString::fromLocal8Bit("提示"), QString::fromLocal8Bit("录制已保存到目录") + EncoderController::GetInstance()->GetCapturePath());
 }
 
 void FFMpegQt::ShowTime(int64_t time)

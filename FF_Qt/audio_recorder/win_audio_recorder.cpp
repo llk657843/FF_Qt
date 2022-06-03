@@ -3,11 +3,15 @@
 #include "cstdio"
 #include <iostream>
 #include "audio_data_cb.h"
+#include "../view_callback/view_callback.h"
+#include "../../player_controller/encoder_controller.h"
+#include "../Thread/thread_pool_entrance.h"
 #define FRAGMENT_SIZE 4096        // 设置缓存区大小  
-
+#define AUDIO_MULTITHREAD_TEST
+const unsigned int WM_STOP_RECORD = WM_USER + 105;
 WinAudioRecorder::WinAudioRecorder()
 {
-
+	index_ = 0;
 }
 
 WinAudioRecorder::~WinAudioRecorder()
@@ -18,37 +22,53 @@ WinAudioRecorder::~WinAudioRecorder()
 	}
 }
 
-DWORD CALLBACK MicCallback(HWAVEIN hwavein, UINT uMsg, DWORD dwInstance, DWORD dwParam1, DWORD dwParam2)
+void WinAudioRecorder::PrivateStopRecord()
 {
-	switch (uMsg)
+	std::lock_guard<std::mutex> lock(mtx_);
+	MMRESULT res = waveInStop(phwi_);
+	waveInReset(phwi_);
+	for (int i = 0; i < 4; i++) 
 	{
-	case WIM_OPEN:
-	{
-		printf("\n设备已经打开...\n");
-		break;
+		res = waveInUnprepareHeader(phwi_, &wave_hdr_[i], sizeof(WAVEHDR));
 	}
-	case WIM_DATA:
-	{
-		auto param = (LPWAVEHDR)dwParam1;
-		AudioDataCallback::GetInstance()->NotifyBufferCallback(param->lpData,param->dwBufferLength);
-		waveInAddBuffer(hwavein, (LPWAVEHDR)dwParam1, sizeof(WAVEHDR));
-		break;
-	}
-	case WIM_CLOSE:
-	{
-		printf("\n设备已经关闭...\n");
-		break;
-	}
-	default:
-		break;
-	}
-	return 0;
+	res = waveInClose(phwi_);
+	phwi_ = NULL;
+	
 }
 
-void WinAudioRecorder::RecordWave()
+WAVEFORMATEX WinAudioRecorder::WaveInitFormat(WORD nCh, DWORD nSampleRate, WORD BitsPerSample)
 {
+	WAVEFORMATEX m_WaveFormat;
+	m_WaveFormat.wFormatTag = WAVE_FORMAT_PCM;
+	m_WaveFormat.nChannels = nCh;
+	m_WaveFormat.nSamplesPerSec = nSampleRate; 
+	m_WaveFormat.nAvgBytesPerSec = nSampleRate * nCh * BitsPerSample / 8;
+	m_WaveFormat.nBlockAlign = m_WaveFormat.nChannels * BitsPerSample / 8;
+	m_WaveFormat.wBitsPerSample = BitsPerSample;
+	m_WaveFormat.cbSize = 0;
+	return m_WaveFormat;
+}
+
+void WinAudioRecorder::StopRecord()
+{
+	::PostThreadMessageA(thread_id_, WM_STOP_RECORD,NULL,NULL);
+}
+
+void WinAudioRecorder::RecordWave(const std::string& device_id)
+{
+	auto task = [=]() {
+		WinEventFilter();
+	};
+
+	std::thread record_thread(task);
+	record_thread.detach();
+}
+
+void WinAudioRecorder::WinEventFilter()
+{
+	thread_id_ = GetCurrentThreadId();
 	WAVEFORMATEX pwfx = WaveInitFormat(2, 44100, 16);
-	auto mmResult = waveInOpen(&phwi_, WAVE_MAPPER, &pwfx, (DWORD)(MicCallback), NULL, CALLBACK_FUNCTION);//3
+	auto mmResult = waveInOpen(&phwi_, WAVE_MAPPER, &pwfx, GetCurrentThreadId(), (DWORD)index_, CALLBACK_THREAD);//3
 
 	if (MMSYSERR_NOERROR == mmResult)
 	{
@@ -74,27 +94,46 @@ void WinAudioRecorder::RecordWave()
 			std::cout << "Record start failed" << std::endl;
 		}
 	}
-}
-
-void WinAudioRecorder::StopRecord()
-{
-	auto res = waveInStop(phwi_);
-	if (res != MMSYSERR_NOERROR) 
+	
+	MSG msg;
+	// 主消息循环:
+	bool b_break = false;
+	while (GetMessage(&msg, nullptr, 0, 0))
 	{
-		std::cout << "Record end failed" << std::endl;
+		TranslateMessage(&msg);
+		switch (msg.message)
+		{
+		case WIM_OPEN:
+		{
+			printf("\n设备已经打开...\n");
+			break;
+		}
+		case WIM_DATA:
+		{
+			auto param = (LPWAVEHDR)msg.lParam;
+			AudioDataCallback::GetInstance()->NotifyBufferCallback(param->lpData, param->dwBufferLength);
+			waveInAddBuffer(phwi_, (LPWAVEHDR)param, sizeof(WAVEHDR));
+			break;
+		}
+		case WIM_CLOSE:
+		{
+			printf("\n设备已经关闭...\n");
+			b_break = true;
+			ViewCallback::GetInstance()->NotifyRecorderCloseCallback();
+			break;
+		}
+		case WM_STOP_RECORD:
+		{
+			PrivateStopRecord();
+			break;
+		}
+		default:
+			break;
+		}
+		DispatchMessage(&msg);
+		if (b_break) 
+		{
+			break;
+		}
 	}
 }
-
-WAVEFORMATEX WinAudioRecorder::WaveInitFormat(WORD nCh, DWORD nSampleRate, WORD BitsPerSample)
-{
-	WAVEFORMATEX m_WaveFormat;
-	m_WaveFormat.wFormatTag = WAVE_FORMAT_PCM;
-	m_WaveFormat.nChannels = nCh;
-	m_WaveFormat.nSamplesPerSec = nSampleRate; 
-	m_WaveFormat.nAvgBytesPerSec = nSampleRate * nCh * BitsPerSample / 8;
-	m_WaveFormat.nBlockAlign = m_WaveFormat.nChannels * BitsPerSample / 8;
-	m_WaveFormat.wBitsPerSample = BitsPerSample;
-	m_WaveFormat.cbSize = 0;
-	return m_WaveFormat;
-}
-
