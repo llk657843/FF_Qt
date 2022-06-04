@@ -37,12 +37,15 @@ private:
 	void InitEnocderInfo(const std::string& file_path);
 	void InitScreenCap();
 
-	void InitAudio();
+	void InitAudioEncoder();
 	void InitVideoEncoder();
 	void CaptureImage();
 	void CleanAll();
 	void SlotStopSuccess();
 	void RegCallback();
+
+	void InitMic();
+	void InitAudioRecorder();
 
 private:
 	std::unique_ptr<VideoEncoder> video_encoder_;
@@ -50,6 +53,7 @@ private:
 	std::shared_ptr<EncoderCriticalSec> encoder_info_;
 	std::unique_ptr<WinScreenCap> screen_cap_;
 	std::unique_ptr<WinAudioRecorder> recorder_;
+	std::unique_ptr<WinAudioRecorder> mic_recorder_;
 	std::unique_ptr<HighRatioTimeThread> video_capture_thread_;
 	VideoEncoderParam video_param_;
 	QString file_path_;

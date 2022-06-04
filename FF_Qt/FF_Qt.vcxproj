@@ -63,7 +63,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <Link>
       <AdditionalLibraryDirectories>D:\Code\FFmpeg_learning\FF_Qt\lib\win32\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>avcodec.lib;avformat.lib;swscale.lib;avutil.lib;swresample.lib;winmm.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>avcodec.lib;avformat.lib;swscale.lib;avutil.lib;swresample.lib;winmm.lib;avfilter.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <ImageHasSafeExceptionHandlers>false</ImageHasSafeExceptionHandlers>
     </Link>
     <ClCompile>
@@ -101,7 +101,7 @@
     <ClCompile Include="AudioQt\audio_io_device.cpp" />
     <ClCompile Include="AudioQt\audio_qt.cpp" />
     <ClCompile Include="Audio\bytes_list.cpp" />
-    <ClCompile Include="audio_recorder\audio_data_cb.cpp" />
+    <ClCompile Include="audio_recorder\audio_filter.cpp" />
     <ClCompile Include="audio_recorder\win_audio_recorder.cpp" />
     <ClCompile Include="base_ui\base_popup_window.cpp" />
     <ClCompile Include="base_ui\base_popup_window_tool.cpp" />
@@ -140,7 +140,7 @@
     <QtMoc Include="player_controller\player_controller.h" />
     <QtMoc Include="base_util\closure.h" />
     <QtMoc Include="base_ui\uslider.h" />
-    <ClInclude Include="audio_recorder\audio_data_cb.h" />
+    <ClInclude Include="audio_recorder\audio_filter.h" />
     <ClInclude Include="audio_recorder\win_audio_recorder.h" />
     <ClInclude Include="base_ui\base_popup_window.h" />
     <ClInclude Include="base_ui\base_popup_window_tool.h" />

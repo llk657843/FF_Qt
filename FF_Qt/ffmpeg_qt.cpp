@@ -230,7 +230,7 @@ void FFMpegQt::SlotStopScreenClicked()
 {
 	EncoderController::GetInstance()->StopCapture();
 	//弹窗
-	//QMessageBox::information(this, QString::fromLocal8Bit("提示"), QString::fromLocal8Bit("录制已保存到目录") + EncoderController::GetInstance()->GetCapturePath());
+	QMessageBox::information(this, QString::fromLocal8Bit("提示"), QString::fromLocal8Bit("录制已保存到目录") + EncoderController::GetInstance()->GetCapturePath());
 }
 
 void FFMpegQt::ShowTime(int64_t time)

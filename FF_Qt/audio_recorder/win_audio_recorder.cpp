@@ -2,7 +2,6 @@
 #include "mmsystem.h"
 #include "cstdio"
 #include <iostream>
-#include "audio_data_cb.h"
 #include "../view_callback/view_callback.h"
 #include "../../player_controller/encoder_controller.h"
 #include "../Thread/thread_pool_entrance.h"
@@ -11,20 +10,18 @@
 const unsigned int WM_STOP_RECORD = WM_USER + 105;
 WinAudioRecorder::WinAudioRecorder()
 {
-	index_ = 0;
+	audio_data_callback_ = nullptr;
+	record_close_callback_ = nullptr;
+	thread_id_ = 0;
 }
 
 WinAudioRecorder::~WinAudioRecorder()
 {
-	for (int i = 0; i < FRAGMENT_NUM; i++) 
-	{
-		delete[] wave_hdr_[i].lpData;
-	}
+
 }
 
 void WinAudioRecorder::PrivateStopRecord()
 {
-	std::lock_guard<std::mutex> lock(mtx_);
 	MMRESULT res = waveInStop(phwi_);
 	waveInReset(phwi_);
 	for (int i = 0; i < 4; i++) 
@@ -51,7 +48,10 @@ WAVEFORMATEX WinAudioRecorder::WaveInitFormat(WORD nCh, DWORD nSampleRate, WORD 
 
 void WinAudioRecorder::StopRecord()
 {
-	::PostThreadMessageA(thread_id_, WM_STOP_RECORD,NULL,NULL);
+	if (thread_id_ != 0) 
+	{
+		::PostThreadMessageA(thread_id_, WM_STOP_RECORD, NULL, NULL);
+	}
 }
 
 void WinAudioRecorder::RecordWave(const std::string& device_id)
@@ -64,11 +64,21 @@ void WinAudioRecorder::RecordWave(const std::string& device_id)
 	record_thread.detach();
 }
 
+void WinAudioRecorder::RegDataCallback(AudioDatasCallback cb)
+{
+	audio_data_callback_ = cb;
+}
+
+void WinAudioRecorder::RegRecordCloseCallback(RecordCloseCallback cb)
+{
+	record_close_callback_ = cb;
+}
+
 void WinAudioRecorder::WinEventFilter()
 {
 	thread_id_ = GetCurrentThreadId();
 	WAVEFORMATEX pwfx = WaveInitFormat(2, 44100, 16);
-	auto mmResult = waveInOpen(&phwi_, WAVE_MAPPER, &pwfx, GetCurrentThreadId(), (DWORD)index_, CALLBACK_THREAD);//3
+	auto mmResult = waveInOpen(&phwi_, WAVE_MAPPER, &pwfx, GetCurrentThreadId(), NULL, CALLBACK_THREAD);//3
 
 	if (MMSYSERR_NOERROR == mmResult)
 	{
@@ -92,6 +102,11 @@ void WinAudioRecorder::WinEventFilter()
 		if (MMSYSERR_NOERROR != mmResult)
 		{
 			std::cout << "Record start failed" << std::endl;
+			if(record_close_callback_)
+			{
+				record_close_callback_();
+			}
+			return;
 		}
 	}
 	
@@ -111,7 +126,10 @@ void WinAudioRecorder::WinEventFilter()
 		case WIM_DATA:
 		{
 			auto param = (LPWAVEHDR)msg.lParam;
-			AudioDataCallback::GetInstance()->NotifyBufferCallback(param->lpData, param->dwBufferLength);
+			if (audio_data_callback_) 
+			{
+				audio_data_callback_(param->lpData, param->dwBufferLength);
+			}
 			waveInAddBuffer(phwi_, (LPWAVEHDR)param, sizeof(WAVEHDR));
 			break;
 		}
@@ -119,7 +137,7 @@ void WinAudioRecorder::WinEventFilter()
 		{
 			printf("\n设备已经关闭...\n");
 			b_break = true;
-			ViewCallback::GetInstance()->NotifyRecorderCloseCallback();
+			
 			break;
 		}
 		case WM_STOP_RECORD:
@@ -135,5 +153,14 @@ void WinAudioRecorder::WinEventFilter()
 		{
 			break;
 		}
+	}
+
+	for (int i = 0; i < FRAGMENT_NUM; i++)
+	{
+		delete[] wave_hdr_[i].lpData;
+	}
+	if (record_close_callback_) 
+	{
+		record_close_callback_();
 	}
 }

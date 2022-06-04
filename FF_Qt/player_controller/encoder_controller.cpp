@@ -13,11 +13,11 @@
 #include "../Thread/thread_pool_entrance.h"
 #include "../FFmpeg/encoder/audio_encoder.h"
 #include "../FFmpeg/encoder/define/encoder_critical_sec.h"
-#include "../audio_recorder/audio_data_cb.h"
 #include <QtCore/qfileinfo.h>
 #include "../view_callback/view_callback.h"
 #define INCLUDE_VIDEO
 #define INCLUDE_AUDIO
+#define INCLUDE_MICROPHONE
 const int pix_size = 1920 * 1080 * 3;
 EncoderController::EncoderController()
 {
@@ -42,8 +42,13 @@ void EncoderController::ReadyEncode()
 #endif // INCLUDE_VIDEO
 
 #ifdef INCLUDE_AUDIO
-	InitAudio();
+	InitAudioEncoder();
+	InitAudioRecorder();
 #endif // INCLUDE_AUDIO
+#ifdef INCLUDE_MICROPHONE
+	InitMic();
+#endif // INCLUDE_MICROPHONE
+
 	encoder_info_->OpenIo();
 	encoder_info_->WriteHeader();
 }
@@ -82,6 +87,13 @@ void EncoderController::StartCatch()
 		recorder_->RecordWave("default");
 	}
 #endif // INCLUDE_AUDIO
+
+#ifdef INCLUDE_MICROPHONE
+	if (mic_recorder_) 
+	{
+		mic_recorder_->RecordWave("default_mic");
+	}
+#endif // INCLUDE_MIC
 }
 
 void EncoderController::StopCapture()
@@ -98,12 +110,16 @@ void EncoderController::StopCapture()
 #ifdef INCLUDE_AUDIO
 	if (recorder_)
 	{
-		if (recorder_)
-		{
-			recorder_->StopRecord();
-		}
+		recorder_->StopRecord();
 	}
 #endif // INCLUDE_AUDIO
+
+#ifdef INCLUDE_MICROPHONE
+	if (mic_recorder_) 
+	{
+		mic_recorder_->StopRecord();
+	}
+#endif
 }
 
 void EncoderController::SetBitrate(int bitrate)
@@ -172,25 +188,16 @@ void EncoderController::InitScreenCap()
 	}
 }
 
-void EncoderController::InitAudio()
+void EncoderController::InitAudioEncoder()
 {
 	if (audio_encoder_) 
 	{
 		std::cout << "audio encoder already init." << std::endl;
 		return;
 	}
-	recorder_ = std::make_unique<WinAudioRecorder>();
+	
 	audio_encoder_ = std::make_unique<AudioEncoder>();
 	audio_encoder_->Init(encoder_info_);
-
-	auto task = [=](const QByteArray& bytes) {
-		if (audio_encoder_) 
-		{
-			audio_encoder_->PushBytes(bytes);
-		}
-	};
-
-	AudioDataCallback::GetInstance()->RegRecordBufferCallback(task);
 }
 
 void EncoderController::InitVideoEncoder()
@@ -265,4 +272,33 @@ void EncoderController::RegCallback()
 		}
 	});
 	ViewCallback::GetInstance()->RegRecorderCloseCallback(close_cb);
+}
+
+void EncoderController::InitMic()
+{
+	mic_recorder_ = std::make_unique<WinAudioRecorder>();
+}
+
+void EncoderController::InitAudioRecorder()
+{
+	recorder_ = std::make_unique<WinAudioRecorder>();
+
+	auto data_cb = [=](char* bytes, int byte_size) {
+		QByteArray cb_bytes(bytes, byte_size);
+		auto task = [=]() {
+			if (audio_encoder_)
+			{
+				audio_encoder_->PushBytes(bytes);
+			}
+		};
+		qtbase::Post2Task(kThreadAudioEncoder, task);
+	};
+
+	recorder_->RegDataCallback(data_cb);
+
+	auto record_close_cb = [=]() {
+		ViewCallback::GetInstance()->NotifyRecorderCloseCallback();
+		};
+
+	recorder_->RegRecordCloseCallback(record_close_cb);
 }
