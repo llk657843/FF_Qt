@@ -12,6 +12,7 @@ class WinScreenCap;
 class AudioEncoder;
 class EncoderCriticalSec;
 class AudioFilter;
+class NativeAudioController;
 class EncoderController :public QObject, public SupportWeakCallback
 {
 	Q_OBJECT
@@ -29,7 +30,6 @@ public:
 	bool SetFilePath(QString);
 	RecordState GetRecordState();
 	QString GetCapturePath();
-	void InitFilter();
 
 signals:
 	void SignalStopSuccess();
@@ -44,20 +44,15 @@ private:
 	void CleanAll();
 	void SlotStopSuccess();
 	void RegCallback();
-
-	void InitMic();
 	void InitAudioRecorder();
-
 
 private:
 	std::unique_ptr<VideoEncoder> video_encoder_;
 	std::unique_ptr<AudioEncoder> audio_encoder_;
 	std::shared_ptr<EncoderCriticalSec> encoder_info_;
 	std::unique_ptr<WinScreenCap> screen_cap_;
-	std::unique_ptr<WinAudioRecorder> recorder_;
-	std::unique_ptr<WinAudioRecorder> mic_recorder_;
 	std::unique_ptr<HighRatioTimeThread> video_capture_thread_;
-	std::unique_ptr<AudioFilter> audio_filter_;
+	std::unique_ptr<NativeAudioController> native_audio_controller_;
 	VideoEncoderParam video_param_;
 	QString file_path_;
 	RecordState record_state_;

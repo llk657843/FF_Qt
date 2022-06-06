@@ -9,6 +9,7 @@
 #include "base_ui/base_popup_window.h"
 class ImageInfo;
 class RecordSettingForm;
+class NativeAudioController;
 namespace Ui
 {
 	class FFMpegQtFormUI;
@@ -61,4 +62,5 @@ private:
 	int64_t total_time_s_;
 	ThreadSafeBytesList bytes_;
 	QPointer<RecordSettingForm> record_form_;
+	std::unique_ptr<NativeAudioController> native_audio_controller_;
 };

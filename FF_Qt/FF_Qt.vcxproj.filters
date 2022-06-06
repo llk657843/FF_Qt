@@ -127,6 +127,9 @@
     <ClCompile Include="audio_recorder\audio_filter.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="player_controller\native_audio_controller.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="ffmpeg_qt.ui">
@@ -278,6 +281,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="audio_recorder\audio_filter.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="player_controller\native_audio_controller.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

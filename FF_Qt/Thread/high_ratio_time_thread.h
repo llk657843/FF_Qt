@@ -7,7 +7,7 @@ class HighRatioTimeThread : public QObject
 {
 	Q_OBJECT
 public:
-	HighRatioTimeThread();
+	HighRatioTimeThread(bool b_high_ratio = true);
 	~HighRatioTimeThread();
 	void InitMediaTimer();
 	void Run();
@@ -16,6 +16,7 @@ public:
 	void RegTimeoutCallback(TimeoutCallback);
 	void SetInterval(int64_t interval_time);
 	void NotifyTimeoutCallback();
+
 
 
 private slots:
@@ -27,4 +28,5 @@ private:
 	std::once_flag once_flag_;
 	QThread* thread_;
 	bool b_main_thread_;
+	bool b_high_ratio_;
 };

@@ -118,6 +118,7 @@
     <ClCompile Include="FFmpeg\nvidia_encoder\nvenc.cpp" />
     <ClCompile Include="ffmpeg_qt.cpp" />
     <ClCompile Include="player_controller\encoder_controller.cpp" />
+    <ClCompile Include="player_controller\native_audio_controller.cpp" />
     <ClCompile Include="player_controller\player_controller.cpp" />
     <ClCompile Include="screen_capture\win_screen_cap.cpp" />
     <ClCompile Include="style\qss_manager.cpp" />
@@ -165,6 +166,7 @@
     <QtMoc Include="ffmpeg_qt.h" />
     <ClInclude Include="player_controller\define\video_encoder_param.h" />
     <QtMoc Include="player_controller\encoder_controller.h" />
+    <ClInclude Include="player_controller\native_audio_controller.h" />
     <ClInclude Include="screen_capture\win_screen_cap.h" />
     <ClInclude Include="style\qss_manager.h" />
     <ClInclude Include="Thread\thread_safe_deque.h" />

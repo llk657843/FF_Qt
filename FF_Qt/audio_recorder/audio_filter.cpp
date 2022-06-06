@@ -18,6 +18,8 @@ AudioFilter::AudioFilter()
 	audio_sink_info_ = std::make_shared<AudioInfo>();
 	audio_sink_info_->name_ = "sink";    // Êä³ö
 	filter_graph_ = nullptr;
+	stream_1_pts_ = 0;
+	stream_2_pts_ = 0;
 }
 
 AudioFilter::~AudioFilter()
@@ -154,42 +156,50 @@ void AudioFilter::AddFrame(uint32_t index, uint8_t* buffer, uint32_t buffer_size
 	av_frame->sample_rate = filter_info.samplerate_;
 	av_frame->channel_layout = av_get_default_channel_layout(filter_info.channels_);
 	av_frame->format = filter_info.format_;
-	av_frame->nb_samples = buffer_size * 8 / (filter_info.bits_per_sample_ * filter_info.channels_);
-	av_frame->pts = av_frame->nb_samples;
-	
+	av_frame->nb_samples = 1024;
+	if (index == 0) 
+	{
+		av_frame->pts =  stream_1_pts_;
+		stream_1_pts_ += av_frame->nb_samples;
+	}
+	else 
+	{
+		av_frame->pts = stream_2_pts_;
+		stream_2_pts_ += av_frame->nb_samples;
+	}
 	av_frame_get_buffer(av_frame, 1);
 	memcpy(av_frame->extended_data[0], buffer, buffer_size);
 
-	if (av_buffersrc_add_frame(filter_info.filter_ctx_, av_frame) != 0) 
+	int res = av_buffersrc_add_frame(filter_info.filter_ctx_, av_frame);
+	if (res != 0) 
 	{
-		printf("[AudioMixer] av_buffersrc_add_frame() failed.\n");
-		return ;
-	}
-	if (av_buffersrc_add_frame(filter_info.filter_ctx_, NULL) != 0) 
-	{
+		PrintResInfo(res);
 		printf("[AudioMixer] av_buffersrc_add_frame() failed.\n");
 		return ;
 	}
 }
 
-bool AudioFilter::GetFrame(uint8_t* buffer, uint32_t max_out_size,int& out_size)
+std::shared_ptr<AVFrameWrapper> AudioFilter::GetFrame(bool& b_success, uint32_t max_out_size,int& out_size)
 {
 	std::lock_guard<std::mutex> lock(mutex_);
-	AVFrameWrapper frame_wrapper;
-	AVFrame* av_frame = frame_wrapper.Frame();
+	std::shared_ptr<AVFrameWrapper> frame_wrapper = std::make_shared<AVFrameWrapper>();
+	AVFrame* av_frame = frame_wrapper->Frame();
 	int res = av_buffersink_get_frame(audio_sink_info_->filter_ctx_, av_frame);
 	if (res < 0)
 	{
-		return false;
+		PrintResInfo(res);
+		b_success = false;
+		return NULL;
 	}
 	out_size = av_samples_get_buffer_size(NULL, av_frame->channels, av_frame->nb_samples, (AVSampleFormat)av_frame->format, 1);
 	if(out_size > max_out_size)
 	{
-		return false;
+		PrintResInfo(res);
+		b_success = false;
+		return NULL;
 	}
-	memcpy(buffer, av_frame->extended_data[0], out_size);
-
-	return true;
+	b_success = true;
+	return frame_wrapper;
 }
 
 void AudioFilter::FreeBuffers()

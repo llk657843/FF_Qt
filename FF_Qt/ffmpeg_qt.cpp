@@ -11,6 +11,7 @@
 #include "player_controller/encoder_controller.h"
 #include "view/record_setting_form.h"
 #include <QtWidgets/qmessagebox.h>
+#include "player_controller/native_audio_controller.h"
 const int TIME_BASE = 1000;	//¿Ì¶ÈÅÌ
 FFMpegQt::FFMpegQt(QWidget* wid) : BasePopupWindow(wid),ui(new Ui::FFMpegQtFormUI)
 {
@@ -235,7 +236,8 @@ void FFMpegQt::SlotStopScreenClicked()
 
 void FFMpegQt::SlotMixStreamClicked()
 {
-	EncoderController::GetInstance()->InitFilter();
+	native_audio_controller_ = std::make_unique<NativeAudioController>();
+	native_audio_controller_->StartRun();
 }
 
 void FFMpegQt::ShowTime(int64_t time)

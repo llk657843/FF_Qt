@@ -1,9 +1,10 @@
 #include "high_ratio_time_thread.h"
-HighRatioTimeThread::HighRatioTimeThread()
+HighRatioTimeThread::HighRatioTimeThread(bool b_high_ratio)
 {
 	timeout_callback_ = nullptr;
 	thread_ = nullptr;
 	b_main_thread_ = false;
+	b_high_ratio_ = b_high_ratio;
 	InitMediaTimer();
 }
 
@@ -24,7 +25,14 @@ void HighRatioTimeThread::InitMediaTimer()
 	if (!timer_)
 	{
 		timer_ = new QTimer();
-		timer_->setTimerType(Qt::TimerType::PreciseTimer);
+		if (b_high_ratio_) 
+		{
+			timer_->setTimerType(Qt::TimerType::PreciseTimer);
+		}
+		else
+		{
+			timer_->setTimerType(Qt::TimerType::CoarseTimer);
+		}
 		timer_->setInterval(20);
 	}
 	if(!thread_)

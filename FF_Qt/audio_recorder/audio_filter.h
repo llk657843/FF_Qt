@@ -2,6 +2,7 @@
 #include <queue>
 #include "memory"
 #include <unordered_map>
+#include "../FFmpeg/decoder/AVFrameWrapper.h"
 #include "mutex"
 extern "C" 
 {
@@ -19,7 +20,7 @@ public:
 	void AddAudioInput(uint32_t index, uint32_t samplerate, uint32_t channels, uint32_t bitsPerSample, const AVSampleFormat& format);
 	void AddAudioOutput(uint32_t samplerate, uint32_t channels, uint32_t bitsPerSample, const AVSampleFormat& format);
 	void AddFrame(uint32_t index, uint8_t* inBuf, uint32_t buffer_size);
-	bool GetFrame(uint8_t* buffer, uint32_t max_out_size,int& get_size);
+	std::shared_ptr<AVFrameWrapper> GetFrame(bool& b_get, uint32_t max_out_size,int& get_size);
 
 private:
 	void FreeBuffers();
@@ -49,4 +50,6 @@ private:
 	std::shared_ptr<AudioInfo> audio_sink_info_;
 	std::mutex mutex_;
 	AVFilterGraph* filter_graph_;
+	int stream_1_pts_;
+	int stream_2_pts_;
 };

@@ -16,6 +16,7 @@
 #include <QtCore/qfileinfo.h>
 #include "../view_callback/view_callback.h"
 #include "../audio_recorder/audio_filter.h"
+#include "native_audio_controller.h"
 #define INCLUDE_VIDEO
 #define INCLUDE_AUDIO
 #define INCLUDE_MICROPHONE
@@ -46,9 +47,6 @@ void EncoderController::ReadyEncode()
 	InitAudioEncoder();
 	InitAudioRecorder();
 #endif // INCLUDE_AUDIO
-#ifdef INCLUDE_MICROPHONE
-	InitMic();
-#endif // INCLUDE_MICROPHONE
 
 	encoder_info_->OpenIo();
 	encoder_info_->WriteHeader();
@@ -83,18 +81,11 @@ void EncoderController::StartCatch()
 
 
 #ifdef INCLUDE_AUDIO
-	if (recorder_)
+	if(native_audio_controller_)
 	{
-		recorder_->RecordWave("default");
+		native_audio_controller_->StartRun();
 	}
 #endif // INCLUDE_AUDIO
-
-#ifdef INCLUDE_MICROPHONE
-	if (mic_recorder_) 
-	{
-		mic_recorder_->RecordWave("default_mic");
-	}
-#endif // INCLUDE_MIC
 }
 
 void EncoderController::StopCapture()
@@ -109,18 +100,12 @@ void EncoderController::StopCapture()
 		video_encoder_->Stop();
 	}
 #ifdef INCLUDE_AUDIO
-	if (recorder_)
+	if (native_audio_controller_)
 	{
-		recorder_->StopRecord();
+		native_audio_controller_->StopRunAsync();
 	}
 #endif // INCLUDE_AUDIO
 
-#ifdef INCLUDE_MICROPHONE
-	if (mic_recorder_) 
-	{
-		mic_recorder_->StopRecord();
-	}
-#endif
 }
 
 void EncoderController::SetBitrate(int bitrate)
@@ -244,9 +229,9 @@ void EncoderController::CleanAll()
 	{
 		encoder_info_.reset();
 	}
-	if (recorder_) 
+	if (native_audio_controller_)
 	{
-		recorder_.reset();
+		native_audio_controller_.reset();
 	}
 	if (screen_cap_) 
 	{
@@ -275,40 +260,36 @@ void EncoderController::RegCallback()
 	ViewCallback::GetInstance()->RegRecorderCloseCallback(close_cb);
 }
 
-void EncoderController::InitMic()
-{
-	mic_recorder_ = std::make_unique<WinAudioRecorder>();
-}
-
 void EncoderController::InitAudioRecorder()
 {
-	recorder_ = std::make_unique<WinAudioRecorder>();
+	native_audio_controller_ = std::make_unique<NativeAudioController>();
 
-	auto data_cb = [=](char* bytes, int byte_size) {
-		QByteArray cb_bytes(bytes, byte_size);
-		auto task = [=]() {
-			if (audio_encoder_)
-			{
-				audio_encoder_->PushBytes(bytes);
-			}
-		};
-		qtbase::Post2Task(kThreadAudioEncoder, task);
+	//auto data_cb = [=](char* bytes, int byte_size) {
+	//	QByteArray cb_bytes(bytes, byte_size);
+	//	auto task = [=]() {
+	//		if (audio_encoder_)
+	//		{
+	//			audio_encoder_->PushBytes(bytes);
+	//		}
+	//	};
+	//	qtbase::Post2Task(kThreadAudioEncoder, task);
+	//};
+
+	auto mixed_data_cb = [=](const std::shared_ptr<AVFrameWrapper>& frame_wrapper, int buffer_size) {
+		//	auto task = [=]() {
+	//		if (audio_encoder_)
+	//		{
+	//			audio_encoder_->PushBytes(bytes);
+	//		}
+	//	};
+	//	qtbase::Post2Task(kThreadAudioEncoder, task);
 	};
 
-	recorder_->RegDataCallback(data_cb);
+	native_audio_controller_->RegDataCallback(mixed_data_cb);
 
 	auto record_close_cb = [=]() {
 		ViewCallback::GetInstance()->NotifyRecorderCloseCallback();
 		};
 
-	recorder_->RegRecordCloseCallback(record_close_cb);
-}
-
-void EncoderController::InitFilter()
-{
-	audio_filter_ = std::make_unique<AudioFilter>();
-	audio_filter_->AddAudioInput(0, 44100,2,12800,AVSampleFormat::AV_SAMPLE_FMT_S16);
-	audio_filter_->AddAudioInput(1,44100,2,12800,AVSampleFormat::AV_SAMPLE_FMT_S16);
-	audio_filter_->AddAudioOutput(44100,2,12800,AVSampleFormat::AV_SAMPLE_FMT_FLTP);
-	audio_filter_->InitFilter();
+	native_audio_controller_->RegStopRecordCallback(record_close_cb);
 }

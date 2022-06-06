@@ -54,8 +54,29 @@ void WinAudioRecorder::StopRecord()
 	}
 }
 
-void WinAudioRecorder::RecordWave(const std::string& device_id)
+std::vector<AudioDevice> WinAudioRecorder::GetAudioList()
 {
+	std::vector<AudioDevice> devices;
+	UINT num_devices = waveInGetNumDevs();
+	for (unsigned int device_id = 0; device_id < num_devices; device_id++) 
+	{
+		AudioDevice device;
+		WAVEINCAPS device_caps;
+		MMRESULT result = waveInGetDevCaps(UINT_PTR(device_id), &device_caps, sizeof(WAVEINCAPS));
+		if (result != MMSYSERR_NOERROR) {
+
+			continue;
+		}
+		device.device_name_ = device_caps.szPname;
+		device.device_id_ = device_caps.wPid;
+		devices.push_back(device);
+	}
+	return devices;
+}
+
+void WinAudioRecorder::RecordWave(int device_id)
+{
+	device_id_ = device_id;
 	auto task = [=]() {
 		WinEventFilter();
 	};
@@ -78,8 +99,24 @@ void WinAudioRecorder::WinEventFilter()
 {
 	thread_id_ = GetCurrentThreadId();
 	WAVEFORMATEX pwfx = WaveInitFormat(2, 44100, 16);
-	auto mmResult = waveInOpen(&phwi_, WAVE_MAPPER, &pwfx, GetCurrentThreadId(), NULL, CALLBACK_THREAD);//3
-
+	MMRESULT mmResult;
+	if (device_id_ == -1) 
+	{
+		mmResult = waveInOpen(&phwi_, WAVE_MAPPER, &pwfx, GetCurrentThreadId(), NULL, CALLBACK_THREAD);//3
+	}
+	else
+	{
+		auto audio_list = GetAudioList();
+		if (device_id_ < audio_list.size()) 
+		{
+			mmResult = waveInOpen(&phwi_, device_id_, &pwfx, GetCurrentThreadId(), NULL, CALLBACK_THREAD);//3
+		}
+		else 
+		{
+			std::cout << "Device not found" << std::endl;
+			return;
+		}
+	}
 	if (MMSYSERR_NOERROR == mmResult)
 	{
 		for (int i = 0; i < FRAGMENT_NUM; i++)
