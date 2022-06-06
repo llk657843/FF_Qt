@@ -15,6 +15,7 @@
 #include "../FFmpeg/encoder/define/encoder_critical_sec.h"
 #include <QtCore/qfileinfo.h>
 #include "../view_callback/view_callback.h"
+#include "../audio_recorder/audio_filter.h"
 #define INCLUDE_VIDEO
 #define INCLUDE_AUDIO
 #define INCLUDE_MICROPHONE
@@ -301,4 +302,13 @@ void EncoderController::InitAudioRecorder()
 		};
 
 	recorder_->RegRecordCloseCallback(record_close_cb);
+}
+
+void EncoderController::InitFilter()
+{
+	audio_filter_ = std::make_unique<AudioFilter>();
+	audio_filter_->AddAudioInput(0, 44100,2,12800,AVSampleFormat::AV_SAMPLE_FMT_S16);
+	audio_filter_->AddAudioInput(1,44100,2,12800,AVSampleFormat::AV_SAMPLE_FMT_S16);
+	audio_filter_->AddAudioOutput(44100,2,12800,AVSampleFormat::AV_SAMPLE_FMT_FLTP);
+	audio_filter_->InitFilter();
 }

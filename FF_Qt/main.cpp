@@ -21,8 +21,6 @@ int main(int argc, char* argv[])
     qss_manager.SetGlobalStyle(qss_path);
     FFMpegQt* wid = new FFMpegQt;
     wid->show();
-    AudioFilter* audio_filter = new AudioFilter;
-	audio_filter->InitFilter();
 	a.exec();
     ThreadPool::GetInstance()->StopAll();
 	return 0;

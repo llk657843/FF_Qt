@@ -43,6 +43,7 @@ private:
 	void SlotOpenFile();
 	void SlotScreenShot();
 	void SlotStopScreenClicked();
+	void SlotMixStreamClicked();
 
 	void ShowTime(int64_t time);
 	void ShowImage(ImageInfo*);
