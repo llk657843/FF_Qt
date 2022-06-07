@@ -1,7 +1,8 @@
 #pragma once
 #include <mutex>
 #include <QIODevice>
-
+#include <shared_mutex>
+#include "../Audio/bytes_list.h"
 class AudioIoDevice : public QIODevice
 {
 public:
@@ -11,10 +12,11 @@ public:
 	virtual qint64 readData(char* data, qint64 maxlen) override;
 	virtual qint64 writeData(const char* data, qint64 len) override;
 
-	void Write(QByteArray bytes);
+	void Write(const QByteArray& bytes,int64_t timestamp);
+	int64_t GetCurrentTimeStamp() const;
+	void Clear();
 
 private:
-	QByteArray m_data;
-	int current_len_;
-	std::mutex data_mutex_;
+	ThreadSafeBytesList bytes_list_;
+	std::atomic_int64_t current_read_timestamp_;
 };

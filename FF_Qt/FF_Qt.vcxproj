@@ -32,7 +32,7 @@
   </ImportGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|Win32'" Label="QtSettings">
     <QtInstall>5.12.11_msvc2017</QtInstall>
-    <QtModules>core;gui;multimedia;widgets</QtModules>
+    <QtModules>core;gui;multimedia;widgets;winextras</QtModules>
     <QtBuildConfig>debug</QtBuildConfig>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|Win32'" Label="QtSettings">
@@ -56,13 +56,14 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|Win32'">
     <OutDir>$(SolutionDir)bin\</OutDir>
+    <ExecutablePath>$(SolutionDir)bin\;$(ExecutablePath)</ExecutablePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|Win32'">
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <Link>
       <AdditionalLibraryDirectories>D:\Code\FFmpeg_learning\FF_Qt\lib\win32\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>avcodec.lib;avformat.lib;swscale.lib;avutil.lib;swresample.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>avcodec.lib;avformat.lib;swscale.lib;avutil.lib;swresample.lib;winmm.lib;avfilter.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <ImageHasSafeExceptionHandlers>false</ImageHasSafeExceptionHandlers>
     </Link>
     <ClCompile>
@@ -99,31 +100,82 @@
   <ItemGroup>
     <ClCompile Include="AudioQt\audio_io_device.cpp" />
     <ClCompile Include="AudioQt\audio_qt.cpp" />
-    <ClCompile Include="Audio\char_queue.cpp" />
-    <ClCompile Include="Audio\mq_manager.cpp" />
-    <ClCompile Include="FFmpeg\frame_cache.cpp" />
+    <ClCompile Include="Audio\bytes_list.cpp" />
+    <ClCompile Include="audio_recorder\audio_filter.cpp" />
+    <ClCompile Include="audio_recorder\win_audio_recorder.cpp" />
+    <ClCompile Include="base_ui\base_popup_window.cpp" />
+    <ClCompile Include="base_ui\base_popup_window_tool.cpp" />
+    <ClCompile Include="base_ui\base_pop_shadow.cpp" />
+    <ClCompile Include="base_ui\base_shadow_form.cpp" />
+    <ClCompile Include="base_ui\uslider.cpp" />
+    <ClCompile Include="FFmpeg\decoder\audio_decoder.cpp" />
+    <ClCompile Include="FFmpeg\decoder\base_decoder.cpp" />
+    <ClCompile Include="FFmpeg\decoder\video_decoder.cpp" />
+    <ClCompile Include="FFmpeg\encoder\audio_encoder.cpp" />
+    <ClCompile Include="FFmpeg\encoder\av_packet_wrapper.cpp" />
+    <ClCompile Include="FFmpeg\encoder\define\encoder_critical_sec.cpp" />
+    <ClCompile Include="FFmpeg\encoder\video_encoder.cpp" />
+    <ClCompile Include="FFmpeg\nvidia_encoder\nvenc.cpp" />
+    <ClCompile Include="ffmpeg_qt.cpp" />
+    <ClCompile Include="player_controller\encoder_controller.cpp" />
+    <ClCompile Include="player_controller\native_audio_controller.cpp" />
+    <ClCompile Include="player_controller\player_controller.cpp" />
+    <ClCompile Include="screen_capture\win_screen_cap.cpp" />
+    <ClCompile Include="style\qss_manager.cpp" />
+    <ClCompile Include="Thread\high_ratio_time_thread.cpp" />
     <ClCompile Include="Thread\pending_task.cpp" />
-    <ClCompile Include="Thread\threadsafe_queue.cpp" />
     <ClCompile Include="Thread\thread_pool.cpp" />
     <ClCompile Include="Thread\thread_pool_entrance.cpp" />
     <ClCompile Include="Thread\thread_safe_priority_task_queue.cpp" />
     <ClCompile Include="Thread\time_util.cpp" />
+    <ClCompile Include="view\record_setting_form.cpp" />
+    <ClCompile Include="view_callback\view_callback.cpp" />
     <QtRcc Include="FF_Qt.qrc" />
     <QtUic Include="ffmpeg_qt.ui" />
     <ClCompile Include="base_util\weak_callback.cpp" />
-    <ClCompile Include="FFmpeg\ffmpeg_controller.cpp" />
-    <ClCompile Include="ffmpeg_qt.cpp" />
     <ClCompile Include="main.cpp" />
+    <QtUic Include="view\record_setting_form.ui" />
   </ItemGroup>
   <ItemGroup>
+    <QtMoc Include="view\record_setting_form.h" />
+    <QtMoc Include="player_controller\player_controller.h" />
+    <QtMoc Include="base_util\closure.h" />
+    <QtMoc Include="base_ui\uslider.h" />
+    <ClInclude Include="audio_recorder\audio_filter.h" />
+    <ClInclude Include="audio_recorder\win_audio_recorder.h" />
+    <ClInclude Include="base_ui\base_popup_window.h" />
+    <ClInclude Include="base_ui\base_popup_window_tool.h" />
+    <ClInclude Include="base_ui\base_pop_shadow.h" />
+    <ClInclude Include="base_ui\base_shadow_form.h" />
+    <ClInclude Include="base_util\guard_ptr.h" />
+    <QtMoc Include="Thread\high_ratio_time_thread.h" />
+    <ClInclude Include="FFmpeg\decoder\audio_decoder.h" />
+    <ClInclude Include="FFmpeg\decoder\AVFrameWrapper.h" />
+    <ClInclude Include="FFmpeg\decoder\base_decoder.h" />
+    <ClInclude Include="FFmpeg\decoder\decoder_callback.h" />
+    <ClInclude Include="FFmpeg\decoder\image_func_packet.h" />
+    <ClInclude Include="FFmpeg\decoder\video_decoder.h" />
+    <ClInclude Include="FFmpeg\encoder\audio_encoder.h" />
+    <ClInclude Include="FFmpeg\encoder\av_packet_wrapper.h" />
+    <ClInclude Include="FFmpeg\encoder\define\bytes_info.h" />
+    <ClInclude Include="FFmpeg\encoder\define\encoder_critical_sec.h" />
+    <ClInclude Include="FFmpeg\encoder\define\encoder_type.h" />
+    <ClInclude Include="FFmpeg\encoder\define\record_state.h" />
+    <ClInclude Include="FFmpeg\encoder\video_encoder.h" />
+    <ClInclude Include="FFmpeg\nvidia_encoder\nv_enc.h" />
     <QtMoc Include="ffmpeg_qt.h" />
-  </ItemGroup>
-  <ItemGroup>
+    <ClInclude Include="player_controller\define\video_encoder_param.h" />
+    <QtMoc Include="player_controller\encoder_controller.h" />
+    <ClInclude Include="player_controller\native_audio_controller.h" />
+    <ClInclude Include="screen_capture\win_screen_cap.h" />
+    <ClInclude Include="style\qss_manager.h" />
+    <ClInclude Include="Thread\thread_safe_deque.h" />
+    <ClInclude Include="time_strategy\time_base_define.h" />
+    <QtMoc Include="view_callback\view_callback.h" />
     <QtMoc Include="AudioQt\audio_qt.h" />
     <ClInclude Include="AudioQt\audio_io_device.h" />
-    <ClInclude Include="Audio\char_queue.h" />
-    <ClInclude Include="Audio\mq_manager.h" />
-    <ClInclude Include="FFmpeg\frame_cache.h" />
+    <ClInclude Include="Audio\bytes_list.h" />
+    <ClInclude Include="image_info\image_info.h" />
     <ClInclude Include="Thread\pending_task.h" />
     <ClInclude Include="Thread\threadsafe_queue.h" />
     <ClInclude Include="Thread\thread_name_define.h" />
@@ -133,7 +185,6 @@
     <ClInclude Include="Thread\time_util.h" />
     <ClInclude Include="base_util\singleton.h" />
     <ClInclude Include="base_util\weak_callback.h" />
-    <ClInclude Include="FFmpeg\ffmpeg_controller.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Condition="Exists('$(QtMsBuild)\qt.targets')">

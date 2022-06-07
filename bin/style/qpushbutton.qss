@@ -1,0 +1,62 @@
+QPushButton#btn_start_play
+{
+	border-image:url(:/FF_Qt/style/res/play.png);
+	border:none;
+}
+
+QPushButton#btn_pause_resume
+{
+	border-image:url(:/FF_Qt/style/res/pause.png);
+	border:none;
+}
+
+QPushButton#btn_pause_resume:checked
+{
+	border-image:url(:/FF_Qt/style/res/play.png);
+	border:none;
+}
+
+QPushButton#btn_stop_1
+{
+	border-image:url(:/FF_Qt/style/res/stop.png);
+	border:none;
+}
+
+QPushButton#btn_folder
+{
+	border-image:url(:/FF_Qt/style/res/folder.png);
+	border:none;
+}
+
+QPushButton#btn_min_1
+{
+	border-image:url(:/FF_Qt/style/res/min.png);
+	border:none;
+}
+QPushButton#btn_fullscreen_1
+{
+	border-image:url(:/FF_Qt/style/res/fullscreen.png);
+	border:none;
+}
+QPushButton#btn_max_1
+{
+	border-image:url(:/FF_Qt/style/res/max.png);
+	border:none;
+}
+QPushButton#btn_close_1
+{
+	border-image:url(:/FF_Qt/style/res/close.png);
+	border:none;
+}
+
+QPushButton#btn_record_state_normal
+{
+	border-image:url(:/FF_Qt/style/res/record.png);
+	border:none;
+}
+
+QPushButton#btn_record_state_run
+{
+	border-image:url(:/FF_Qt/style/res/record_check.png);
+	border:none;
+}

@@ -14,6 +14,6 @@ namespace time_util
 	__int64 GetCurrentTimeMst()
 	{
 		std::uint64_t ticks = 0;
-		return  std::chrono::duration_cast<std::chrono::duration<__int64>>(GetCurrentTimeMs().time_since_epoch()).count();
+		return  std::chrono::duration_cast<std::chrono::milliseconds>(GetCurrentTimeMs().time_since_epoch()).count();
 	}
 }

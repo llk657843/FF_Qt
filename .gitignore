@@ -37,3 +37,5 @@ hysd*.exe
 tool-kits/bin/*
 hysd-module/ui_test/*
 path.txt
+*.vs/*
+bin/*.exe

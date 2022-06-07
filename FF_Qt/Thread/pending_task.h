@@ -3,12 +3,13 @@
 #include <thread>
 #include "time_util.h"
 #include <memory>
+#include <qnamespace.h>
 using ThreadTask =std::function<void()>;
 class ThreadTaskInfo
 {
 public:
 	~ThreadTaskInfo();
-	std::thread::id working_thread_id_;	//需要执行的线程的id
+	Qt::HANDLE working_thread_id_;	//需要执行的线程的id
 	std::shared_ptr<ThreadTask> task_;
 	std::chrono::time_point<std::chrono::system_clock, std::chrono::milliseconds> pending_abs_time_ms_;	//绝对时间
 	ThreadTaskInfo()
@@ -17,7 +18,7 @@ public:
 	};
 
 	template<class _Rep, class _Period>
-	ThreadTaskInfo(std::thread::id id, const ThreadTask& task, const std::chrono::duration<_Rep, _Period>& delay_times)
+	ThreadTaskInfo(Qt::HANDLE id, const ThreadTask& task, const std::chrono::duration<_Rep, _Period>& delay_times)
 	{
 		working_thread_id_ = id;
 		task_ = std::make_shared<ThreadTask>(task);

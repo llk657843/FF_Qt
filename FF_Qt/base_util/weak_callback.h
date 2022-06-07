@@ -67,7 +67,7 @@ public:
 
 	void Cancel()
 	{
-		std::atomic_store(&shared_flag_, std::shared_ptr<WeakFlag>());
+		shared_flag_.reset();
 	}
 
 	bool HasUsed()

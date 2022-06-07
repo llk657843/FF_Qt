@@ -1,5 +1,7 @@
 #pragma once
 #include <atomic>
+#include <qnamespace.h>
+
 #include "thread_name_define.h"
 #include "vector"
 #include <thread>
@@ -7,15 +9,15 @@
 #include <unordered_map>
 #include "thread_safe_priority_task_queue.h"
 #include "mutex"
-#include "time_util.h"
 #include "../base_util/weak_callback.h"
 #include "../base_util/singleton.h"
 /*线程池，可将任务分发给指定线程*/
+class QThread;
 class ThreadPool : public SupportWeakCallback
 {
 public:
 	SINGLETON_DEFINE(ThreadPool);
-	explicit ThreadPool();
+	ThreadPool();
 	~ThreadPool();
 
 	void Post2Task(ThreadName thread_name, const ThreadTask& f);
@@ -29,22 +31,13 @@ public:
 	void StopAll();
 
 private:
-	void EventLoop();
+	void EventLoop(int name);
 	void InitAll();
-	bool GetThreadName(std::thread::id, int& thread_name);
-	std::thread::id GetThreadId(int);
+	bool GetThreadName(Qt::HANDLE, int& thread_name);
+	Qt::HANDLE GetThreadId(int);
 
 	template<class _Rep, class _Period>
 	void PushTask(ThreadName thread_name, const ThreadTask& f, const std::chrono::duration<_Rep, _Period>& time_span);
-	//************************************
-	// Method:    IsThreadInitDone
-	// FullName:  ThreadPool::CheckThreadInitDone
-	// Access:    private 
-	// Returns:   bool
-	// Qualifier: 线程创建完成时，线程无法得知自己对应的映射值。需要主线程通知。此时线程不处理任务。但是任务可以正常放进来。
-	//			  线程会在知道自己映射后开始处理任务
-	//************************************
-	bool IsThreadInitDone();
 
 	template<class _Rep, class _Period>
 	void PrivateRepeatTask(ThreadName thread_id, const WeakFunction<ThreadTask>& task, const std::chrono::duration<_Rep, _Period>& delay);
@@ -52,10 +45,11 @@ private:
 private:
 	std::atomic_bool b_done_;
 	ThreadSafePriorityQueue* work_queue_;
-	std::vector<std::thread> threads_;
-	std::unordered_map<int, std::thread::id> thread_name_to_id_;
-	std::unordered_map<std::thread::id, int> thread_id_to_name_;
+	std::unordered_map<int, Qt::HANDLE> thread_name_to_id_;
+	std::unordered_map<Qt::HANDLE, int> thread_id_to_name_;
+	std::vector<QThread*> threads_;
 	std::mutex thread_map_mutex_;
+	
 };
 
 template<class _Rep, class _Period>
