@@ -14,8 +14,9 @@ EncoderCriticalSec::EncoderCriticalSec()
 {
 	format_context_ = nullptr;
 	end_vote_ = 0;
-	write_packet_vote_ = 0;
 	stop_success_cb_ = nullptr;
+	b_video_stream_open_ = false;
+	b_audio_stream_open_ = false;
 }
 
 EncoderCriticalSec::~EncoderCriticalSec()
@@ -78,13 +79,20 @@ AVStream* EncoderCriticalSec::CreateNewStream()
 void EncoderCriticalSec::WriteTrailer()
 {
 	std::lock_guard<std::mutex> lock(format_ctx_mtx_);
-	if (--end_vote_ == 0) 
+	if (--end_vote_ == 0)
 	{
 		av_write_trailer(format_context_);
-		if (stop_success_cb_)
-		{
-			stop_success_cb_();
-		}
+		//if (format_context_->pb) 
+		//{
+		//	uint8_t* fileBytes = NULL;
+		//	int fileSize = avio_close_dyn_buf(format_context_->pb, &fileBytes);
+		//	av_freep(&fileBytes);
+		//}
+		//format_context_->pb = NULL;
+	}
+	if (stop_success_cb_)
+	{
+		stop_success_cb_();
 	}
 }
 
@@ -104,15 +112,20 @@ bool EncoderCriticalSec::WriteFrame(AVPacketWrapper& av_packet)
 	if (end_vote_ > 0)
 	{
 		//vote to write, only all stream is ready to write,then write
-		if(write_packet_vote_ != GetStreamIndexBinary(end_vote_ - 1))
+		if(av_packet.Get()->stream_index == 0)
 		{
-			write_packet_vote_ = write_packet_vote_ | (GetStreamIndexBinary(av_packet.Get()->stream_index));
+			b_video_stream_open_ = true;
 		}
+		else if(av_packet.Get()->stream_index == 1)
+		{
+			b_audio_stream_open_ = true;
+		}
+
 		if(av_packet.Get()->pts  == AV_NOPTS_VALUE)
 		{
 			return false;
 		}
-		if (write_packet_vote_ == GetStreamIndexBinary(end_vote_ - 1)) 
+		if (IsAllStreamReady()) 
 		{
 			int res = av_interleaved_write_frame(format_context_, av_packet.Get()) == 0;
 			return res;
@@ -133,16 +146,11 @@ void EncoderCriticalSec::RegStopSuccessCallback(StopSuccessCallback cb)
 	stop_success_cb_ = cb;
 }
 
-int EncoderCriticalSec::GetStreamIndexBinary(int index)
+bool EncoderCriticalSec::IsAllStreamReady()
 {
-	if (index <= 31) 
+	if(b_video_stream_open_ && b_audio_stream_open_)
 	{
-		return pow(2, index);
+		return true;
 	}
-	else 
-	{
-		std::cout << "warning,wrong stream index" << std::endl;
-		return 0;
-	}
-	
+	return false;
 }

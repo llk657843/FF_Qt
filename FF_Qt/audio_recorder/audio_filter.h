@@ -20,7 +20,7 @@ public:
 	void AddAudioInput(uint32_t index, uint32_t samplerate, uint32_t channels, uint32_t bitsPerSample, const AVSampleFormat& format);
 	void AddAudioOutput(uint32_t samplerate, uint32_t channels, uint32_t bitsPerSample, const AVSampleFormat& format);
 	void AddFrame(uint32_t index, uint8_t* inBuf, uint32_t buffer_size);
-	std::shared_ptr<AVFrameWrapper> GetFrame(bool& b_get, uint32_t max_out_size,int& get_size);
+	AVFrame* GetFrame(bool& b_get, uint32_t max_out_size,int& get_size);
 
 private:
 	void FreeBuffers();

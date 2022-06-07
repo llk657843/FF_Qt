@@ -23,6 +23,7 @@ AudioEncoder::AudioEncoder()
 
 AudioEncoder::~AudioEncoder()
 {
+	Stop();
 	if(swr_context_)
 	{
 		swr_free(&swr_context_);
@@ -78,16 +79,30 @@ void AudioEncoder::PushBytes(const QByteArray& bytes)
 	{
 		return;
 	}
-	AVCodecContext* ctx = audio_stream_->codec;
-	std::shared_ptr<AVFrameWrapper> dst_frame = CreateFrame(AV_SAMPLE_FMT_FLTP, bytes, false);
 	std::shared_ptr<AVFrameWrapper> src_frame = CreateFrame(AV_SAMPLE_FMT_S16, bytes, true);
+	PushFrame(src_frame);
+	
+}
 
-	int res = swr_convert(swr_context_, dst_frame->Frame()->data, MAX_AUDIO_FRAME_SIZE,
-		(const uint8_t**)src_frame->Frame()->data, src_frame->Frame()->nb_samples);
-	if (res < 0)
+void AudioEncoder::PushFrame(const std::shared_ptr<AVFrameWrapper>& src_frame)
+{
+	AVCodecContext* ctx = audio_stream_->codec;
+	std::shared_ptr<AVFrameWrapper> dst_frame;
+	
+	if (src_frame->Frame()->format == AV_SAMPLE_FMT_S16)
 	{
-		std::cout << "convert audio failed" << std::endl;
-		return;
+		dst_frame = CreateFrame(ctx->sample_fmt, NULL, false);
+		int res = swr_convert(swr_context_, dst_frame->Frame()->data, MAX_AUDIO_FRAME_SIZE,
+			(const uint8_t**)src_frame->Frame()->data, src_frame->Frame()->nb_samples);
+		if (res < 0)
+		{
+			std::cout << "convert audio failed" << std::endl;
+			return;
+		}
+	}
+	else
+	{
+		dst_frame = src_frame;
 	}
 	auto time_base = audio_stream_->time_base;
 
@@ -101,13 +116,13 @@ void AudioEncoder::PushBytes(const QByteArray& bytes)
 
 	AVPacketWrapper av_packet;
 	av_packet.Init();
-	if (b_stop_) 
+	if (b_stop_)
 	{
 		avcodec_flush_buffers(ctx);
 	}
 	if (avcodec_receive_packet(ctx, av_packet.Get()) != 0)
 	{
-		if (!b_stop_) 
+		if (!b_stop_)
 		{
 			return;
 		}
@@ -125,7 +140,7 @@ void AudioEncoder::PushBytes(const QByteArray& bytes)
 	}
 	if (b_stop_)
 	{
-		while (!flag_.test_and_set()) 
+		while (!flag_.test_and_set())
 		{
 			auto info = encoder_infos_.lock();
 			if (info)
@@ -134,6 +149,7 @@ void AudioEncoder::PushBytes(const QByteArray& bytes)
 			}
 		}
 	}
+
 }
 
 bool AudioEncoder::AddAudioStream()

@@ -2,11 +2,13 @@
 #include "string"
 #include <iostream>
 #include "../FFmpeg/decoder/AVFrameWrapper.h"
+#include <QtCore/qbytearray.h>
 extern "C" 
 {
 #include "libavfilter/avfilter.h"
 #include "libavfilter/buffersink.h"
 #include <libavfilter/buffersrc.h>
+
 }	
 
 AudioFilter::AudioFilter()
@@ -144,6 +146,7 @@ void AudioFilter::AddAudioOutput(uint32_t samplerate, uint32_t channels, uint32_
 
 void AudioFilter::AddFrame(uint32_t index, uint8_t* buffer, uint32_t buffer_size)
 {
+	QByteArray bytes((char*)buffer, buffer_size);
 	std::lock_guard<std::mutex> lock(mutex_);
 	auto iter = audio_input_info_.find(index);
 	if(iter == audio_input_info_.end())
@@ -157,6 +160,7 @@ void AudioFilter::AddFrame(uint32_t index, uint8_t* buffer, uint32_t buffer_size
 	av_frame->channel_layout = av_get_default_channel_layout(filter_info.channels_);
 	av_frame->format = filter_info.format_;
 	av_frame->nb_samples = 1024;
+	av_frame->channels = 2;
 	if (index == 0) 
 	{
 		av_frame->pts =  stream_1_pts_;
@@ -168,9 +172,12 @@ void AudioFilter::AddFrame(uint32_t index, uint8_t* buffer, uint32_t buffer_size
 		stream_2_pts_ += av_frame->nb_samples;
 	}
 	av_frame_get_buffer(av_frame, 1);
-	memcpy(av_frame->extended_data[0], buffer, buffer_size);
-
+	memcpy(av_frame->extended_data[0], bytes.data(), bytes.size());
 	int res = av_buffersrc_add_frame(filter_info.filter_ctx_, av_frame);
+	av_frame->sample_rate = filter_info.samplerate_;
+	av_frame->channel_layout = av_get_default_channel_layout(filter_info.channels_);
+	av_frame->format = filter_info.format_;
+	av_frame->nb_samples = 1024;	
 	if (res != 0) 
 	{
 		PrintResInfo(res);
@@ -179,27 +186,30 @@ void AudioFilter::AddFrame(uint32_t index, uint8_t* buffer, uint32_t buffer_size
 	}
 }
 
-std::shared_ptr<AVFrameWrapper> AudioFilter::GetFrame(bool& b_success, uint32_t max_out_size,int& out_size)
+AVFrame* AudioFilter::GetFrame(bool& b_success, uint32_t max_out_size,int& out_size)
 {
 	std::lock_guard<std::mutex> lock(mutex_);
-	std::shared_ptr<AVFrameWrapper> frame_wrapper = std::make_shared<AVFrameWrapper>();
-	AVFrame* av_frame = frame_wrapper->Frame();
+
+	AVFrame* av_frame = av_frame_alloc();
 	int res = av_buffersink_get_frame(audio_sink_info_->filter_ctx_, av_frame);
 	if (res < 0)
 	{
-		PrintResInfo(res);
 		b_success = false;
+		av_frame_unref(av_frame);
+		av_frame_free(&av_frame);
 		return NULL;
 	}
 	out_size = av_samples_get_buffer_size(NULL, av_frame->channels, av_frame->nb_samples, (AVSampleFormat)av_frame->format, 1);
 	if(out_size > max_out_size)
 	{
 		PrintResInfo(res);
+		av_frame_unref(av_frame);
+		av_frame_free(&av_frame);
 		b_success = false;
 		return NULL;
 	}
 	b_success = true;
-	return frame_wrapper;
+	return av_frame;
 }
 
 void AudioFilter::FreeBuffers()

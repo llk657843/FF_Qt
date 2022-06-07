@@ -8,7 +8,7 @@ class WinAudioRecorder;
 class HighRatioTimeThread;
 class AudioFilter;
 
-using AVFrameDataCallback = std::function<void(const std::shared_ptr<AVFrameWrapper>&,int buffer_size)>;
+using AVFrameDataCallback = std::function<void(AVFrame*,int buffer_size)>;
 using StopRecordCallback = std::function<void()>;
 class NativeAudioController : public SupportWeakCallback
 {

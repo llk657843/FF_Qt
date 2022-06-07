@@ -241,7 +241,6 @@ void VideoEncoder::AddVideoStream(const VideoEncoderParam& video_param)
 bool VideoEncoder::OpenVideo()
 {
 	auto codec = avcodec_find_encoder_by_name("h264_nvenc");
-	//AVCodec* codec = avcodec_find_encoder(codec_context_->codec_id);
 	if (!codec)
 	{
 		printf("Cannot found video codec\n");

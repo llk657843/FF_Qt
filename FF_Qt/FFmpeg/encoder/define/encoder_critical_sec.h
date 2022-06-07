@@ -27,7 +27,7 @@ public:
 	void RegStopSuccessCallback(StopSuccessCallback);
 
 private:
-	int GetStreamIndexBinary(int);
+	bool IsAllStreamReady();
 
 private:
 	AVFormatContext* format_context_;
@@ -35,6 +35,7 @@ private:
 	std::string file_path_;
 	int end_vote_;
 	int64_t last_frame_timestamp_;
-	int write_packet_vote_;
 	StopSuccessCallback stop_success_cb_;
+	bool b_video_stream_open_;
+	bool b_audio_stream_open_;
 };

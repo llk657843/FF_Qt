@@ -53,6 +53,7 @@ void NativeAudioController::InitRecorder()
 		close_stream_cnt_++;
 		if (close_stream_cnt_ == RECORD_STREAM_NUM) 
 		{
+			audio_filter_.reset();
 			if (stop_record_cb_)
 			{
 				stop_record_cb_();
@@ -105,7 +106,6 @@ void NativeAudioController::AddStream(int index,char* buffer,int buffer_size)
 
 void NativeAudioController::StartGetBufferLoop()
 {
-	uint8_t* bytes = new uint8_t[8192];
 	auto media_timer = ([=]() {
 		if(audio_filter_)
 		{
@@ -114,13 +114,15 @@ void NativeAudioController::StartGetBufferLoop()
 			do 
 			{
 				auto av_frame = audio_filter_->GetFrame(b_get, 8192, res_size);
-				if(frame_data_cb_)
+				if (b_get) 
 				{
-					frame_data_cb_(av_frame,res_size);
+					if (frame_data_cb_)
+					{
+						frame_data_cb_(av_frame, res_size);
+					}
 				}
 			} while (b_get);
 		}
-		
 		});
 	time_thread_ = std::make_unique<HighRatioTimeThread>(false);
 	time_thread_->InitMediaTimer();

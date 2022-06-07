@@ -19,7 +19,6 @@
 #include "native_audio_controller.h"
 #define INCLUDE_VIDEO
 #define INCLUDE_AUDIO
-#define INCLUDE_MICROPHONE
 const int pix_size = 1920 * 1080 * 3;
 EncoderController::EncoderController()
 {
@@ -251,44 +250,31 @@ void EncoderController::SlotStopSuccess()
 
 void EncoderController::RegCallback()
 {
-	auto close_cb = ToWeakCallback([=]() {
-		if (audio_encoder_)
-		{
-			audio_encoder_->Stop();
-		}
-	});
-	ViewCallback::GetInstance()->RegRecorderCloseCallback(close_cb);
 }
 
 void EncoderController::InitAudioRecorder()
 {
 	native_audio_controller_ = std::make_unique<NativeAudioController>();
-
-	//auto data_cb = [=](char* bytes, int byte_size) {
-	//	QByteArray cb_bytes(bytes, byte_size);
-	//	auto task = [=]() {
-	//		if (audio_encoder_)
-	//		{
-	//			audio_encoder_->PushBytes(bytes);
-	//		}
-	//	};
-	//	qtbase::Post2Task(kThreadAudioEncoder, task);
-	//};
-
-	auto mixed_data_cb = [=](const std::shared_ptr<AVFrameWrapper>& frame_wrapper, int buffer_size) {
-		//	auto task = [=]() {
-	//		if (audio_encoder_)
-	//		{
-	//			audio_encoder_->PushBytes(bytes);
-	//		}
-	//	};
-	//	qtbase::Post2Task(kThreadAudioEncoder, task);
+	auto mixed_data_cb = [=](AVFrame* frame , int buffer_size) {
+		
+		auto task = [=]() 
+		{
+			if (audio_encoder_)
+			{
+				std::shared_ptr<AVFrameWrapper> frame_wrapper = std::make_shared<AVFrameWrapper>(frame);
+				audio_encoder_->PushFrame(frame_wrapper);
+			}
+		};
+		qtbase::Post2Task(kThreadAudioEncoder, task);
 	};
 
 	native_audio_controller_->RegDataCallback(mixed_data_cb);
 
 	auto record_close_cb = [=]() {
-		ViewCallback::GetInstance()->NotifyRecorderCloseCallback();
+		if (audio_encoder_)
+		{
+			audio_encoder_->Stop();
+		}
 		};
 
 	native_audio_controller_->RegStopRecordCallback(record_close_cb);

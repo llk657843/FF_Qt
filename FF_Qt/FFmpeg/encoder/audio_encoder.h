@@ -17,6 +17,7 @@ public:
 	~AudioEncoder();
 	void Init(const std::weak_ptr<EncoderCriticalSec>& encoder_infos_);
 	void PushBytes(const QByteArray& bytes);
+	void PushFrame(const std::shared_ptr<AVFrameWrapper>& frame_wrapper);
 	void Stop();
 
 private:

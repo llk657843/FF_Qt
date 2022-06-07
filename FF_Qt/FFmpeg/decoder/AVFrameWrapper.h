@@ -14,6 +14,11 @@ enum FreeDataType
 class AVFrameWrapper
 {
 public:
+	AVFrameWrapper(AVFrame* frame)
+	{
+		frame_ = frame;
+		free_type_ = NO_NEED_TO_FREE;
+	}
 	AVFrameWrapper()
 	{
 		frame_ = av_frame_alloc();
