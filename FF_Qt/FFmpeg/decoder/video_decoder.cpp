@@ -128,7 +128,6 @@ bool VideoDecoder::Run()
           
             image_funcs_.push_back(ImageFunc(std::make_shared<QImage>(width, height, QImage::Format_ARGB32),func, frame_ptr));
         }
-        
         av_packet_unref(packet_);
     }
     if (b_stop_flag_) 

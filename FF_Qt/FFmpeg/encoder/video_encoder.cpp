@@ -125,7 +125,10 @@ void VideoEncoder::ParseBytesInfo(const std::shared_ptr<BytesInfo>& bytes_info)
 		sws_scale(sws_context_, frame->Frame()->data, frame->Frame()->linesize,
 			0, video_height_, dst_frame->Frame()->data, dst_frame->Frame()->linesize);
 	}
-
+	if (frame_cnt_ == 0) 
+	{
+		dst_frame->Frame()->key_frame = 0;
+	}
 	if (!SendFrame(dst_frame))
 	{
 		return;
@@ -213,10 +216,10 @@ void VideoEncoder::AddVideoStream(const VideoEncoderParam& video_param)
 	codec_context->time_base.num = 1;
 	codec_context->gop_size = 12;
 	codec_context->qmin = 10;
-	codec_context->qmax = 51;
+	codec_context->qmax = 15;
 	codec_context->max_qdiff = 4;
 	codec_context->me_range = 16;
-	codec_context->compression_level = 0.6;
+	codec_context->compression_level = 0.8;
 	av_opt_set(codec_context->priv_data, "tune", "zerolatency", 0);
 
 

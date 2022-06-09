@@ -290,11 +290,14 @@ void FFMpegQt::UpdateRecordButton(bool b_run)
 {
 	if(b_run)
 	{
+		start_time_ = time_util::GetCurrentTimeMst();
 		ui->btn_screen_shot->setObjectName("btn_record_state_run");
 	}
 	else
 	{
+		end_time_ = time_util::GetCurrentTimeMst();
 		ui->btn_screen_shot->setObjectName("btn_record_state_normal");
+		std::cout << "record time:" << end_time_ - start_time_ << std::endl;
 	}
 	ui->btn_screen_shot->setStyle(ui->btn_screen_shot->style());
 }
