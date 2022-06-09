@@ -60,6 +60,4 @@ private:
 	int64_t total_time_s_;
 	ThreadSafeBytesList bytes_;
 	QPointer<RecordSettingForm> record_form_;
-	int64_t start_time_;
-	int64_t end_time_;
 };
