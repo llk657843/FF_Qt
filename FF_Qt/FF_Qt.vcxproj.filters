@@ -130,6 +130,9 @@
     <ClCompile Include="player_controller\native_audio_controller.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="base_ui\clabel.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="ffmpeg_qt.ui">
@@ -165,6 +168,9 @@
       <Filter>Header Files</Filter>
     </QtMoc>
     <QtMoc Include="player_controller\encoder_controller.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="base_ui\clabel.h">
       <Filter>Header Files</Filter>
     </QtMoc>
   </ItemGroup>

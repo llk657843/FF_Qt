@@ -21,6 +21,7 @@ public:
 	~FFMpegQt();
 	virtual std::wstring GetWindowId(void) const override;
 	virtual void InitWindow() override;
+	
 protected:
 	bool eventFilter(QObject* watched, QEvent* event) override;
 
@@ -43,7 +44,9 @@ private:
 	void SlotOpenFile();
 	void SlotScreenShot();
 	void SlotStopScreenClicked();
-
+	void SlotMinClicked();
+	void SlotMaxClicked();
+	
 	void ShowTime(int64_t time);
 	void ShowImage(ImageInfo*);
 	QString GetTimeString(int64_t time_seconds);

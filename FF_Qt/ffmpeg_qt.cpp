@@ -13,6 +13,7 @@
 #include <QtWidgets/qmessagebox.h>
 #include "player_controller/native_audio_controller.h"
 const int TIME_BASE = 1000;	//刻度盘
+const int SHADOW_MARGIN = 30;
 FFMpegQt::FFMpegQt(QWidget* wid) : BasePopupWindow(wid),ui(new Ui::FFMpegQtFormUI)
 {
 	setWindowFlags(Qt::FramelessWindowHint);
@@ -110,6 +111,8 @@ void FFMpegQt::RegisterSignals()
 	connect(ui->btn_close,&QPushButton::clicked,this,&FFMpegQt::SlotClose);
 	connect(ui->btn_open_file,&QPushButton::clicked,this,&FFMpegQt::SlotOpenFile);
 	connect(ui->btn_screen_shot, &QPushButton::clicked, this, &FFMpegQt::SlotScreenShot);
+	connect(ui->btn_min,&QPushButton::clicked,this,&FFMpegQt::SlotMinClicked);
+	connect(ui->btn_max, &QPushButton::clicked, this, &FFMpegQt::SlotMaxClicked);
 	connect(this,&FFMpegQt::SignalClose,this,&FFMpegQt::close);
 	ui->lb_movie->installEventFilter(this);
 	auto image_cb = ToWeakCallback([=](ImageInfo* image_info)
@@ -231,6 +234,25 @@ void FFMpegQt::SlotStopScreenClicked()
 	EncoderController::GetInstance()->StopCapture();
 	//弹窗
 	QMessageBox::information(this, QString::fromLocal8Bit("提示"), QString::fromLocal8Bit("录制已保存到目录") + EncoderController::GetInstance()->GetCapturePath());
+}
+
+void FFMpegQt::SlotMinClicked()
+{
+	this->showMinimized();
+}
+
+void FFMpegQt::SlotMaxClicked()
+{
+	if (this->isMaximized()) 
+	{
+		ui->main_layout->setMargin(SHADOW_MARGIN);
+		this->showNormal();
+	}		
+	else 
+	{
+		ui->main_layout->setMargin(0);
+		this->showMaximized();
+	}
 }
 
 void FFMpegQt::ShowTime(int64_t time)
