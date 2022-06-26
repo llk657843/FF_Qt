@@ -12,6 +12,7 @@
 #include "view/record_setting_form.h"
 #include <QtWidgets/qmessagebox.h>
 #include "player_controller/native_audio_controller.h"
+#include "../../base_ui/clabel.h"
 const int TIME_BASE = 1000;	//¿Ì¶ÈÅÌ
 const int SHADOW_MARGIN = 30;
 FFMpegQt::FFMpegQt(QWidget* wid) : BasePopupWindow(wid),ui(new Ui::FFMpegQtFormUI)
@@ -43,14 +44,13 @@ void FFMpegQt::InitWindow()
 
 bool FFMpegQt::eventFilter(QObject* watched, QEvent* event)
 {
-	if(watched == ui->lb_movie)
+	if (watched == lb_movie_)
 	{
-		if(event->type() == QEvent::Show || event->type() == QEvent::Resize)
+		if (event->type() == QEvent::Show || event->type() == QEvent::Resize)
 		{
 			RefreshSize();
 		}
 	}
-
 	return QObject::eventFilter(watched, event);
 }
 
@@ -60,8 +60,10 @@ void FFMpegQt::OnModifyUI()
 	ui->slider->setMaximum(1000);
 	ui->slider->setTickInterval(1);
 	ui->fr_main->setObjectName("wid_bg");
-	ui->lb_movie->setObjectName("wid_bg");
-	
+	lb_movie_ = new CLabel(ui->fr_movie);
+	ui->movie_layout->addWidget(lb_movie_);
+	lb_movie_->setObjectName("wid_bg");
+	lb_movie_->installEventFilter(this);
 	ui->btn_pause_resume->setFixedSize(30, 30);
 
 	ui->btn_stop->setFixedSize(30, 30);
@@ -100,7 +102,9 @@ void FFMpegQt::OnModifyUI()
 	ui->btn_screen_shot->setCursor(Qt::PointingHandCursor);
 	ui->btn_screen_shot->setObjectName("btn_record_state_normal");
 	ui->btn_screen_shot->setFixedSize(30,30);
-	ui->lb_movie->setObjectName("lb_img");
+	//ui->lb_movie->setObjectName("lb_img");
+
+	
 }
 
 void FFMpegQt::RegisterSignals()
@@ -114,7 +118,7 @@ void FFMpegQt::RegisterSignals()
 	connect(ui->btn_min,&QPushButton::clicked,this,&FFMpegQt::SlotMinClicked);
 	connect(ui->btn_max, &QPushButton::clicked, this, &FFMpegQt::SlotMaxClicked);
 	connect(this,&FFMpegQt::SignalClose,this,&FFMpegQt::close);
-	ui->lb_movie->installEventFilter(this);
+	//ui->lb_movie->installEventFilter(this);
 	auto image_cb = ToWeakCallback([=](ImageInfo* image_info)
 		{
 			ShowImage(image_info);
@@ -169,7 +173,7 @@ void FFMpegQt::SlotStop()
 {
 	PlayerController::GetInstance()->Stop();
 	ViewCallback::GetInstance()->Clear();
-	ui->lb_movie->setPixmap(QPixmap());
+	lb_movie_->SetPixmap(QPixmap());
 }
 
 void FFMpegQt::SlotSliderMove(int value)
@@ -275,7 +279,7 @@ void FFMpegQt::ShowImage(ImageInfo* image_info)
 	{
 		return;
 	}
-	ui->lb_movie->setPixmap(QPixmap::fromImage(*image_info->image_));
+	lb_movie_->SetPixmap(QPixmap::fromImage(*image_info->image_));
 	repaint();
 	delete image_info;
 }
@@ -291,10 +295,10 @@ QString FFMpegQt::GetTimeString(int64_t time_seconds)
 
 void FFMpegQt::RefreshSize()
 {
-	if(lb_width_ != ui->lb_movie->width() || lb_height_ != ui->lb_movie->height())
+	if(lb_width_ != lb_movie_->width() || lb_height_ != lb_movie_->height())
 	{
-		lb_width_ = ui->lb_movie->width();
-		lb_height_ = ui->lb_movie->height();
+		lb_width_ = lb_movie_->width();
+		lb_height_ = lb_movie_->height();
 		PlayerController::GetInstance()->SetImageSize(lb_width_,lb_height_);
 	}
 }

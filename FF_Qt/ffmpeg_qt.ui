@@ -103,27 +103,28 @@
        </widget>
       </item>
       <item>
-       <layout class="QVBoxLayout" name="verticalLayout_3">
-        <property name="topMargin">
-         <number>0</number>
+       <widget class="QFrame" name="fr_movie">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
         </property>
-        <property name="rightMargin">
-         <number>0</number>
-        </property>
-        <item>
-         <widget class="CLabel" name="lb_movie">
-          <property name="sizePolicy">
-           <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
-            <horstretch>0</horstretch>
-            <verstretch>0</verstretch>
-           </sizepolicy>
-          </property>
-          <property name="text">
-           <string/>
-          </property>
-         </widget>
-        </item>
-       </layout>
+        <layout class="QVBoxLayout" name="movie_layout">
+         <property name="leftMargin">
+          <number>0</number>
+         </property>
+         <property name="topMargin">
+          <number>0</number>
+         </property>
+         <property name="rightMargin">
+          <number>0</number>
+         </property>
+         <property name="bottomMargin">
+          <number>0</number>
+         </property>
+        </layout>
+       </widget>
       </item>
       <item>
        <widget class="USlider" name="slider">
@@ -218,11 +219,6 @@
    <class>USlider</class>
    <extends>QSlider</extends>
    <header>../../base_ui/uslider.h</header>
-  </customwidget>
-  <customwidget>
-   <class>CLabel</class>
-   <extends>QLabel</extends>
-   <header location="global">../../base_ui/clabel.h</header>
   </customwidget>
  </customwidgets>
  <resources/>
