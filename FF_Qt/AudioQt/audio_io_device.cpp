@@ -39,3 +39,9 @@ void AudioIoDevice::Clear()
 	current_read_timestamp_ = 0;
 	bytes_list_.Clear();
 }
+
+void AudioIoDevice::Release()
+{
+	bytes_list_.Release();
+	Clear();
+}

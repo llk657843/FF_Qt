@@ -98,7 +98,7 @@ bool AudioDecoder::Run()
 	out_buffer_ = (uint8_t*)av_malloc(MAX_AUDIO_FRAME_SIZE);
 	int out_buffer_size = 0;
 	b_running_ = true;
-	while (ReadFrame(packet_))
+	while (!stop_flag_ && ReadFrame(packet_))
 	{
 		if (stop_flag_)
 		{
@@ -182,6 +182,7 @@ void AudioDecoder::AsyncStop(StopDecodeResCallback res_cb)
 	stop_decode_cb_ = res_cb;
 	//happens before
 	stop_flag_ = true;
+	
 	if (!b_running_) 
 	{
 		ReleaseAll();

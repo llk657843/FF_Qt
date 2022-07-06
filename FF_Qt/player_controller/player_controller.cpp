@@ -17,6 +17,8 @@ PlayerController::PlayerController()
 	pause_flag_ = false;
 	connect(this, SIGNAL(SignalStartLoop()), this, SLOT(SlotStartLoop()));
 	connect(this, SIGNAL(SignalStopLoop()), this, SLOT(SlotStopLoop()));
+	connect(this,SIGNAL(SignalAudioClose()),this,SLOT(SlotAudioClose()));
+	connect(this,SIGNAL(SignalVideoStop()),this,SLOT(SlotVideoStop()));
 	InitCallbacks();
 }
 
@@ -40,7 +42,7 @@ void PlayerController::InitCallbacks()
 			emit SignalStopLoop();
 		}
 	}));
-
+	
 	ViewCallback::GetInstance()->RegAudioStateCallback(audio_state_cb_);
 }
 
@@ -74,9 +76,17 @@ bool PlayerController::Open(int win_width,int win_height)
 		std::cout << "release video decoder first" << std::endl;
 		return false;
 	}
-	video_decoder_ = new VideoDecoder;
+
+	auto stop_video_cb = [=]()
+	{
+		emit SignalVideoStop();
+	};
+
+	video_decoder_ = std::make_shared<VideoDecoder>();
+	video_decoder_->RegStopSuccessCallback(stop_video_cb);
 	video_decoder_->SetImageSize(win_width, win_height);
 	InitAudioCore();
+	InitVideoThread();
 	if (!net_path_.empty()) 
 	{
 		path_ = net_path_;
@@ -144,13 +154,15 @@ void PlayerController::SetImageSize(int width, int height)
 
 void PlayerController::Stop()
 {
-	video_render_thread_.Stop();
-
+	if (video_render_thread_) 
+	{
+		video_render_thread_->Stop();
+		video_render_thread_.reset();
+	}
 	if (video_decoder_)
 	{
 		video_decoder_->AsyncStop();
 	}
-
 	if (audio_core_) 
 	{
 		audio_core_->AsyncStop();
@@ -164,13 +176,10 @@ void PlayerController::SetPath(const std::string& path)
 
 void PlayerController::SlotStartLoop()
 {
-	auto time_out_cb = ToWeakCallback([=]()
-		{
-			SlotMediaTimeout();
-		});
-
-	video_render_thread_.RegTimeoutCallback(time_out_cb);
-	video_render_thread_.Run();
+	if (video_render_thread_) 
+	{
+		video_render_thread_->Run();
+	}
 }
 
 void PlayerController::SlotStopLoop()
@@ -185,7 +194,10 @@ void PlayerController::SlotMediaTimeout()
 	{
 		if (image_info && image_info->delay_time_ms_ > 0)
 		{
-			video_render_thread_.SetInterval(image_info->delay_time_ms_);
+			if (video_render_thread_) 
+			{
+				video_render_thread_->SetInterval(image_info->delay_time_ms_);
+			}
 		}
 		
 		ViewCallback::GetInstance()->NotifyImageInfoCallback(image_info);
@@ -197,13 +209,36 @@ void PlayerController::SlotMediaTimeout()
 	}
 }
 
+void PlayerController::SlotAudioClose()
+{
+	if (audio_core_) 
+	{
+		audio_core_.reset();
+	}
+}
+
+void PlayerController::SlotVideoStop()
+{
+	if (video_decoder_) 
+	{
+		video_decoder_.reset();
+	}
+}
+
 void PlayerController::InitAudioCore()
 {
 	if (audio_core_) 
 	{
 		return;
 	}
-	audio_core_ = new AudioPlayerCore;
+	audio_core_ = std::make_shared<AudioPlayerCore>();
+	auto close_state_cb = [=]() 
+	{
+		//trans to main thread
+		emit SignalAudioClose();
+	};
+
+	audio_core_->RegCloseSuccessCallback(close_state_cb);
 }
 
 bool PlayerController::ParseImageInfo(ImageInfo*& image_info)
@@ -254,4 +289,14 @@ bool PlayerController::ParseImageInfo(ImageInfo*& image_info)
 		return false;
 	}
 	return true;
+}
+
+void PlayerController::InitVideoThread()
+{
+	auto time_out_cb = ToWeakCallback([=]()
+		{
+			SlotMediaTimeout();
+		});
+	video_render_thread_ = std::make_shared<HighRatioTimeThread>();
+	video_render_thread_->RegTimeoutCallback(time_out_cb);
 }

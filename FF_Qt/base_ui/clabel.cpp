@@ -28,26 +28,41 @@ void CLabel::SetPixmap(const QPixmap& pixmap)
 	}
 }
 
+void CLabel::ShowNormal()
+{
+	if (lb_img_->isFullScreen())
+	{
+		lb_img_->showNormal();
+		lb_img_->setParent(this);
+		hbox_->addWidget(lb_img_);
+		PlayerController::GetInstance()->SetImageSize(this->width(), this->height());
+	}
+}
+
+void CLabel::ShowFullScreen()
+{
+	if (!lb_img_->isFullScreen()) 
+	{
+		hbox_->removeWidget(lb_img_);
+		lb_img_->setParent(NULL);
+		lb_img_->showFullScreen();
+		int width = GetSystemMetrics(SM_CXSCREEN);
+		int height = GetSystemMetrics(SM_CYSCREEN);
+		PlayerController::GetInstance()->SetImageSize(width, height);
+	}
+}
+
 bool CLabel::eventFilter(QObject* obj, QEvent* evt)
 {
 	if (evt->type() == QEvent::MouseButtonDblClick && obj == lb_img_) 
 	{
 		if (lb_img_->isFullScreen()) 
 		{
-			lb_img_->showNormal();
-			lb_img_->setParent(this);
-			hbox_->addWidget(lb_img_);
-			PlayerController::GetInstance()->SetImageSize(this->width(), this->height());
-			
+			ShowNormal();
 		}
 		else 
 		{
-			hbox_->removeWidget(lb_img_);
-			lb_img_->setParent(NULL);
-			lb_img_->showFullScreen();
-			int width = GetSystemMetrics(SM_CXSCREEN);
-			int height = GetSystemMetrics(SM_CYSCREEN);
-			PlayerController::GetInstance()->SetImageSize(width, height);
+			ShowFullScreen();
 		}
 	}
 	return false;

@@ -13,6 +13,7 @@
 #include <QtWidgets/qmessagebox.h>
 #include "player_controller/native_audio_controller.h"
 #include "../../base_ui/clabel.h"
+#include "QKeyEvent"
 const int TIME_BASE = 1000;	//¿Ì¶ÈÅÌ
 const int SHADOW_MARGIN = 30;
 FFMpegQt::FFMpegQt(QWidget* wid) : BasePopupWindow(wid),ui(new Ui::FFMpegQtFormUI)
@@ -51,6 +52,24 @@ bool FFMpegQt::eventFilter(QObject* watched, QEvent* event)
 			RefreshSize();
 		}
 	}
+	if(watched == this)
+	{
+		if(event->type() == QEvent::KeyRelease)
+		{
+			QKeyEvent* key_event = static_cast<QKeyEvent*>(event);
+			if(key_event->key() == Qt::Key_Space)
+			{
+				bool b_checked = ui->btn_pause_resume->isChecked();
+				SlotPauseResume(b_checked);
+				ui->btn_pause_resume->setChecked(!b_checked);
+			}
+			else if(key_event->key() == Qt::Key_Escape)
+			{
+				lb_movie_->ShowNormal();
+			}
+		}
+	}
+
 	return QObject::eventFilter(watched, event);
 }
 
@@ -64,6 +83,7 @@ void FFMpegQt::OnModifyUI()
 	ui->movie_layout->addWidget(lb_movie_);
 	lb_movie_->setObjectName("wid_bg");
 	lb_movie_->installEventFilter(this);
+	this->installEventFilter(this);
 	ui->btn_pause_resume->setFixedSize(30, 30);
 
 	ui->btn_stop->setFixedSize(30, 30);
@@ -118,28 +138,8 @@ void FFMpegQt::RegisterSignals()
 	connect(ui->btn_min,&QPushButton::clicked,this,&FFMpegQt::SlotMinClicked);
 	connect(ui->btn_max, &QPushButton::clicked, this, &FFMpegQt::SlotMaxClicked);
 	connect(this,&FFMpegQt::SignalClose,this,&FFMpegQt::close);
-	//ui->lb_movie->installEventFilter(this);
-	auto image_cb = ToWeakCallback([=](ImageInfo* image_info)
-		{
-			ShowImage(image_info);
-		});
+	connect(ui->btn_fullscreen,&QPushButton::clicked,this,&FFMpegQt::SlotFullScreenClicked);
 
-	ViewCallback::GetInstance()->RegImageInfoCallback(image_cb);
-
-
-	auto time_cb = ToWeakCallback([=](int64_t timestamp) {
-		//ui thread
-		ShowTime(timestamp);
-		});
-
-	ViewCallback::GetInstance()->RegTimeCallback(time_cb);
-
-	auto parse_dur_cb = ToWeakCallback([=](int64_t timestamp)
-	{
-			//micro seconds -> seconds(show time)
-			total_time_s_ = (timestamp/1000)/1000;
-	});
-	ViewCallback::GetInstance()->RegParseDoneCallback(parse_dur_cb);
 
 
 	auto record_state_cb = ToWeakCallback([=](int run_state) {
@@ -154,8 +154,15 @@ void FFMpegQt::SlotStartClicked()
 {
 	if (!PlayerController::GetInstance()->IsRunning()) 
 	{
-		PlayerController::GetInstance()->Open(lb_width_,lb_height_);
-		PlayerController::GetInstance()->Start();
+		bool b_open = PlayerController::GetInstance()->Open(lb_width_,lb_height_);
+		if (b_open) 
+		{
+			PlayerController::GetInstance()->Start();
+		}
+		else
+		{
+			QMessageBox::warning(this, "Warning", "Open file failed!");
+		}
 	}
 }
 
@@ -174,6 +181,9 @@ void FFMpegQt::SlotStop()
 	PlayerController::GetInstance()->Stop();
 	ViewCallback::GetInstance()->Clear();
 	lb_movie_->SetPixmap(QPixmap());
+	ui->slider->setValue(0);
+	total_time_s_ = 0;
+	ShowTime(0);
 }
 
 void FFMpegQt::SlotSliderMove(int value)
@@ -213,6 +223,8 @@ void FFMpegQt::SlotOpenFile()
 		return;
 	}
 	PlayerController::GetInstance()->SetPath(name.toStdString());
+	ViewCallback::GetInstance()->Clear();
+	RegViewCallback();
 	SlotStartClicked();
 }
 
@@ -256,6 +268,14 @@ void FFMpegQt::SlotMaxClicked()
 	{
 		ui->main_layout->setMargin(0);
 		this->showMaximized();
+	}
+}
+
+void FFMpegQt::SlotFullScreenClicked()
+{
+	if (lb_movie_) 
+	{
+		lb_movie_->ShowFullScreen();
 	}
 }
 
@@ -323,4 +343,29 @@ void FFMpegQt::UpdateRecordButton(bool b_run)
 		ui->btn_screen_shot->setObjectName("btn_record_state_normal");
 	}
 	ui->btn_screen_shot->setStyle(ui->btn_screen_shot->style());
+}
+
+void FFMpegQt::RegViewCallback()
+{
+	auto image_cb = ToWeakCallback([=](ImageInfo* image_info)
+		{
+			ShowImage(image_info);
+		});
+
+	ViewCallback::GetInstance()->RegImageInfoCallback(image_cb);
+
+
+	auto time_cb = ToWeakCallback([=](int64_t timestamp) {
+		//ui thread
+		ShowTime(timestamp);
+		});
+
+	ViewCallback::GetInstance()->RegTimeCallback(time_cb);
+
+	auto parse_dur_cb = ToWeakCallback([=](int64_t timestamp)
+		{
+			//micro seconds -> seconds(show time)
+			total_time_s_ = (timestamp / 1000) / 1000;
+		});
+	ViewCallback::GetInstance()->RegParseDoneCallback(parse_dur_cb);
 }

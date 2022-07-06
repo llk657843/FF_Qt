@@ -10,7 +10,9 @@ public:
 	CLabel(QWidget* wid);
 	~CLabel();
 	void SetPixmap(const QPixmap& pixmap);
-
+	void ShowNormal();
+	void ShowFullScreen();
+	
 protected:
 	bool eventFilter(QObject*, QEvent*);
 

@@ -15,6 +15,7 @@ public:
 	void Write(const QByteArray& bytes,int64_t timestamp);
 	int64_t GetCurrentTimeStamp() const;
 	void Clear();
+	void Release();
 
 private:
 	ThreadSafeBytesList bytes_list_;

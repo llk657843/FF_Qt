@@ -24,6 +24,7 @@ VideoDecoder::VideoDecoder()
     height_ = 0;
     src_width_ = 0;
     packet_ = nullptr;
+    stop_success_callback_ = nullptr;
     image_funcs_.set_max_size(100); //最多含200个缓存，约10秒缓存
 }
 
@@ -32,6 +33,11 @@ VideoDecoder::~VideoDecoder()
     if (decoder_) 
     {
         avformat_free_context(decoder_);
+    }
+    if(codec_context_)
+    {
+        avcodec_free_context(&codec_context_);
+        codec_context_ = NULL;
     }
 }
 
@@ -142,6 +148,11 @@ bool VideoDecoder::Run()
         }
         ReleaseAll();
     }
+	if(stop_success_callback_)
+    {
+        stop_success_callback_();
+    }
+
     return true;
 }
 
@@ -258,4 +269,9 @@ void VideoDecoder::AsyncStop()
     {
         ReleaseAll();
     }
+}
+
+void VideoDecoder::RegStopSuccessCallback(StopSuccessCallback cb)
+{
+    stop_success_callback_ = cb;
 }

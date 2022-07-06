@@ -47,6 +47,7 @@ private:
 	void SlotStopScreenClicked();
 	void SlotMinClicked();
 	void SlotMaxClicked();
+	void SlotFullScreenClicked();
 	
 	void ShowTime(int64_t time);
 	void ShowImage(ImageInfo*);
@@ -56,7 +57,7 @@ private:
 	void ShowSettingForm();
 
 	void UpdateRecordButton(bool b_run);
-
+	void RegViewCallback();
 private:
 	Ui::FFMpegQtFormUI* ui;
 	int lb_width_;
