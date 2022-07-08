@@ -27,6 +27,7 @@ public:
 	void Resume();
 	void SeekTime(int64_t seek_time);
 	void SetImageSize(int width,int height);
+	void SetAudioValue(int value);
 	void Stop();
 	void SetPath(const std::string& path);
 
@@ -59,4 +60,5 @@ private:
 	std::shared_ptr<AudioPlayerCore> audio_core_;
 	std::string path_;
 	std::string net_path_;
+	int volume_;
 };

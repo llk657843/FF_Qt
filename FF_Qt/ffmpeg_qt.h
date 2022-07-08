@@ -48,7 +48,6 @@ private:
 	void SlotMinClicked();
 	void SlotMaxClicked();
 	void SlotFullScreenClicked();
-	
 	void ShowTime(int64_t time);
 	void ShowImage(ImageInfo*);
 	QString GetTimeString(int64_t time_seconds);
@@ -58,6 +57,7 @@ private:
 
 	void UpdateRecordButton(bool b_run);
 	void RegViewCallback();
+	
 private:
 	Ui::FFMpegQtFormUI* ui;
 	int lb_width_;

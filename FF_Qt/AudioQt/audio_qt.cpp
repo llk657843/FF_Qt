@@ -164,7 +164,7 @@ void AudioPlayerCore::AudioFmtInit()
 	fmt.setChannelCount(2);//声道
 	fmt.setCodec("audio/pcm");//解码格式
 	fmt.setByteOrder(QAudioFormat::LittleEndian);
-	fmt.setSampleType(QAudioFormat::UnSignedInt);//设置音频类型
+	fmt.setSampleType(QAudioFormat::SignedInt);//设置音频类型
 	output_ = std::make_shared<QAudioOutput>(fmt);
 	io_ = std::make_shared<AudioIoDevice>();
 	io_->open(QIODevice::ReadWrite);
@@ -252,4 +252,12 @@ void AudioPlayerCore::AsyncStop()
 void AudioPlayerCore::RegCloseSuccessCallback(CloseStateCallback cb)
 {
 	close_state_callback_ = cb;
+}
+
+void AudioPlayerCore::SetVolume(int volume)
+{
+	if(output_)
+	{
+		output_->setVolume(volume / 100.0);
+	}
 }

@@ -16,6 +16,7 @@
 #include "QKeyEvent"
 const int TIME_BASE = 1000;	//¿Ì¶ÈÅÌ
 const int SHADOW_MARGIN = 30;
+const int PROGRESSBAR_WIDTH = 100;
 FFMpegQt::FFMpegQt(QWidget* wid) : BasePopupWindow(wid),ui(new Ui::FFMpegQtFormUI)
 {
 	setWindowFlags(Qt::FramelessWindowHint);
@@ -52,6 +53,29 @@ bool FFMpegQt::eventFilter(QObject* watched, QEvent* event)
 			RefreshSize();
 		}
 	}
+	if (watched == ui->audio_value) 
+	{
+		if(event->type() == QEvent::MouseButtonRelease)
+		{
+			QMouseEvent* mouse_event = static_cast<QMouseEvent*>(event);
+			if(mouse_event->button() == Qt::LeftButton)
+			{
+				int value = mouse_event->x() * 100 / PROGRESSBAR_WIDTH;
+				if(value < 0)
+				{
+					value = 0;
+				}
+				else if(value > 100)
+				{
+					value = 100;
+				}
+				ui->audio_value->setValue(value);
+				PlayerController::GetInstance()->SetAudioValue(value);
+			}
+		}
+	}
+	
+
 	if(watched == this)
 	{
 		if(event->type() == QEvent::KeyRelease)
@@ -106,6 +130,7 @@ void FFMpegQt::OnModifyUI()
 	ui->btn_max->setObjectName("btn_max_1");
 	ui->btn_close->setObjectName("btn_close_1");
 	ui->btn_fullscreen->setObjectName("btn_fullscreen_1");
+	ui->audio_value->setObjectName("pb_1");
 
 	ui->btn_fullscreen->setFixedSize(30, 30);
 	ui->btn_max->setFixedSize(18,18);
@@ -122,9 +147,9 @@ void FFMpegQt::OnModifyUI()
 	ui->btn_screen_shot->setCursor(Qt::PointingHandCursor);
 	ui->btn_screen_shot->setObjectName("btn_record_state_normal");
 	ui->btn_screen_shot->setFixedSize(30,30);
-	//ui->lb_movie->setObjectName("lb_img");
-
-	
+	ui->audio_value->setFixedWidth(100);
+	ui->audio_value->setValue(100);
+	ui->slider->setObjectName("sl_1");
 }
 
 void FFMpegQt::RegisterSignals()
@@ -139,9 +164,7 @@ void FFMpegQt::RegisterSignals()
 	connect(ui->btn_max, &QPushButton::clicked, this, &FFMpegQt::SlotMaxClicked);
 	connect(this,&FFMpegQt::SignalClose,this,&FFMpegQt::close);
 	connect(ui->btn_fullscreen,&QPushButton::clicked,this,&FFMpegQt::SlotFullScreenClicked);
-
-
-
+	ui->audio_value->installEventFilter(this);
 	auto record_state_cb = ToWeakCallback([=](int run_state) {
 		UpdateRecordButton(run_state == RecordState::RECORD_STATE_RUNNING);
 		});

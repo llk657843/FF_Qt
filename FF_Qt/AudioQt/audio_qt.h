@@ -30,6 +30,7 @@ public:
 	void Seek(int64_t,SeekResCallback);
 	void AsyncStop();
 	void RegCloseSuccessCallback(CloseStateCallback);
+	void SetVolume(int volume);
 
 signals:
 	void SignalStart();
