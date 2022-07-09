@@ -169,7 +169,8 @@ void AudioDecoder::Seek(int64_t seek_time, SeekResCallback res_cb)
 			res_cb(seek_frame, audio_stream_id_,res);
 		}
 	}
-	else {
+	else 
+	{
 		if (res_cb)
 		{
 			res_cb(0, 0, false);

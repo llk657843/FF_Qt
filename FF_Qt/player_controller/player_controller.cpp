@@ -12,7 +12,7 @@
 PlayerController::PlayerController()
 {
 	path_ = "";
-	volume_ = -1;
+	volume_ = 100;
 	//net_path_ = "http://220.161.87.62:8800/hls/1/index.m3u8";
 	//net_path_ = "https://r3-ndr.ykt.cbern.com.cn/edu_product/65/video/17b26a89547a11eb96b8fa20200c3759/76594798f8163d96296ba6263f2fbc62.1280.720.false/76594798f8163d96296ba6263f2fbc62.1280.720.m3u8";
 	pause_flag_ = false;
@@ -153,13 +153,21 @@ void PlayerController::SetImageSize(int width, int height)
 	}
 }
 
-void PlayerController::SetAudioValue(int value)
+void PlayerController::SetAudioVolume(int value)
 {
-	volume_ = value;
-	if (audio_core_)
+	if (value >= 0 && value <= 100) 
 	{
-		audio_core_->SetVolume(value);
+		volume_ = value;
+		if (audio_core_)
+		{
+			audio_core_->SetVolume(value);
+		}
 	}
+}
+
+int PlayerController::GetAudioVolume()
+{
+	return volume_;
 }
 
 void PlayerController::Stop()
@@ -244,12 +252,11 @@ void PlayerController::InitAudioCore()
 	audio_core_ = std::make_shared<AudioPlayerCore>();
 	if (volume_ > 0) 
 	{
-		SetAudioValue(volume_);
+		SetAudioVolume(volume_);
 	}
 	else
 	{
-		volume_ = 100;
-		SetAudioValue(100);
+		SetAudioVolume(100);
 	}
 	auto close_state_cb = [=]() 
 	{

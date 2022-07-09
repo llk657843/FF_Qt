@@ -70,7 +70,7 @@ bool FFMpegQt::eventFilter(QObject* watched, QEvent* event)
 					value = 100;
 				}
 				ui->audio_value->setValue(value);
-				PlayerController::GetInstance()->SetAudioValue(value);
+				PlayerController::GetInstance()->SetAudioVolume(value);
 			}
 		}
 	}
@@ -90,6 +90,16 @@ bool FFMpegQt::eventFilter(QObject* watched, QEvent* event)
 			else if(key_event->key() == Qt::Key_Escape)
 			{
 				lb_movie_->ShowNormal();
+			}
+			else if(key_event->key() == Qt::Key_Up)
+			{
+				PlayerController::GetInstance()->SetAudioVolume(PlayerController::GetInstance()->GetAudioVolume() + 5);
+				ui->audio_value->setValue(PlayerController::GetInstance()->GetAudioVolume());
+			}
+			else if(key_event->key() == Qt::Key_Down)
+			{
+				PlayerController::GetInstance()->SetAudioVolume(PlayerController::GetInstance()->GetAudioVolume() - 5);
+				ui->audio_value->setValue(PlayerController::GetInstance()->GetAudioVolume());
 			}
 		}
 	}
