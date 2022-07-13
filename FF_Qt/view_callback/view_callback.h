@@ -2,7 +2,7 @@
 #include <functional>
 #include <qaudio.h>
 #include <QObject>
-
+#include "memory"
 #include "../base_util/singleton.h"
 class ImageInfo;
 using AudioStateCallback = std::function<void(QAudio::State)>;

@@ -4,6 +4,7 @@
 #include "../base_util/singleton.h"
 #include "qbytearray.h"
 #include <mutex>
+#include "vector"
 #define FRAGMENT_NUM 4            // 设置缓存区个数
 
 struct AudioDevice 
