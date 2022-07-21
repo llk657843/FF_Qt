@@ -5,10 +5,13 @@
 #include "../base_util/weak_callback.h"
 #include "../base_util/singleton.h"
 #include "../FFmpeg/decoder/audio_decoder.h"
+#include "QPointer"
+#include "memory"
 class AudioIoDevice;
 class QIODevice;
 class QAudioOutput;
 using PlayStartCallback = std::function<void()>;
+using CloseStateCallback = std::function<void()>;
 class AudioPlayerCore : public QObject,public SupportWeakCallback
 {
 	Q_OBJECT
@@ -26,6 +29,8 @@ public:
 	void Clear();
 	void Seek(int64_t,SeekResCallback);
 	void AsyncStop();
+	void RegCloseSuccessCallback(CloseStateCallback);
+	void SetVolume(int volume);
 
 signals:
 	void SignalStart();
@@ -43,8 +48,8 @@ private:
 	void AudioFmtInit();
 
 private:
-	QAudioOutput* output_;
-	AudioIoDevice* io_;
+	std::shared_ptr<QAudioOutput> output_;
+	std::shared_ptr<AudioIoDevice> io_;
 	int sample_rate_;
 	int64_t start_time_;
 	int64_t end_time_;
@@ -55,4 +60,5 @@ private:
 	int64_t seek_time_;
 	std::atomic_bool b_start_;
 	SeekResCallback seek_res_callback_;
+	CloseStateCallback close_state_callback_;
 };

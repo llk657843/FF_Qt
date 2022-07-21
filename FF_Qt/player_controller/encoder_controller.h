@@ -45,15 +45,21 @@ private:
 	void SlotStopSuccess();
 	void RegCallback();
 	void InitAudioRecorder();
+	void PostScreenCapImg(int index);
+	void PreciseTimer();
 
 private:
 	std::unique_ptr<VideoEncoder> video_encoder_;
 	std::unique_ptr<AudioEncoder> audio_encoder_;
 	std::shared_ptr<EncoderCriticalSec> encoder_info_;
 	std::unique_ptr<WinScreenCap> screen_cap_;
+	std::unique_ptr<WinScreenCap> screen_cap_2_;
+	std::unique_ptr<WinScreenCap> screen_cap_3_;
 	std::unique_ptr<HighRatioTimeThread> video_capture_thread_;
 	std::unique_ptr<NativeAudioController> native_audio_controller_;
 	VideoEncoderParam video_param_;
 	QString file_path_;
 	RecordState record_state_;
+	int64_t complete_frame_;
+	int64_t start_time_;
 };

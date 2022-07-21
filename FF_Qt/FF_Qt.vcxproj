@@ -62,13 +62,13 @@
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <Link>
-      <AdditionalLibraryDirectories>D:\Code\FFmpeg_learning\FF_Qt\lib\win32\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(SolutionDir)lib\win32\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>avcodec.lib;avformat.lib;swscale.lib;avutil.lib;swresample.lib;winmm.lib;avfilter.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <ImageHasSafeExceptionHandlers>false</ImageHasSafeExceptionHandlers>
     </Link>
     <ClCompile>
-      <AdditionalIncludeDirectories>D:\Code\FFmpeg_learning\FF_Qt\include\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <LanguageStandard>stdcpp17</LanguageStandard>
+      <AdditionalIncludeDirectories>$(SolutionDir)include\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <LanguageStandard>Default</LanguageStandard>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|Win32'" Label="Configuration">
@@ -107,6 +107,7 @@
     <ClCompile Include="base_ui\base_popup_window_tool.cpp" />
     <ClCompile Include="base_ui\base_pop_shadow.cpp" />
     <ClCompile Include="base_ui\base_shadow_form.cpp" />
+    <ClCompile Include="base_ui\clabel.cpp" />
     <ClCompile Include="base_ui\uslider.cpp" />
     <ClCompile Include="FFmpeg\decoder\audio_decoder.cpp" />
     <ClCompile Include="FFmpeg\decoder\base_decoder.cpp" />
@@ -147,6 +148,7 @@
     <ClInclude Include="base_ui\base_popup_window_tool.h" />
     <ClInclude Include="base_ui\base_pop_shadow.h" />
     <ClInclude Include="base_ui\base_shadow_form.h" />
+    <QtMoc Include="base_ui\clabel.h" />
     <ClInclude Include="base_util\guard_ptr.h" />
     <QtMoc Include="Thread\high_ratio_time_thread.h" />
     <ClInclude Include="FFmpeg\decoder\audio_decoder.h" />

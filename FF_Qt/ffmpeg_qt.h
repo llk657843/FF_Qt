@@ -9,6 +9,7 @@
 #include "base_ui/base_popup_window.h"
 class ImageInfo;
 class RecordSettingForm;
+class CLabel;
 namespace Ui
 {
 	class FFMpegQtFormUI;
@@ -21,6 +22,7 @@ public:
 	~FFMpegQt();
 	virtual std::wstring GetWindowId(void) const override;
 	virtual void InitWindow() override;
+	
 protected:
 	bool eventFilter(QObject* watched, QEvent* event) override;
 
@@ -43,7 +45,9 @@ private:
 	void SlotOpenFile();
 	void SlotScreenShot();
 	void SlotStopScreenClicked();
-
+	void SlotMinClicked();
+	void SlotMaxClicked();
+	void SlotFullScreenClicked();
 	void ShowTime(int64_t time);
 	void ShowImage(ImageInfo*);
 	QString GetTimeString(int64_t time_seconds);
@@ -52,7 +56,8 @@ private:
 	void ShowSettingForm();
 
 	void UpdateRecordButton(bool b_run);
-
+	void RegViewCallback();
+	
 private:
 	Ui::FFMpegQtFormUI* ui;
 	int lb_width_;
@@ -60,4 +65,5 @@ private:
 	int64_t total_time_s_;
 	ThreadSafeBytesList bytes_;
 	QPointer<RecordSettingForm> record_form_;
+	QPointer<CLabel> lb_movie_;
 };

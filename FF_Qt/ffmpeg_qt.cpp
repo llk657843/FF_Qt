@@ -12,7 +12,11 @@
 #include "view/record_setting_form.h"
 #include <QtWidgets/qmessagebox.h>
 #include "player_controller/native_audio_controller.h"
+#include "../../base_ui/clabel.h"
+#include "QKeyEvent"
 const int TIME_BASE = 1000;	//刻度盘
+const int SHADOW_MARGIN = 30;
+const int PROGRESSBAR_WIDTH = 100;
 FFMpegQt::FFMpegQt(QWidget* wid) : BasePopupWindow(wid),ui(new Ui::FFMpegQtFormUI)
 {
 	setWindowFlags(Qt::FramelessWindowHint);
@@ -42,11 +46,61 @@ void FFMpegQt::InitWindow()
 
 bool FFMpegQt::eventFilter(QObject* watched, QEvent* event)
 {
-	if(watched == ui->lb_movie)
+	if (watched == lb_movie_)
 	{
-		if(event->type() == QEvent::Show || event->type() == QEvent::Resize)
+		if (event->type() == QEvent::Show || event->type() == QEvent::Resize)
 		{
 			RefreshSize();
+		}
+	}
+	if (watched == ui->audio_value) 
+	{
+		if(event->type() == QEvent::MouseButtonRelease)
+		{
+			QMouseEvent* mouse_event = static_cast<QMouseEvent*>(event);
+			if(mouse_event->button() == Qt::LeftButton)
+			{
+				int value = mouse_event->x() * 100 / PROGRESSBAR_WIDTH;
+				if(value < 0)
+				{
+					value = 0;
+				}
+				else if(value > 100)
+				{
+					value = 100;
+				}
+				ui->audio_value->setValue(value);
+				PlayerController::GetInstance()->SetAudioVolume(value);
+			}
+		}
+	}
+	
+
+	if(watched == this)
+	{
+		if(event->type() == QEvent::KeyRelease)
+		{
+			QKeyEvent* key_event = static_cast<QKeyEvent*>(event);
+			if(key_event->key() == Qt::Key_Space)
+			{
+				bool b_checked = ui->btn_pause_resume->isChecked();
+				SlotPauseResume(b_checked);
+				ui->btn_pause_resume->setChecked(!b_checked);
+			}
+			else if(key_event->key() == Qt::Key_Escape)
+			{
+				lb_movie_->ShowNormal();
+			}
+			else if(key_event->key() == Qt::Key_Up)
+			{
+				PlayerController::GetInstance()->SetAudioVolume(PlayerController::GetInstance()->GetAudioVolume() + 5);
+				ui->audio_value->setValue(PlayerController::GetInstance()->GetAudioVolume());
+			}
+			else if(key_event->key() == Qt::Key_Down)
+			{
+				PlayerController::GetInstance()->SetAudioVolume(PlayerController::GetInstance()->GetAudioVolume() - 5);
+				ui->audio_value->setValue(PlayerController::GetInstance()->GetAudioVolume());
+			}
 		}
 	}
 
@@ -59,8 +113,11 @@ void FFMpegQt::OnModifyUI()
 	ui->slider->setMaximum(1000);
 	ui->slider->setTickInterval(1);
 	ui->fr_main->setObjectName("wid_bg");
-	ui->lb_movie->setObjectName("wid_bg");
-	
+	lb_movie_ = new CLabel(ui->fr_movie);
+	ui->movie_layout->addWidget(lb_movie_);
+	lb_movie_->setObjectName("wid_bg");
+	lb_movie_->installEventFilter(this);
+	this->installEventFilter(this);
 	ui->btn_pause_resume->setFixedSize(30, 30);
 
 	ui->btn_stop->setFixedSize(30, 30);
@@ -83,6 +140,7 @@ void FFMpegQt::OnModifyUI()
 	ui->btn_max->setObjectName("btn_max_1");
 	ui->btn_close->setObjectName("btn_close_1");
 	ui->btn_fullscreen->setObjectName("btn_fullscreen_1");
+	ui->audio_value->setObjectName("pb_1");
 
 	ui->btn_fullscreen->setFixedSize(30, 30);
 	ui->btn_max->setFixedSize(18,18);
@@ -99,7 +157,9 @@ void FFMpegQt::OnModifyUI()
 	ui->btn_screen_shot->setCursor(Qt::PointingHandCursor);
 	ui->btn_screen_shot->setObjectName("btn_record_state_normal");
 	ui->btn_screen_shot->setFixedSize(30,30);
-	ui->lb_movie->setObjectName("lb_img");
+	ui->audio_value->setFixedWidth(100);
+	ui->audio_value->setValue(100);
+	ui->slider->setObjectName("sl_1");
 }
 
 void FFMpegQt::RegisterSignals()
@@ -110,31 +170,11 @@ void FFMpegQt::RegisterSignals()
 	connect(ui->btn_close,&QPushButton::clicked,this,&FFMpegQt::SlotClose);
 	connect(ui->btn_open_file,&QPushButton::clicked,this,&FFMpegQt::SlotOpenFile);
 	connect(ui->btn_screen_shot, &QPushButton::clicked, this, &FFMpegQt::SlotScreenShot);
+	connect(ui->btn_min,&QPushButton::clicked,this,&FFMpegQt::SlotMinClicked);
+	connect(ui->btn_max, &QPushButton::clicked, this, &FFMpegQt::SlotMaxClicked);
 	connect(this,&FFMpegQt::SignalClose,this,&FFMpegQt::close);
-	ui->lb_movie->installEventFilter(this);
-	auto image_cb = ToWeakCallback([=](ImageInfo* image_info)
-		{
-			ShowImage(image_info);
-		});
-
-	ViewCallback::GetInstance()->RegImageInfoCallback(image_cb);
-
-
-	auto time_cb = ToWeakCallback([=](int64_t timestamp) {
-		//ui thread
-		ShowTime(timestamp);
-		});
-
-	ViewCallback::GetInstance()->RegTimeCallback(time_cb);
-
-	auto parse_dur_cb = ToWeakCallback([=](int64_t timestamp)
-	{
-			//micro seconds -> seconds(show time)
-			total_time_s_ = (timestamp/1000)/1000;
-	});
-	ViewCallback::GetInstance()->RegParseDoneCallback(parse_dur_cb);
-
-
+	connect(ui->btn_fullscreen,&QPushButton::clicked,this,&FFMpegQt::SlotFullScreenClicked);
+	ui->audio_value->installEventFilter(this);
 	auto record_state_cb = ToWeakCallback([=](int run_state) {
 		UpdateRecordButton(run_state == RecordState::RECORD_STATE_RUNNING);
 		});
@@ -147,8 +187,15 @@ void FFMpegQt::SlotStartClicked()
 {
 	if (!PlayerController::GetInstance()->IsRunning()) 
 	{
-		PlayerController::GetInstance()->Open(lb_width_,lb_height_);
-		PlayerController::GetInstance()->Start();
+		bool b_open = PlayerController::GetInstance()->Open(lb_width_,lb_height_);
+		if (b_open) 
+		{
+			PlayerController::GetInstance()->Start();
+		}
+		else
+		{
+			QMessageBox::warning(this, "Warning", "Open file failed!");
+		}
 	}
 }
 
@@ -166,7 +213,10 @@ void FFMpegQt::SlotStop()
 {
 	PlayerController::GetInstance()->Stop();
 	ViewCallback::GetInstance()->Clear();
-	ui->lb_movie->setPixmap(QPixmap());
+	lb_movie_->SetPixmap(QPixmap());
+	ui->slider->setValue(0);
+	total_time_s_ = 0;
+	ShowTime(0);
 }
 
 void FFMpegQt::SlotSliderMove(int value)
@@ -206,6 +256,8 @@ void FFMpegQt::SlotOpenFile()
 		return;
 	}
 	PlayerController::GetInstance()->SetPath(name.toStdString());
+	ViewCallback::GetInstance()->Clear();
+	RegViewCallback();
 	SlotStartClicked();
 }
 
@@ -233,6 +285,33 @@ void FFMpegQt::SlotStopScreenClicked()
 	QMessageBox::information(this, QString::fromLocal8Bit("提示"), QString::fromLocal8Bit("录制已保存到目录") + EncoderController::GetInstance()->GetCapturePath());
 }
 
+void FFMpegQt::SlotMinClicked()
+{
+	this->showMinimized();
+}
+
+void FFMpegQt::SlotMaxClicked()
+{
+	if (this->isMaximized()) 
+	{
+		ui->main_layout->setMargin(SHADOW_MARGIN);
+		this->showNormal();
+	}		
+	else 
+	{
+		ui->main_layout->setMargin(0);
+		this->showMaximized();
+	}
+}
+
+void FFMpegQt::SlotFullScreenClicked()
+{
+	if (lb_movie_) 
+	{
+		lb_movie_->ShowFullScreen();
+	}
+}
+
 void FFMpegQt::ShowTime(int64_t time)
 {
 	int64_t sec = time * 0.001;
@@ -253,7 +332,7 @@ void FFMpegQt::ShowImage(ImageInfo* image_info)
 	{
 		return;
 	}
-	ui->lb_movie->setPixmap(QPixmap::fromImage(*image_info->image_));
+	lb_movie_->SetPixmap(QPixmap::fromImage(*image_info->image_));
 	repaint();
 	delete image_info;
 }
@@ -269,10 +348,10 @@ QString FFMpegQt::GetTimeString(int64_t time_seconds)
 
 void FFMpegQt::RefreshSize()
 {
-	if(lb_width_ != ui->lb_movie->width() || lb_height_ != ui->lb_movie->height())
+	if(lb_width_ != lb_movie_->width() || lb_height_ != lb_movie_->height())
 	{
-		lb_width_ = ui->lb_movie->width();
-		lb_height_ = ui->lb_movie->height();
+		lb_width_ = lb_movie_->width();
+		lb_height_ = lb_movie_->height();
 		PlayerController::GetInstance()->SetImageSize(lb_width_,lb_height_);
 	}
 }
@@ -297,4 +376,29 @@ void FFMpegQt::UpdateRecordButton(bool b_run)
 		ui->btn_screen_shot->setObjectName("btn_record_state_normal");
 	}
 	ui->btn_screen_shot->setStyle(ui->btn_screen_shot->style());
+}
+
+void FFMpegQt::RegViewCallback()
+{
+	auto image_cb = ToWeakCallback([=](ImageInfo* image_info)
+		{
+			ShowImage(image_info);
+		});
+
+	ViewCallback::GetInstance()->RegImageInfoCallback(image_cb);
+
+
+	auto time_cb = ToWeakCallback([=](int64_t timestamp) {
+		//ui thread
+		ShowTime(timestamp);
+		});
+
+	ViewCallback::GetInstance()->RegTimeCallback(time_cb);
+
+	auto parse_dur_cb = ToWeakCallback([=](int64_t timestamp)
+		{
+			//micro seconds -> seconds(show time)
+			total_time_s_ = (timestamp / 1000) / 1000;
+		});
+	ViewCallback::GetInstance()->RegParseDoneCallback(parse_dur_cb);
 }

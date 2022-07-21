@@ -24,6 +24,8 @@ VideoDecoder::VideoDecoder()
     height_ = 0;
     src_width_ = 0;
     packet_ = nullptr;
+    stop_success_callback_ = nullptr;
+    b_seek_flag_ = false;
     image_funcs_.set_max_size(100); //最多含200个缓存，约10秒缓存
 }
 
@@ -32,6 +34,11 @@ VideoDecoder::~VideoDecoder()
     if (decoder_) 
     {
         avformat_free_context(decoder_);
+    }
+    if(codec_context_)
+    {
+        avcodec_free_context(&codec_context_);
+        codec_context_ = NULL;
     }
 }
 
@@ -111,6 +118,23 @@ bool VideoDecoder::Run()
                 av_packet_unref(packet_);
                 continue;
             }
+            if (b_seek_flag_) 
+            {
+                std::lock_guard<std::mutex> lock(decode_mutex_);
+                auto time_base = decoder_->streams[video_stream_id_]->time_base;
+                auto raw_ptr = frame_ptr->Frame();
+                int64_t timestamp = raw_ptr->best_effort_timestamp * av_q2d(time_base) * 1000.0;
+				if(timestamp < last_seek_time_)
+                {
+                    av_packet_unref(packet_);
+                    continue;
+                }
+                else
+                {
+                    last_seek_time_ = 0;
+                    b_seek_flag_ = false;
+                }
+            }
             //解码线程
             int width = width_;
             int height = height_;
@@ -128,7 +152,6 @@ bool VideoDecoder::Run()
           
             image_funcs_.push_back(ImageFunc(std::make_shared<QImage>(width, height, QImage::Format_ARGB32),func, frame_ptr));
         }
-        
         av_packet_unref(packet_);
     }
     if (b_stop_flag_) 
@@ -143,6 +166,11 @@ bool VideoDecoder::Run()
         }
         ReleaseAll();
     }
+	if(stop_success_callback_)
+    {
+        stop_success_callback_();
+    }
+
     return true;
 }
 
@@ -163,6 +191,8 @@ ImageInfo* VideoDecoder::PostImageTask(std::shared_ptr<AVFrameWrapper> frame, in
     {
         int* linesize = local_frame->linesize;
         uint8_t** data = local_frame->data;
+        auto fmt = local_frame->format;
+       
     	int output_line_size[4];
         av_image_fill_linesizes(output_line_size, AV_PIX_FMT_ARGB, width_);
         uint8_t* output_dst[] =
@@ -171,6 +201,7 @@ ImageInfo* VideoDecoder::PostImageTask(std::shared_ptr<AVFrameWrapper> frame, in
         };
         auto srs = sws_getContext(src_width_, src_height_, format_, width_, height_, AVPixelFormat::AV_PIX_FMT_RGB32, SWS_BICUBIC, NULL, NULL, NULL);
     	sws_scale(srs, data, linesize, 0, src_height_, output_dst, output_line_size);
+        ViewCallback::GetInstance()->ConvertRGBData(output_dst, width_, height_, output_line_size[0], output_line_size[1]);
         image_info = new ImageInfo(timestamp, img_ptr);
         sws_freeContext(srs);
     	return image_info;
@@ -230,22 +261,14 @@ void VideoDecoder::SetImageSize(int width, int height)
     }
 }
 
-void VideoDecoder::Seek(int64_t seek_time_ms)
+void VideoDecoder::Seek(int64_t seek_frame, int audio_stream_id,int64_t seek_time)
 {
     std::lock_guard<std::mutex> lock(decode_mutex_);
     image_funcs_.clear();
     image_funcs_.notify_one(true);
-    auto time_base = codec_context_->time_base;
-    int seek_frame = seek_time_ms / av_q2d(time_base) / 1000.0;
-    av_seek_frame(decoder_, video_stream_id_, seek_frame, AVSEEK_FLAG_BACKWARD);
-}
-
-void VideoDecoder::Seek(int64_t seek_frame, int audio_stream_id)
-{
-    std::lock_guard<std::mutex> lock(decode_mutex_);
-    image_funcs_.clear();
-    image_funcs_.notify_one(true);
-    av_seek_frame(decoder_, audio_stream_id, seek_frame, AVSEEK_FLAG_BACKWARD) >= 0 ? true : false;
+    last_seek_time_ = seek_time;
+    b_seek_flag_ = true;
+    av_seek_frame(decoder_,audio_stream_id,seek_frame, AVSEEK_FLAG_BACKWARD);
 }
 
 void VideoDecoder::AsyncStop()
@@ -259,4 +282,9 @@ void VideoDecoder::AsyncStop()
     {
         ReleaseAll();
     }
+}
+
+void VideoDecoder::RegStopSuccessCallback(StopSuccessCallback cb)
+{
+    stop_success_callback_ = cb;
 }

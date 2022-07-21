@@ -24,6 +24,7 @@ EncoderController::EncoderController()
 {
 	video_encoder_ = nullptr;
 	audio_encoder_ = nullptr;
+	complete_frame_ = 0;
 	record_state_ = RECORD_STATE_NONE;
 	connect(this,&EncoderController::SignalStopSuccess,this,&EncoderController::SlotStopSuccess);
 	RegCallback();
@@ -70,6 +71,7 @@ void EncoderController::StartCatch()
 	{
 		video_capture_thread_->SetInterval(40);
 	}
+	start_time_ = time_util::GetCurrentTimeMst();
 	video_capture_thread_->Run();
 	qtbase::Post2Task(kThreadVideoEncoder, [=]() {
 		video_encoder_->RunEncoder();
@@ -171,6 +173,16 @@ void EncoderController::InitScreenCap()
 		screen_cap_ = std::make_unique<WinScreenCap>();
 		screen_cap_->Init();
 	}
+	if (!screen_cap_2_) 
+	{
+		screen_cap_2_ = std::make_unique<WinScreenCap>();
+		screen_cap_2_->Init();
+	}
+	if (!screen_cap_3_) 
+	{
+		screen_cap_3_ = std::make_unique<WinScreenCap>();
+		screen_cap_3_->Init();
+	}
 }
 
 void EncoderController::InitAudioEncoder()
@@ -196,21 +208,31 @@ void EncoderController::InitVideoEncoder()
 
 void EncoderController::CaptureImage()
 {
-	auto task = ToWeakCallback([=]() {
-		if(!video_encoder_)
-		{
-			return;
-		}
-		auto bytes = screen_cap_->GetScreenBytes();
-		if (video_encoder_) 
-		{
-			uint8_t* bytes_cpy = new uint8_t[pix_size + 1];
-			memcpy(bytes_cpy, bytes, pix_size);
-			bytes_cpy[pix_size] = '\0';
-			video_encoder_->PostImage(std::make_shared<BytesInfo>(bytes_cpy));
-		}
-	});
-	qtbase::Post2Task(kThreadVideoCapture,task);
+	
+	auto task_1 = ToWeakCallback([=]() {
+		PostScreenCapImg(0);
+		});
+	auto task_2 = ToWeakCallback([=]() {
+		PostScreenCapImg(1);
+		});
+	auto task_3 = ToWeakCallback([=]() {
+		PostScreenCapImg(2);
+		});
+
+	if (complete_frame_ % 3 == 0) 
+	{
+		qtbase::Post2Task(kThreadVideoCapture, task_1);
+	}
+	else if(complete_frame_ % 3 == 1)
+	{
+		qtbase::Post2Task(kThreadVideoCapture2, task_2);
+	}
+	else 
+	{
+		qtbase::Post2Task(kThreadVideoCapture3, task_3);
+	}
+	complete_frame_++;
+	PreciseTimer();
 }
 
 void EncoderController::CleanAll()
@@ -235,6 +257,14 @@ void EncoderController::CleanAll()
 	if (screen_cap_) 
 	{
 		screen_cap_.reset();
+	}
+	if (screen_cap_2_) 
+	{
+		screen_cap_2_.reset();
+	}
+	if (screen_cap_3_) 
+	{
+		screen_cap_3_.reset();
 	}
 	if (video_capture_thread_) 
 	{
@@ -278,4 +308,81 @@ void EncoderController::InitAudioRecorder()
 		};
 
 	native_audio_controller_->RegStopRecordCallback(record_close_cb);
+}
+
+void EncoderController::PostScreenCapImg(int index)
+{
+	if (!video_encoder_)
+	{
+		return;
+	}
+
+	BYTE* bytes = NULL;
+	if (index == 0) 
+	{
+		bytes = screen_cap_->GetScreenBytes();
+	}
+	else if (index == 1) 
+	{
+		bytes = screen_cap_2_->GetScreenBytes();
+	}
+	else if(index == 2)
+	{
+		bytes = screen_cap_3_->GetScreenBytes();
+	}
+	if (video_encoder_)
+	{
+		uint8_t* bytes_cpy = new uint8_t[pix_size + 1];
+		memcpy(bytes_cpy, bytes, pix_size);
+		bytes_cpy[pix_size] = '\0';
+		video_encoder_->PostImage(std::make_shared<BytesInfo>(bytes_cpy));
+	}
+}
+
+void EncoderController::PreciseTimer()
+{
+	if (video_param_.fps_ == 25) 
+	{
+		return;
+	}
+	else if (video_param_.fps_ == 30) 
+	{
+		if(complete_frame_ % 3 == 0)
+		{
+			auto end_time = time_util::GetCurrentTimeMst();
+			int64_t res_time = (end_time - start_time_) % 100;
+			if (res_time > 90)
+			{
+				video_capture_thread_->SetInterval(33 + (100 - res_time));
+			}
+			else if (res_time < 33)
+			{
+				video_capture_thread_->SetInterval(33 - res_time);
+			}
+		}
+		else
+		{
+			video_capture_thread_->SetInterval(33);
+		}
+	}
+	else if(video_param_.fps_ == 60)
+	{
+		if(complete_frame_ % 6 == 0)	//每100MS一次校准帧
+		{
+			auto end_time = time_util::GetCurrentTimeMst();
+			int64_t res_time = (end_time - start_time_) % 100;
+			if(res_time > 90)
+			{
+				video_capture_thread_->SetInterval(16 + (100 - res_time));
+			}
+			else if(res_time < 16)
+			{
+				video_capture_thread_->SetInterval(16 - res_time);
+			}
+		}
+		else
+		{
+			video_capture_thread_->SetInterval(16);
+		}
+	}
 }

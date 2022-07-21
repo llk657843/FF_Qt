@@ -10,5 +10,7 @@ enum ThreadName
 	kThreadVideoEncoder,
 	kThreadVideoCapture,
 	kThreadAudioEncoder,
+	kThreadVideoCapture2,
+	kThreadVideoCapture3,
 };
-const int ThreadCnt = 9;
+const int ThreadCnt = 11;

@@ -24,6 +24,10 @@ public:
 	{
 		std::unique_lock<std::mutex> lock(mutex_);
 		internal_queue_.push(single);
+		if (internal_queue_.size() >= 10) 
+		{
+			std::cout << "warning memory boom" << internal_queue_.size() << std::endl;
+		}
 		try_wake_up(false);
 	}
 

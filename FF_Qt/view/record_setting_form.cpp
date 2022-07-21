@@ -27,10 +27,11 @@ void RecordSettingForm::OnModifyUI()
 	ui->bitrate_combo->addItem(QString::number(1500000));
 	ui->framerate_combo->addItem(QString::number(25));
 	ui->framerate_combo->addItem(QString::number(30));
+	ui->framerate_combo->addItem(QString::number(60));
 	ui->pix_rate_combo->addItem(QString("1920*1080"));
 	ui->pix_rate_combo->addItem(QString("1280*720"));
 	ui->pix_rate_combo->addItem(QString("640*480"));
-	ui->line_file_pos->setText(QString::fromLocal8Bit("D:/record.mp4"));
+	ui->line_file_pos->setText(QString::fromLocal8Bit("E:/record.mp4"));
 }
 
 void RecordSettingForm::SlotStartClicked()

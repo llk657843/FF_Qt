@@ -1,4 +1,5 @@
 #include "high_ratio_time_thread.h"
+#include <QElapsedTimer>
 HighRatioTimeThread::HighRatioTimeThread(bool b_high_ratio)
 {
 	timeout_callback_ = nullptr;

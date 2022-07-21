@@ -1,5 +1,4 @@
 #include "audio_qt.h"
-#include "../audio_recorder/audio_data_cb.h"
 #include <iostream>
 #include <QAudioOutput>
 #include "QIODevice"
@@ -14,10 +13,10 @@ AudioPlayerCore::AudioPlayerCore()
 	seek_res_callback_ = nullptr;
 	b_audio_seek_ = false;
 	b_stop_ = false;
+	close_state_callback_ = nullptr;
 	seek_time_ = 0;
 	output_ = nullptr;
 	io_ = nullptr;
-	output_ = nullptr;
 	b_start_ = false;
 	sample_rate_ = 44100;
 	play_start_callback_ = nullptr;
@@ -68,7 +67,7 @@ void AudioPlayerCore::SlotStart()
 	if (output_ && io_ && !b_start_)
 	{
 		b_start_ = true;
-		output_->start(io_);//播放开始
+		output_->start(io_.get());//播放开始
 	}
 }
 
@@ -113,7 +112,6 @@ void AudioPlayerCore::RegCallback()
 		WriteByteArray(bytes, timestamp);
 	};
 	audio_decoder_.RegDataCallback(data_cb);
-	//AudioDataCallback::GetInstance()->RegRecordBufferCallback(data_cb);
 }
 
 void AudioPlayerCore::Close()
@@ -166,11 +164,11 @@ void AudioPlayerCore::AudioFmtInit()
 	fmt.setChannelCount(2);//声道
 	fmt.setCodec("audio/pcm");//解码格式
 	fmt.setByteOrder(QAudioFormat::LittleEndian);
-	fmt.setSampleType(QAudioFormat::UnSignedInt);//设置音频类型
-	output_ = new QAudioOutput(fmt);
-	io_ = new AudioIoDevice;
+	fmt.setSampleType(QAudioFormat::SignedInt);//设置音频类型
+	output_ = std::make_shared<QAudioOutput>(fmt);
+	io_ = std::make_shared<AudioIoDevice>();
 	io_->open(QIODevice::ReadWrite);
-	connect(output_, &QAudioOutput::stateChanged, this, &AudioPlayerCore::SlotStateChange);
+	connect(output_.get(), &QAudioOutput::stateChanged, this, &AudioPlayerCore::SlotStateChange);
 
 }
 
@@ -225,17 +223,41 @@ void AudioPlayerCore::Seek(int64_t timestamp,SeekResCallback res_cb)
 		seek_time_ = timestamp;
 		output_->suspend();
 	}
-
 }
 
 void AudioPlayerCore::AsyncStop()
 {
+	if(output_)
+	{
+		output_->suspend();
+	}
 	auto stop_cb = ToWeakCallback([=]() {
 		if (output_) 
 		{
 			output_->stop();
 		}
 		Clear();
+		if (close_state_callback_) 
+		{
+			close_state_callback_();
+		}
 	});
 	audio_decoder_.AsyncStop(stop_cb);
+	if (io_) 
+	{
+		io_->Release();
+	}
+}
+
+void AudioPlayerCore::RegCloseSuccessCallback(CloseStateCallback cb)
+{
+	close_state_callback_ = cb;
+}
+
+void AudioPlayerCore::SetVolume(int volume)
+{
+	if(output_)
+	{
+		output_->setVolume(volume / 100.0);
+	}
 }

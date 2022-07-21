@@ -72,3 +72,9 @@ void ThreadSafeBytesList::Clear()
 	std::lock_guard<std::mutex> lock(mutex_);
 	byte_list_.clear();
 }
+
+void ThreadSafeBytesList::Release()
+{
+	std::lock_guard<std::mutex> lock(mutex_);
+	cv_.notify_all();
+}

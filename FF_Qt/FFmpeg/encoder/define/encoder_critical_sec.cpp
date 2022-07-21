@@ -21,6 +21,11 @@ EncoderCriticalSec::EncoderCriticalSec()
 
 EncoderCriticalSec::~EncoderCriticalSec()
 {
+	if (format_context_ && format_context_->pb)
+	{
+		avio_close(format_context_->pb);
+		format_context_->pb = NULL;
+	}
 	if (format_context_) 
 	{
 		avformat_free_context(format_context_);
@@ -82,13 +87,7 @@ void EncoderCriticalSec::WriteTrailer()
 	if (--end_vote_ == 0)
 	{
 		av_write_trailer(format_context_);
-		//if (format_context_->pb) 
-		//{
-		//	uint8_t* fileBytes = NULL;
-		//	int fileSize = avio_close_dyn_buf(format_context_->pb, &fileBytes);
-		//	av_freep(&fileBytes);
-		//}
-		//format_context_->pb = NULL;
+		
 	}
 	if (stop_success_cb_)
 	{
@@ -108,6 +107,7 @@ int EncoderCriticalSec::GetAudioCodecId() const
 
 bool EncoderCriticalSec::WriteFrame(AVPacketWrapper& av_packet)
 {
+	int64_t start_time = time_util::GetCurrentTimeMst();
 	std::lock_guard<std::mutex> lock(format_ctx_mtx_);
 	if (end_vote_ > 0)
 	{
