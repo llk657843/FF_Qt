@@ -14,7 +14,7 @@ PlayerController::PlayerController()
 	path_ = "";
 	volume_ = 100;
 	//net_path_ = "http://220.161.87.62:8800/hls/1/index.m3u8";
-	//net_path_ = "https://r3-ndr.ykt.cbern.com.cn/edu_product/65/video/17b26a89547a11eb96b8fa20200c3759/76594798f8163d96296ba6263f2fbc62.1280.720.false/76594798f8163d96296ba6263f2fbc62.1280.720.m3u8";
+	//net_path_ = "http://media.jiayouxueba.com/15838edu_pc_574543608a8222929482c800f1d68e9b_1545096945069.m3u8";
 	pause_flag_ = false;
 	connect(this, SIGNAL(SignalStartLoop()), this, SLOT(SlotStartLoop()));
 	connect(this, SIGNAL(SignalStopLoop()), this, SLOT(SlotStopLoop()));
@@ -131,11 +131,11 @@ void PlayerController::Resume()
 
 void PlayerController::SeekTime(int64_t seek_time)
 {
-	auto cb = [=](int64_t seek_frame, int audio_id, bool b_success)
+	auto cb = [=](int64_t seek_frame, int audio_id,bool b_success)
 	{
 			if (b_success && video_decoder_)
 			{
-				video_decoder_->Seek(seek_frame,audio_id);
+				video_decoder_->Seek(seek_frame,audio_id,seek_time);
 			}
 	};
 

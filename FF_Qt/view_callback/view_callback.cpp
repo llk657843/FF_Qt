@@ -1,5 +1,6 @@
 #include "view_callback.h"
 #include "../player_controller/player_controller.h"
+#include "iostream"
 ViewCallback::ViewCallback()
 {
 	last_cb_time_ = 0;
@@ -11,6 +12,7 @@ ViewCallback::ViewCallback()
 	connect(this,SIGNAL(SignalImageInfo(ImageInfo*)),this,SLOT(SlotImageInfo(ImageInfo*)));
 	connect(this,SIGNAL(SignalTimeUpdate(int64_t)),this,SLOT(SlotTimeUpdate(int64_t)));
 	connect(this,SIGNAL(SignalRecorderClose()),this,SLOT(SlotRecorderClose()));
+	connect(this,SIGNAL(SignalConvertData(uint8_t*, uint8_t*, uint8_t*, int, int)),this,SLOT(SlotConvertData(uint8_t*, uint8_t*, uint8_t*, int, int)));
 }
 
 ViewCallback::~ViewCallback()
@@ -111,6 +113,51 @@ void ViewCallback::NotifyRecorderCloseCallback()
 	emit SignalRecorderClose();
 }
 
+void ViewCallback::RegConvertDataCb(ConvertDataCallback cb)
+{
+	convert_data_callback_ = cb;
+}
+
+void ViewCallback::ConvertData(uint8_t** data, int w, int h, int data_1, int data_2)
+{
+	unsigned char* y = nullptr;
+	unsigned char* u = nullptr;
+	unsigned char* v = nullptr;
+	if (y == nullptr) 
+	{
+		y = new unsigned char[w * h];
+	}
+	if (u == nullptr) 
+	{
+		u = new unsigned char[w * h / 4];
+	}
+	if (v == nullptr) 
+	{
+		v = new unsigned char[w * h / 4];
+	}
+
+	int l1 = data_1;
+	int l2 = data_2;
+	int l3 = data_2;
+	for (int i = 0; i < h; i++)
+	{
+		memcpy(y + w * i, data[0] + l1 * i, sizeof(unsigned char) * w);
+	}
+	for (int i = 0; i < h / 2; i++)
+	{
+		memcpy(u + w / 2 * i, data[1] + l2 * i, sizeof(unsigned char) * w / 2);
+		memcpy(v + w / 2 * i, data[2] + l3 * i, sizeof(unsigned char) * w / 2);
+	}
+
+	emit SignalConvertData(y, u, v, w, h);
+}
+
+void ViewCallback::ConvertRGBData(uint8_t** data, int w, int h, int data_1, int data_2)
+{
+	//emit SignalConvertData(data[0],data[1],data[2],w,h);
+	emit SignalConvertData(data[0], nullptr, nullptr, w, h);
+}
+
 void ViewCallback::SlotImageInfo(ImageInfo* image_info)
 {
 	if (image_info_callback_)
@@ -132,5 +179,13 @@ void ViewCallback::SlotRecorderClose()
 	if (recorder_close_callback_)
 	{
 		recorder_close_callback_();
+	}
+}
+
+void ViewCallback::SlotConvertData(uint8_t* y_data, uint8_t* u_data, uint8_t* v_data, int width, int height)
+{
+	if (convert_data_callback_) 
+	{
+		convert_data_callback_(y_data,u_data,v_data,width,height);
 	}
 }

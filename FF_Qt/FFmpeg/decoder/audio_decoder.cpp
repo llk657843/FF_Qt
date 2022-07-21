@@ -163,7 +163,7 @@ void AudioDecoder::Seek(int64_t seek_time, SeekResCallback res_cb)
 	{
 		auto timebase = decoder_->streams[audio_stream_id_]->codec->pkt_timebase;
 		int seek_frame = seek_time / av_q2d(timebase) / 1000.0;
-		bool res = av_seek_frame(decoder_, audio_stream_id_, seek_frame, AVSEEK_FLAG_BACKWARD) >= 0 ? true : false;
+		bool res = av_seek_frame(decoder_, audio_stream_id_, seek_frame, AVSEEK_FLAG_ANY) >= 0 ? true : false;
 		if(res_cb)
 		{
 			res_cb(seek_frame, audio_stream_id_,res);
