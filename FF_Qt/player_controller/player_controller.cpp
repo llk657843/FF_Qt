@@ -13,8 +13,6 @@ PlayerController::PlayerController()
 {
 	path_ = "";
 	volume_ = 100;
-	//net_path_ = "http://220.161.87.62:8800/hls/1/index.m3u8";
-	//net_path_ = "http://media.jiayouxueba.com/15838edu_pc_574543608a8222929482c800f1d68e9b_1545096945069.m3u8";
 	pause_flag_ = false;
 	connect(this, SIGNAL(SignalStartLoop()), this, SLOT(SlotStartLoop()));
 	connect(this, SIGNAL(SignalStopLoop()), this, SLOT(SlotStopLoop()));
