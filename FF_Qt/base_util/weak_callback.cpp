@@ -9,7 +9,7 @@ SupportWeakCallback::~SupportWeakCallback()
 {
 }
 
-std::weak_ptr<WeakFlag> SupportWeakCallback::GetWeakFlag()
+std::weak_ptr<WeakFlag> SupportWeakCallback::GetWeakFlag() const
 {
 	return shared_flag_;
 }

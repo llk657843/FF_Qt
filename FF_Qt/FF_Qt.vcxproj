@@ -109,6 +109,8 @@
     <ClCompile Include="base_ui\base_shadow_form.cpp" />
     <ClCompile Include="base_ui\clabel.cpp" />
     <ClCompile Include="base_ui\uslider.cpp" />
+    <ClCompile Include="base_util\guard_ptr.cpp" />
+    <ClCompile Include="device\device_controller.cpp" />
     <ClCompile Include="FFmpeg\decoder\audio_decoder.cpp" />
     <ClCompile Include="FFmpeg\decoder\base_decoder.cpp" />
     <ClCompile Include="FFmpeg\decoder\video_decoder.cpp" />
@@ -129,15 +131,19 @@
     <ClCompile Include="Thread\thread_pool_entrance.cpp" />
     <ClCompile Include="Thread\thread_safe_priority_task_queue.cpp" />
     <ClCompile Include="Thread\time_util.cpp" />
+    <ClCompile Include="view\device_detect.cpp" />
     <ClCompile Include="view\record_setting_form.cpp" />
     <ClCompile Include="view_callback\view_callback.cpp" />
     <QtRcc Include="FF_Qt.qrc" />
     <QtUic Include="ffmpeg_qt.ui" />
     <ClCompile Include="base_util\weak_callback.cpp" />
     <ClCompile Include="main.cpp" />
+    <QtUic Include="view\device_info_form.ui" />
     <QtUic Include="view\record_setting_form.ui" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="device\device_controller.h" />
+    <ClInclude Include="view\device_detect.h" />
     <QtMoc Include="view\record_setting_form.h" />
     <QtMoc Include="player_controller\player_controller.h" />
     <QtMoc Include="base_util\closure.h" />
@@ -149,7 +155,7 @@
     <ClInclude Include="base_ui\base_pop_shadow.h" />
     <ClInclude Include="base_ui\base_shadow_form.h" />
     <QtMoc Include="base_ui\clabel.h" />
-    <ClInclude Include="base_util\guard_ptr.h" />
+    <QtMoc Include="base_util\guard_ptr.h" />
     <QtMoc Include="Thread\high_ratio_time_thread.h" />
     <ClInclude Include="FFmpeg\decoder\audio_decoder.h" />
     <ClInclude Include="FFmpeg\decoder\AVFrameWrapper.h" />

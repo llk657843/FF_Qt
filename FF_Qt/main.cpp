@@ -9,6 +9,7 @@
 #include "windows.h"
 #include "audio_recorder/win_audio_recorder.h"
 #include "audio_recorder/audio_filter.h"
+#include "base_util/guard_ptr.h"
 int main(int argc, char* argv[])
 {
     QApplication a(argc, argv);
@@ -16,6 +17,7 @@ int main(int argc, char* argv[])
     qRegisterMetaType<ImageInfo*>("ImageInfo*");
     qRegisterMetaType<int64_t>("int64_t");
     qRegisterMetaType<std::function<void()>>("std::function<void()>");
+    GuardSingleton::GetInstance();
     QssManager qss_manager;
     QString qss_path = a.applicationDirPath() + "/style/";
     qss_manager.SetGlobalStyle(qss_path);

@@ -133,12 +133,24 @@
     <ClCompile Include="base_ui\clabel.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="base_util\guard_ptr.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="view\device_detect.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="device\device_controller.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="ffmpeg_qt.ui">
       <Filter>Form Files</Filter>
     </QtUic>
     <QtUic Include="view\record_setting_form.ui">
+      <Filter>Form Files</Filter>
+    </QtUic>
+    <QtUic Include="view\device_info_form.ui">
       <Filter>Form Files</Filter>
     </QtUic>
   </ItemGroup>
@@ -171,6 +183,9 @@
       <Filter>Header Files</Filter>
     </QtMoc>
     <QtMoc Include="base_ui\clabel.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="base_util\guard_ptr.h">
       <Filter>Header Files</Filter>
     </QtMoc>
   </ItemGroup>
@@ -212,9 +227,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="time_strategy\time_base_define.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="base_util\guard_ptr.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="style\qss_manager.h">
@@ -290,6 +302,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="player_controller\native_audio_controller.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="view\device_detect.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="device\device_controller.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

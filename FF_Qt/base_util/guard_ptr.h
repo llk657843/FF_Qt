@@ -1,34 +1,45 @@
-//#pragma once
-//#include <type_traits>
-//#include "weak_callback.h"
-//#include "closure.h"
-//
-//using Closure = std::function<void()>;
-//template<typename T>
-//using IsSupportWeakBase = std::enable_if_t<std::is_base_of<SupportWeakCallback, T>::value>;
-//template<typename T,typename = IsSupportWeakBase<T>>
-//class GuardPtr
-//{
-//public:
-//	GuardPtr(T* Parent)
-//	{
-//		QObject::connect(signal_, &QObjectWithClosureSignal::SignalClosure, this, [](const std::function<void()>& closure)
-//			{
-//				closure();
-//			});
-//		weak_ = Parent->GetWeakFlag();
-//	}
-//	~GuardPtr(){}
-//
-//	void TryPerformOnHost(Closure closure)
-//	{
-//		if(!weak_.expired())
-//		{
-//			emit signal_.SignalClosure(closure);
-//		}
-//	}
-//
-//private:
-//	std::weak_ptr<WeakFlag> weak_;
-//	QObjectWithClosureSignal signal_;
-//};
+#pragma once
+#include "functional"
+#include "singleton.h"
+#include "qobject.h"
+#include "weak_callback.h"
+using Func = std::function<void()>;
+class GuardSingleton : public QObject
+{
+	Q_OBJECT
+public:
+	GuardSingleton();
+	~GuardSingleton();
+	SINGLETON_DEFINE(GuardSingleton);
+
+signals:
+	void SignalSendFunction(const Func&);
+
+private:
+	void SlotSendFunction(const Func&);
+};
+
+
+class GuardPtr
+{
+public:
+	GuardPtr(const SupportWeakCallback& host)
+	{
+		weak_flag_ = host.GetWeakFlag();
+	};
+
+	void TryToPerformOnHostThread(const Func& function)
+	{
+		auto func = [=]() {
+			if (!weak_flag_.expired()) 
+			{
+				function();
+			}
+		};
+		emit GuardSingleton::GetInstance()->SignalSendFunction(func);
+	}
+
+
+private:
+	std::weak_ptr<WeakFlag> weak_flag_;
+};

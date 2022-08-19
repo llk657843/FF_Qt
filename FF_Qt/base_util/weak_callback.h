@@ -46,7 +46,7 @@ class SupportWeakCallback
 public:
 	SupportWeakCallback();
 	~SupportWeakCallback();
-	std::weak_ptr<WeakFlag> GetWeakFlag();
+	std::weak_ptr<WeakFlag> GetWeakFlag() const;
 
 
 	template<typename Function>
