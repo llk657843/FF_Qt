@@ -6,7 +6,6 @@
 #include "../../player_controller/encoder_controller.h"
 #include "../Thread/thread_pool_entrance.h"
 #define FRAGMENT_SIZE 4096        // 设置缓存区大小  
-#define AUDIO_MULTITHREAD_TEST
 const unsigned int WM_STOP_RECORD = WM_USER + 105;
 WinAudioRecorder::WinAudioRecorder()
 {
