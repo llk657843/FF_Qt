@@ -108,6 +108,7 @@
     <ClCompile Include="base_ui\base_pop_shadow.cpp" />
     <ClCompile Include="base_ui\base_shadow_form.cpp" />
     <ClCompile Include="base_ui\clabel.cpp" />
+    <ClCompile Include="base_ui\suspendedscrollbar.cpp" />
     <ClCompile Include="base_ui\uslider.cpp" />
     <ClCompile Include="base_util\guard_ptr.cpp" />
     <ClCompile Include="device\device_controller.cpp" />
@@ -142,6 +143,7 @@
     <QtUic Include="view\record_setting_form.ui" />
   </ItemGroup>
   <ItemGroup>
+    <QtMoc Include="base_ui\suspendedscrollbar.h" />
     <ClInclude Include="device\device_controller.h" />
     <ClInclude Include="log\log_singleton.h" />
     <ClInclude Include="view\device_detect.h" />

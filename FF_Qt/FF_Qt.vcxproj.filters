@@ -142,6 +142,9 @@
     <ClCompile Include="device\device_controller.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="base_ui\suspendedscrollbar.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="ffmpeg_qt.ui">
@@ -186,6 +189,9 @@
       <Filter>Header Files</Filter>
     </QtMoc>
     <QtMoc Include="base_util\guard_ptr.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="base_ui\suspendedscrollbar.h">
       <Filter>Header Files</Filter>
     </QtMoc>
   </ItemGroup>
