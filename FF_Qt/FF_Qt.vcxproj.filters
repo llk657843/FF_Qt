@@ -310,5 +310,8 @@
     <ClInclude Include="device\device_controller.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="log\log_singleton.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

@@ -143,6 +143,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="device\device_controller.h" />
+    <ClInclude Include="log\log_singleton.h" />
     <ClInclude Include="view\device_detect.h" />
     <QtMoc Include="view\record_setting_form.h" />
     <QtMoc Include="player_controller\player_controller.h" />
