@@ -145,6 +145,9 @@
     <ClCompile Include="base_ui\suspendedscrollbar.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="scale_manager.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="ffmpeg_qt.ui">
@@ -317,6 +320,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="log\log_singleton.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="scale_manager.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

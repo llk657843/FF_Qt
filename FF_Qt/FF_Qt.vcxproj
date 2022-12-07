@@ -124,6 +124,7 @@
     <ClCompile Include="player_controller\encoder_controller.cpp" />
     <ClCompile Include="player_controller\native_audio_controller.cpp" />
     <ClCompile Include="player_controller\player_controller.cpp" />
+    <ClCompile Include="scale_manager.cpp" />
     <ClCompile Include="screen_capture\win_screen_cap.cpp" />
     <ClCompile Include="style\qss_manager.cpp" />
     <ClCompile Include="Thread\high_ratio_time_thread.cpp" />
@@ -146,6 +147,7 @@
     <QtMoc Include="base_ui\suspendedscrollbar.h" />
     <ClInclude Include="device\device_controller.h" />
     <ClInclude Include="log\log_singleton.h" />
+    <ClInclude Include="scale_manager.h" />
     <ClInclude Include="view\device_detect.h" />
     <QtMoc Include="view\record_setting_form.h" />
     <QtMoc Include="player_controller\player_controller.h" />
